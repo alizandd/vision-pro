@@ -67,7 +67,6 @@ class VisionProController {
     init() {
         this.bindElements();
         this.bindEvents();
-        this.renderMediaLibrary();
         this.log('Orchestrator initialized', 'info');
     }
 
@@ -87,10 +86,6 @@ class VisionProController {
         this.emptyState = document.getElementById('emptyState');
         this.deviceCount = document.getElementById('deviceCount');
 
-        // Media Library
-        this.mediaList = document.getElementById('mediaList');
-        this.customVideoUrl = document.getElementById('customVideoUrl');
-        this.addCustomUrlBtn = document.getElementById('addCustomUrl');
 
         // Global Controls
         this.playAllBtn = document.getElementById('playAllBtn');
@@ -136,12 +131,6 @@ class VisionProController {
         this.playAllBtn.addEventListener('click', () => this.sendCommandToAll('play'));
         this.stopAllBtn.addEventListener('click', () => this.sendCommandToAll('stop'));
         this.scanDevicesBtn.addEventListener('click', () => this.log('Scanning for devices...', 'info'));
-
-        // Custom URL
-        this.addCustomUrlBtn.addEventListener('click', () => this.addCustomVideo());
-        this.customVideoUrl.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') this.addCustomVideo();
-        });
 
         // Preview Panel
         this.closePreviewBtn.addEventListener('click', () => this.closePreviewPanel());
@@ -680,21 +669,31 @@ class VisionProController {
         this.previewStatus.textContent = playbackState.toUpperCase();
 
         if (currentVideo && (playbackState === 'playing' || playbackState === 'paused')) {
-            // Only change src if different to avoid reload
-            if (this.previewVideo.src !== currentVideo) {
+            // Only change src if different to avoid reload (compare without protocol differences)
+            const currentSrc = this.previewVideo.src || '';
+            const isSameVideo = currentSrc.endsWith(currentVideo.split('/').pop()) || currentSrc === currentVideo;
+            
+            if (!isSameVideo) {
                 this.previewVideo.src = currentVideo;
             }
             this.previewOverlay.classList.add('hidden');
             this.previewVideoTitle.textContent = this.getVideoNameFromUrl(currentVideo) || currentVideo;
             
-            // Sync playback state
+            // Sync playback state without restarting
             if (playbackState === 'playing') {
-                this.previewVideo.play().catch(() => {});
+                if (this.previewVideo.paused) {
+                    this.previewVideo.play().catch(() => {});
+                }
             } else {
-                this.previewVideo.pause();
+                if (!this.previewVideo.paused) {
+                    this.previewVideo.pause();
+                }
             }
         } else {
-            this.previewVideo.src = '';
+            if (this.previewVideo.src) {
+                this.previewVideo.pause();
+                this.previewVideo.src = '';
+            }
             this.previewOverlay.classList.remove('hidden');
             this.previewVideoTitle.textContent = '—';
         }
@@ -769,70 +768,6 @@ class VisionProController {
         document.querySelectorAll('.device-card').forEach(card => {
             card.classList.remove('selected');
         });
-    }
-
-    // =====================================
-    // MEDIA LIBRARY
-    // =====================================
-
-    renderMediaLibrary() {
-        this.mediaList.innerHTML = this.presetVideos.map((video, index) => `
-            <div class="media-item" data-index="${index}" data-url="${this.escapeHtml(video.url)}">
-                <div class="media-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polygon points="5,3 19,12 5,21" fill="currentColor"/>
-                    </svg>
-                </div>
-                <div class="media-info">
-                    <div class="media-name">${this.escapeHtml(video.name)}</div>
-                    <div class="media-desc">${this.escapeHtml(video.description)}</div>
-                </div>
-            </div>
-        `).join('');
-
-        // Bind click events
-        this.mediaList.querySelectorAll('.media-item').forEach(item => {
-            item.addEventListener('click', () => {
-                // Deselect all
-                this.mediaList.querySelectorAll('.media-item').forEach(i => {
-                    i.classList.remove('selected');
-                });
-
-                // Select this one
-                item.classList.add('selected');
-
-                // Update selected video URL
-                this.selectedVideoUrl = item.dataset.url;
-                this.updateGlobalControls();
-
-                const video = this.presetVideos[item.dataset.index];
-                this.log(`Selected: ${video.name}`, 'info');
-            });
-        });
-    }
-
-    addCustomVideo() {
-        const url = this.customVideoUrl.value.trim();
-        if (!url) return;
-
-        // Add to preset videos
-        const name = this.getVideoNameFromUrl(url) || 'Custom Video';
-        this.presetVideos.push({
-            name: name,
-            description: 'Custom URL',
-            url: url
-        });
-
-        this.renderMediaLibrary();
-        this.customVideoUrl.value = '';
-        this.log(`Added custom video: ${name}`, 'success');
-
-        // Select it
-        this.selectedVideoUrl = url;
-        this.updateGlobalControls();
-
-        // Update device selectors
-        this.renderDevicesGrid();
     }
 
     getVideoNameFromUrl(url) {

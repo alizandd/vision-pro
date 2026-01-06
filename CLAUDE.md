@@ -268,8 +268,17 @@ The web controller uses a modern dark theme with:
 
 ### Essential Commands
 ```bash
-# Start server
+# Start server (recommended - handles PORT conflicts)
+cd server && ./start.sh
+
+# Or use npm
 cd server && npm start
+
+# Add videos to server
+cp ~/Downloads/my-video.mp4 server/videos/
+
+# Test video API
+curl http://localhost:8080/api/videos
 
 # Serve web controller
 cd web-controller && npx serve .
@@ -285,11 +294,36 @@ git push -u origin claude/vision-pro-web-controller-scFsv
 ```bash
 curl http://localhost:8080/health
 curl http://localhost:8080/devices
+curl http://localhost:8080/api/videos
 ```
 
 ---
 
 ## Changelog
+
+### 2026-01-07
+- **[Local Video Storage]** Server now serves videos from local folder
+  - Videos stored in `server/videos/` directory
+  - Server scans folder and serves video list via `/api/videos`
+  - HTTP video streaming with range request support
+  - Supports MP4, MOV, M4V, AVI, MKV, WebM formats
+- **[Dynamic Media Library]** Web controller fetches videos from server
+  - Automatic video library loading on connection
+  - Shows video name, format, and file size
+  - Click to select videos for playback
+  - No more hardcoded video URLs
+- **[Network Architecture]** Clear hub-and-spoke setup
+  - Server device stores videos and handles WebSocket/HTTP
+  - Web controller connects from tablet/mobile browser
+  - Vision Pro devices connect to same server
+  - Comprehensive network setup guide in NETWORK_SETUP.md
+- **[Server Startup Scripts]** Added startup scripts for easy launch
+  - `start-all.sh` / `start-all.bat` - Start all servers (Mac/Windows)
+  - `stop-all.sh` / `stop-all.bat` - Stop all servers (Mac/Windows)
+  - Automatic IP detection and display
+  - Auto-install dependencies if needed
+  - Handles PORT environment variable conflicts
+  - Shows all necessary URLs for mobile and Vision Pro
 
 ### 2026-01-06
 - Initial project implementation

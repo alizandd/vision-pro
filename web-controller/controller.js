@@ -20,43 +20,13 @@ class VisionProController {
         this.reconnectDelay = 1000;
         this.logCount = 0;
         this.sidebarOpen = false;
+        this.serverBaseUrl = '';
 
         // Device video players for sync
         this.deviceVideoPreviews = new Map();
 
-        // Sample videos for testing
-        this.presetVideos = [
-            {
-                name: 'Big Buck Bunny',
-                description: '360p MP4 sample',
-                url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
-            },
-            {
-                name: 'Elephant Dream',
-                description: 'Blender movie',
-                url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4'
-            },
-            {
-                name: 'Sintel',
-                description: 'Blender animated film',
-                url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4'
-            },
-            {
-                name: 'Tears of Steel',
-                description: 'Sci-fi short film',
-                url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4'
-            },
-            {
-                name: 'For Bigger Blazes',
-                description: 'Google sample video',
-                url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'
-            },
-            {
-                name: 'Subaru Outback',
-                description: 'Demo video',
-                url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4'
-            }
-        ];
+        // Video library (loaded from server)
+        this.presetVideos = [];
 
         // Device-specific selected media
         this.deviceMediaSelections = new Map();
@@ -67,7 +37,27 @@ class VisionProController {
     init() {
         this.bindElements();
         this.bindEvents();
+        this.setDefaultServerUrl();
         this.log('Orchestrator initialized', 'info');
+    }
+
+    /**
+     * Set default server URL based on current hostname
+     * If accessed via IP (e.g., 192.168.x.x), use that IP for WebSocket
+     * If accessed via localhost, use localhost for WebSocket
+     */
+    setDefaultServerUrl() {
+        const currentHost = window.location.hostname;
+        const wsPort = 8080; // WebSocket server port
+        
+        // Construct WebSocket URL based on current host
+        const defaultWsUrl = `ws://${currentHost}:${wsPort}`;
+        
+        // Set the value in the input field
+        if (this.serverUrlInput) {
+            this.serverUrlInput.value = defaultWsUrl;
+            console.log(`[Controller] Default server URL set to: ${defaultWsUrl}`);
+        }
     }
 
     bindElements() {
@@ -206,6 +196,10 @@ class VisionProController {
             return;
         }
 
+        // Extract HTTP base URL from WebSocket URL
+        // ws://192.168.1.100:8080 -> http://192.168.1.100:8080
+        this.serverBaseUrl = serverUrl.replace('ws://', 'http://').replace('wss://', 'https://');
+
         this.updateConnectionStatus('connecting');
         this.log(`Connecting to ${serverUrl}...`, 'info');
 
@@ -232,6 +226,9 @@ class VisionProController {
                 deviceName: 'Web Orchestrator',
                 deviceType: 'controller'
             }));
+
+            // Fetch video library from server
+            this.fetchVideosFromServer();
         };
 
         this.ws.onmessage = (event) => {
@@ -273,6 +270,118 @@ class VisionProController {
         }
         this.devices.clear();
         this.renderDevicesGrid();
+    }
+
+    /**
+     * Fetch video library from server
+     */
+    async fetchVideosFromServer() {
+        if (!this.serverBaseUrl) {
+            this.log('No server URL configured', 'warning');
+            return;
+        }
+
+        try {
+            this.log('Fetching video library from server...', 'info');
+            const response = await fetch(`${this.serverBaseUrl}/api/videos`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            
+            if (data.videos && Array.isArray(data.videos)) {
+                // Convert server video list to preset format
+                this.presetVideos = data.videos.map(video => ({
+                    name: video.name,
+                    description: `${video.extension.toUpperCase()} • ${this.formatFileSize(video.size)}`,
+                    url: `${this.serverBaseUrl}${video.url}`,
+                    filename: video.filename
+                }));
+
+                this.log(`Loaded ${data.count} video(s) from server`, 'success');
+                
+                // Update media library display
+                this.updateMediaLibrary();
+                
+                // Re-render device cards to show updated video list
+                this.renderDevicesGrid();
+            } else {
+                this.log('No videos found on server', 'warning');
+                this.presetVideos = [];
+            }
+        } catch (error) {
+            this.log(`Failed to fetch videos: ${error.message}`, 'error');
+            console.error('Error fetching videos:', error);
+            this.presetVideos = [];
+        }
+    }
+
+    /**
+     * Update media library display in sidebar
+     */
+    updateMediaLibrary() {
+        const mediaLibrary = document.getElementById('mediaLibrary');
+        if (!mediaLibrary) return;
+
+        // Clear existing items
+        mediaLibrary.innerHTML = '';
+
+        if (this.presetVideos.length === 0) {
+            mediaLibrary.innerHTML = `
+                <div class="empty-library">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="6" width="20" height="12" rx="2"/>
+                        <line x1="2" y1="12" x2="22" y2="12"/>
+                    </svg>
+                    <p>No videos available</p>
+                    <small>Add videos to server/videos/ folder</small>
+                </div>
+            `;
+            return;
+        }
+
+        // Create media items
+        this.presetVideos.forEach((video, index) => {
+            const item = document.createElement('div');
+            item.className = 'media-item';
+            item.innerHTML = `
+                <div class="media-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="5,3 19,12 5,21" fill="currentColor"/>
+                    </svg>
+                </div>
+                <div class="media-info">
+                    <div class="media-name">${this.escapeHtml(video.name)}</div>
+                    <div class="media-desc">${this.escapeHtml(video.description)}</div>
+                </div>
+            `;
+            
+            item.addEventListener('click', () => {
+                this.selectedVideoUrl = video.url;
+                this.log(`Selected: ${video.name}`, 'info');
+                
+                // Highlight selected item
+                document.querySelectorAll('.media-item').forEach(i => i.classList.remove('selected'));
+                item.classList.add('selected');
+                
+                this.updateGlobalControls();
+            });
+            
+            mediaLibrary.appendChild(item);
+        });
+    }
+
+    /**
+     * Format file size to human-readable format
+     */
+    formatFileSize(bytes) {
+        if (bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
     }
 
     // =====================================

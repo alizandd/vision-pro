@@ -30,7 +30,7 @@
             <div class="server-panel">
                 <div class="panel-label">Server Connection</div>
                 <div class="server-input-group">
-                    <input type="text" id="serverUrl" placeholder="ws://192.168.1.100:8080" value="ws://localhost:8080">
+                    <input type="text" id="serverUrl" placeholder="ws://192.168.1.100:8080" value="">
                     <button id="connectBtn" class="btn-connect">
                         <span class="connect-icon"></span>
                     </button>
@@ -38,6 +38,19 @@
                 <div class="connection-status" id="connectionStatus">
                     <span class="status-indicator disconnected"></span>
                     <span class="status-label">Disconnected</span>
+                </div>
+            </div>
+
+            <div class="media-library-panel">
+                <div class="panel-label">Media Library</div>
+                <div class="media-library" id="mediaLibrary">
+                    <div class="empty-library">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="6" width="20" height="12" rx="2"/>
+                            <line x1="2" y1="12" x2="22" y2="12"/>
+                        </svg>
+                        <p>Connect to server to load videos</p>
+                    </div>
                 </div>
             </div>
 

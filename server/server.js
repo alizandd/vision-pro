@@ -7,15 +7,42 @@
 
 const WebSocket = require('ws');
 const http = require('http');
+const fs = require('fs');
+const path = require('path');
+const url = require('url');
 const config = require('./config');
 
 // Device registry
 const devices = new Map();      // deviceId -> { ws, info, state }
 const controllers = new Set();  // Set of controller WebSocket connections
 
-// Create HTTP server for health checks
+// Video storage directory
+const VIDEOS_DIR = path.join(__dirname, 'videos');
+
+// Ensure videos directory exists
+if (!fs.existsSync(VIDEOS_DIR)) {
+    fs.mkdirSync(VIDEOS_DIR, { recursive: true });
+    console.log(`[Server] Created videos directory: ${VIDEOS_DIR}`);
+}
+
+// Create HTTP server for API, video serving, and health checks
 const httpServer = http.createServer((req, res) => {
-    if (req.url === '/health') {
+    const parsedUrl = url.parse(req.url, true);
+    const pathname = parsedUrl.pathname;
+
+    // Enable CORS for web controller access
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+    if (req.method === 'OPTIONS') {
+        res.writeHead(200);
+        res.end();
+        return;
+    }
+
+    if (pathname === '/health') {
+        // Health check endpoint
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({
             status: 'healthy',
@@ -23,7 +50,8 @@ const httpServer = http.createServer((req, res) => {
             connectedControllers: controllers.size,
             uptime: process.uptime()
         }));
-    } else if (req.url === '/devices') {
+    } else if (pathname === '/devices') {
+        // Device list endpoint
         res.writeHead(200, { 'Content-Type': 'application/json' });
         const deviceList = Array.from(devices.entries()).map(([id, data]) => ({
             deviceId: id,
@@ -31,11 +59,141 @@ const httpServer = http.createServer((req, res) => {
             state: data.state
         }));
         res.end(JSON.stringify(deviceList));
+    } else if (pathname === '/api/videos') {
+        // List available videos
+        handleVideoListRequest(req, res);
+    } else if (pathname.startsWith('/videos/')) {
+        // Serve video files
+        handleVideoFileRequest(req, res, pathname);
     } else {
-        res.writeHead(404);
+        res.writeHead(404, { 'Content-Type': 'text/plain' });
         res.end('Not Found');
     }
 });
+
+/**
+ * Handle video list API request
+ * Returns JSON array of available videos with metadata
+ */
+function handleVideoListRequest(req, res) {
+    try {
+        const files = fs.readdirSync(VIDEOS_DIR);
+        
+        // Filter for video files only
+        const videoExtensions = ['.mp4', '.mov', '.m4v', '.avi', '.mkv', '.webm'];
+        const videoFiles = files.filter(file => {
+            const ext = path.extname(file).toLowerCase();
+            return videoExtensions.includes(ext);
+        });
+
+        // Build video metadata
+        const videos = videoFiles.map(filename => {
+            const filePath = path.join(VIDEOS_DIR, filename);
+            const stats = fs.statSync(filePath);
+            const ext = path.extname(filename);
+            const name = path.basename(filename, ext);
+            
+            return {
+                filename: filename,
+                name: name.replace(/[-_]/g, ' '),
+                url: `/videos/${encodeURIComponent(filename)}`,
+                size: stats.size,
+                modified: stats.mtime,
+                extension: ext
+            };
+        });
+
+        // Sort by name
+        videos.sort((a, b) => a.name.localeCompare(b.name));
+
+        console.log(`[Server] Video list requested: ${videos.length} videos found`);
+
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+            count: videos.length,
+            videos: videos
+        }));
+    } catch (error) {
+        console.error('[Server] Error listing videos:', error);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Failed to list videos' }));
+    }
+}
+
+/**
+ * Handle video file serving with range support (for streaming)
+ */
+function handleVideoFileRequest(req, res, pathname) {
+    try {
+        // Extract filename from path
+        const filename = decodeURIComponent(pathname.replace('/videos/', ''));
+        const filePath = path.join(VIDEOS_DIR, filename);
+
+        // Security check: prevent directory traversal
+        const normalizedPath = path.normalize(filePath);
+        if (!normalizedPath.startsWith(VIDEOS_DIR)) {
+            res.writeHead(403, { 'Content-Type': 'text/plain' });
+            res.end('Forbidden');
+            return;
+        }
+
+        // Check if file exists
+        if (!fs.existsSync(filePath)) {
+            res.writeHead(404, { 'Content-Type': 'text/plain' });
+            res.end('Video not found');
+            return;
+        }
+
+        const stat = fs.statSync(filePath);
+        const fileSize = stat.size;
+        const range = req.headers.range;
+
+        // Determine MIME type
+        const ext = path.extname(filename).toLowerCase();
+        const mimeTypes = {
+            '.mp4': 'video/mp4',
+            '.mov': 'video/quicktime',
+            '.m4v': 'video/x-m4v',
+            '.avi': 'video/x-msvideo',
+            '.mkv': 'video/x-matroska',
+            '.webm': 'video/webm'
+        };
+        const contentType = mimeTypes[ext] || 'application/octet-stream';
+
+        if (range) {
+            // Handle range requests for video streaming
+            const parts = range.replace(/bytes=/, '').split('-');
+            const start = parseInt(parts[0], 10);
+            const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+            const chunksize = (end - start) + 1;
+            const file = fs.createReadStream(filePath, { start, end });
+
+            res.writeHead(206, {
+                'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+                'Accept-Ranges': 'bytes',
+                'Content-Length': chunksize,
+                'Content-Type': contentType,
+            });
+
+            file.pipe(res);
+            console.log(`[Server] Streaming video: ${filename} (${start}-${end}/${fileSize})`);
+        } else {
+            // Serve entire file
+            res.writeHead(200, {
+                'Content-Length': fileSize,
+                'Content-Type': contentType,
+                'Accept-Ranges': 'bytes'
+            });
+
+            fs.createReadStream(filePath).pipe(res);
+            console.log(`[Server] Serving video: ${filename} (${fileSize} bytes)`);
+        }
+    } catch (error) {
+        console.error('[Server] Error serving video:', error);
+        res.writeHead(500, { 'Content-Type': 'text/plain' });
+        res.end('Internal Server Error');
+    }
+}
 
 // Create WebSocket server
 const wss = new WebSocket.Server({ server: httpServer });
@@ -45,6 +203,12 @@ console.log(`[Server] Vision Pro WebSocket Server starting...`);
 wss.on('connection', (ws, req) => {
     const clientIp = req.socket.remoteAddress;
     console.log(`[Server] New connection from ${clientIp}`);
+
+    // Initialize heartbeat tracking
+    ws.isAlive = true;
+    ws.on('pong', () => {
+        ws.isAlive = true;
+    });
 
     let clientInfo = null;
 
@@ -329,19 +493,34 @@ wss.on('close', () => {
     clearInterval(heartbeatInterval);
 });
 
-// Handle client pong responses
-wss.on('connection', (ws) => {
-    ws.isAlive = true;
-    ws.on('pong', () => {
-        ws.isAlive = true;
-    });
-});
-
 // Start server
 httpServer.listen(config.port, config.host, () => {
-    console.log(`[Server] WebSocket server running on ws://${config.host}:${config.port}`);
-    console.log(`[Server] Health check: http://${config.host}:${config.port}/health`);
-    console.log(`[Server] Device list: http://${config.host}:${config.port}/devices`);
+    console.log(`[Server] ========================================`);
+    console.log(`[Server] Vision Pro Server Started`);
+    console.log(`[Server] ========================================`);
+    console.log(`[Server] WebSocket: ws://${config.host}:${config.port}`);
+    console.log(`[Server] Video API: http://${config.host}:${config.port}/api/videos`);
+    console.log(`[Server] Videos Folder: ${VIDEOS_DIR}`);
+    console.log(`[Server] Health Check: http://${config.host}:${config.port}/health`);
+    console.log(`[Server] Device List: http://${config.host}:${config.port}/devices`);
+    console.log(`[Server] ========================================`);
+    
+    // List available videos on startup
+    try {
+        const files = fs.readdirSync(VIDEOS_DIR);
+        const videoExtensions = ['.mp4', '.mov', '.m4v', '.avi', '.mkv', '.webm'];
+        const videoFiles = files.filter(file => {
+            const ext = path.extname(file).toLowerCase();
+            return videoExtensions.includes(ext);
+        });
+        console.log(`[Server] Available videos: ${videoFiles.length}`);
+        videoFiles.forEach((file, index) => {
+            console.log(`[Server]   ${index + 1}. ${file}`);
+        });
+    } catch (error) {
+        console.log(`[Server] No videos folder found or error reading it`);
+    }
+    console.log(`[Server] ========================================`);
 });
 
 // Graceful shutdown

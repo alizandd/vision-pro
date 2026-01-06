@@ -1,0 +1,17 @@
+[Server] Vision Pro WebSocket Server starting...
+[Server] ========================================
+[Server] Vision Pro Server Started
+[Server] ========================================
+[Server] WebSocket: ws://0.0.0.0:8080
+[Server] Video API: http://0.0.0.0:8080/api/videos
+[Server] Videos Folder: /Users/alizand/Herd/vision-pro/server/videos
+[Server] Health Check: http://0.0.0.0:8080/health
+[Server] Device List: http://0.0.0.0:8080/devices
+[Server] ========================================
+[Server] Available videos: 1
+[Server]   1. BigBuckBunny.mp4
+[Server] ========================================
+[Server] New connection from 192.168.88.240
+[Server] Received message: {"type":"register","deviceId":"controller-av94k2vje","deviceName":"Web Orchestrator","deviceType":"controller"}
+[Server] Controller registered: Web Orchestrator
+[Server] Video list requested: 1 videos found

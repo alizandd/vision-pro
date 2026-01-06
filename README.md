@@ -16,6 +16,8 @@ A Node.js WebSocket relay server that:
 - Runs on your local network
 - Relays commands between the web controller and Vision Pro devices
 - Tracks connected devices and playback state
+- **Serves video files from local storage** (`server/videos/` folder)
+- Provides video library API for dynamic media loading
 
 ### 3. Web Controller (`web-controller/`)
 A web application that:
@@ -25,17 +27,63 @@ A web application that:
 
 ## Quick Start
 
-### 1. Start the WebSocket Server
+### ⚡ Fast Start (Recommended)
+
+**Mac/Linux:**
+```bash
+./start-all.sh
+```
+
+**Windows:**
+```cmd
+start-all.bat
+```
+
+This will automatically:
+- **Check and install dependencies** (if needed - only first time)
+- Start both WebSocket server and Web Controller
+- Display all necessary addresses for mobile/tablet and Vision Pro
+- Create logs for troubleshooting
+
+See [STARTUP_SCRIPTS.md](STARTUP_SCRIPTS.md) for detailed instructions.
+
+---
+
+### 📝 Manual Start
+
+### 1. Add Video Files (Optional)
+
+Place your video files in the `server/videos/` directory:
+
+```bash
+cd server/videos
+# Copy your video files here
+cp ~/Downloads/my-video.mp4 .
+```
+
+Supported formats: MP4, MOV, M4V, AVI, MKV, WebM
+
+### 2. Start the WebSocket Server
 
 ```bash
 cd server
 npm install
+./start.sh
+```
+
+Or use npm:
+```bash
 npm start
 ```
 
-The server runs on port 8080 by default.
+**Note:** The `start.sh` script is recommended as it handles PORT environment variable conflicts.
 
-### 2. Open the Web Controller
+The server runs on port 8080 by default and will:
+- Serve videos from `server/videos/` folder
+- Display available videos on startup
+- Provide video list API at `http://localhost:8080/api/videos`
+
+### 3. Open the Web Controller
 
 Open `web-controller/index.html` in a browser, or serve it:
 
@@ -44,13 +92,47 @@ cd web-controller
 npx serve .
 ```
 
-### 3. Deploy the Vision Pro App
+Enter the server WebSocket URL (e.g., `ws://192.168.1.100:8080`) and click Connect.
+The video library will load automatically from the server.
+
+### 4. Deploy the Vision Pro App
 
 1. Open `VisionProPlayer/VisionProPlayer.xcodeproj` in Xcode
 2. Configure the WebSocket server URL in Settings
 3. Build and deploy to your Vision Pro device
 
-## Architecture
+## Network Architecture
+
+The system uses a **hub-and-spoke architecture** where all devices connect to a central server:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Local Network (WiFi)                      │
+│                                                               │
+│  ┌──────────────────┐        ┌─────────────────┐            │
+│  │  Server Device   │        │  Web Controller │            │
+│  │  (Laptop/PC)     │◄───────┤  (Tablet/Mobile)│            │
+│  │                  │  WS    │                 │            │
+│  │  - WebSocket     │        └─────────────────┘            │
+│  │  - Video Server  │                                        │
+│  │  - Video Files   │        ┌─────────────────┐            │
+│  │                  │◄───────┤  Vision Pro     │            │
+│  │  192.168.1.100   │  WS    │                 │            │
+│  │  Port: 8080      │        └─────────────────┘            │
+│  └──────────────────┘                                        │
+│                                                               │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Key Points:**
+- **Server runs on one device** (laptop/desktop) storing videos and handling WebSocket connections
+- **Web controller runs on tablet/mobile** - connects to server via browser
+- **Vision Pro devices** connect to same server for commands and video streaming
+- **All devices must be on the same local network**
+
+For detailed network setup instructions, see [NETWORK_SETUP.md](NETWORK_SETUP.md).
+
+## Component Architecture
 
 ```
 ┌─────────────────┐         ┌──────────────────┐         ┌─────────────────┐

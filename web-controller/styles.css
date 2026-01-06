@@ -373,6 +373,133 @@ body {
     height: 16px;
 }
 
+/* Media Library Panel */
+.media-library-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 20px 20px 0 20px;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.media-library {
+    flex: 1;
+    overflow-y: auto;
+    margin-top: 12px;
+    padding-right: 4px;
+}
+
+.media-library::-webkit-scrollbar {
+    width: 6px;
+}
+
+.media-library::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.media-library::-webkit-scrollbar-thumb {
+    background: var(--bg-active);
+    border-radius: 3px;
+}
+
+.media-library::-webkit-scrollbar-thumb:hover {
+    background: var(--text-dim);
+}
+
+.media-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px;
+    margin-bottom: 8px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.media-item:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-light);
+    transform: translateX(2px);
+}
+
+.media-item.selected {
+    background: var(--accent-primary-dim);
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 1px var(--accent-primary);
+}
+
+.media-icon {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    background: var(--bg-card);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent-primary);
+}
+
+.media-icon svg {
+    width: 18px;
+    height: 18px;
+}
+
+.media-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.media-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.media-desc {
+    font-size: 11px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.empty-library {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+}
+
+.empty-library svg {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 12px;
+    opacity: 0.3;
+}
+
+.empty-library p {
+    font-size: 13px;
+    margin-bottom: 4px;
+    color: var(--text-secondary);
+}
+
+.empty-library small {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
 /* Sidebar Footer */
 .sidebar-footer {
     padding: 20px;

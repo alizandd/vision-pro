@@ -68,11 +68,15 @@ vision-pro/
 - **Technologies**: HTML5, CSS3, JavaScript (ES6+)
 - **Fonts**: Outfit (UI), JetBrains Mono (code)
 - **No build step required** - runs directly in browser
+- **Responsive**: Fully supports desktop, tablet, and mobile views
 - **Features**:
   - Per-device video preview with LIVE badge
+  - **Video sync**: When Vision Pro plays/pauses, web preview syncs automatically
   - Media library sidebar with preset videos
   - Individual device controls
   - Expandable full-size preview panel
+  - Mobile: Hamburger menu with slide-out sidebar
+  - Tablet: Optimized layout with larger video preview
 
 ---
 
@@ -302,6 +306,13 @@ curl http://localhost:8080/devices
   - Status badges (Playing, Paused, Immersive)
   - Custom video URL support
   - Activity log panel
+- **[Responsive]** Tablet and mobile support
+  - Hamburger menu with slide-out sidebar on mobile
+  - Adaptive layouts for all screen sizes
+  - Touch-friendly controls
+- **[Video Sync]** Web preview syncs with Vision Pro
+  - Automatic play/pause/stop synchronization
+  - LIVE badge shows when video is actively playing
 
 ---
 

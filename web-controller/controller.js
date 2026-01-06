@@ -325,11 +325,14 @@ class VisionProController {
                     state: message.state
                 });
                 
-                // Sync video preview with device state
-                this.syncVideoPreview(message.deviceId, message.state, prevState);
-                
+                // First render the grid, then sync video
+                // This ensures the video element exists before we try to sync it
                 this.renderDevicesGrid();
                 this.updatePreviewPanel();
+                
+                // Sync video preview with device state AFTER render
+                this.syncVideoPreview(message.deviceId, message.state, prevState);
+                
                 this.log(`${message.deviceName}: ${message.state.playbackState}`, 'info');
                 break;
 
@@ -562,12 +565,19 @@ class VisionProController {
                 </div>
                 <div class="device-preview-section">
                     <div class="preview-thumbnail">
-                        ${currentVideo && playbackState === 'playing' ? `
-                            <video src="${this.escapeHtml(currentVideo)}" muted loop autoplay></video>
-                            <div class="preview-live-badge">
-                                <span class="live-dot"></span>
-                                LIVE
-                            </div>
+                        ${currentVideo && (playbackState === 'playing' || playbackState === 'paused') ? `
+                            <video src="${this.escapeHtml(currentVideo)}" muted loop></video>
+                            ${playbackState === 'playing' ? `
+                                <div class="preview-live-badge">
+                                    <span class="live-dot"></span>
+                                    LIVE
+                                </div>
+                            ` : `
+                                <div class="preview-paused-badge">
+                                    <span class="paused-icon">❚❚</span>
+                                    PAUSED
+                                </div>
+                            `}
                         ` : `
                             <div class="no-preview-placeholder">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

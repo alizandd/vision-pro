@@ -3,83 +3,161 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vision Pro Controller</title>
+    <title>Vision Pro Orchestrator</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Vision Pro Controller</h1>
-            <div class="connection-status" id="connectionStatus">
-                <span class="status-dot disconnected"></span>
-                <span class="status-text">Disconnected</span>
-            </div>
-        </header>
-
-        <section class="server-config">
-            <h2>Server Connection</h2>
-            <div class="config-row">
-                <input type="text" id="serverUrl" placeholder="ws://192.168.1.100:8080" value="ws://localhost:8080">
-                <button id="connectBtn" class="btn btn-primary">Connect</button>
-            </div>
-        </section>
-
-        <section class="devices-section">
-            <h2>Connected Devices</h2>
-            <div class="devices-list" id="devicesList">
-                <p class="no-devices">No Vision Pro devices connected</p>
-            </div>
-        </section>
-
-        <section class="video-section">
-            <h2>Video Control</h2>
-            <div class="video-input">
-                <input type="text" id="videoUrl" placeholder="Enter video URL (mp4, m3u8, etc.)">
-                <button id="loadVideoBtn" class="btn btn-secondary">Load</button>
-            </div>
-            <div class="preset-videos">
-                <h3>Sample Videos</h3>
-                <div class="preset-list" id="presetList">
-                    <!-- Preset videos will be populated by JavaScript -->
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <svg viewBox="0 0 32 32" class="logo-icon">
+                        <rect x="4" y="8" width="24" height="16" rx="8" fill="none" stroke="currentColor" stroke-width="2"/>
+                        <circle cx="11" cy="16" r="3" fill="currentColor"/>
+                        <circle cx="21" cy="16" r="3" fill="currentColor"/>
+                    </svg>
+                    <span class="logo-text">Vision Pro<br><span class="logo-subtext">Orchestrator</span></span>
                 </div>
             </div>
-        </section>
 
-        <section class="controls-section">
-            <h2>Playback Controls</h2>
-            <div class="target-selector">
-                <label>Target Devices:</label>
-                <select id="targetDevices">
-                    <option value="all">All Devices</option>
-                </select>
+            <div class="server-panel">
+                <div class="panel-label">Server Connection</div>
+                <div class="server-input-group">
+                    <input type="text" id="serverUrl" placeholder="ws://192.168.1.100:8080" value="ws://localhost:8080">
+                    <button id="connectBtn" class="btn-connect">
+                        <span class="connect-icon"></span>
+                    </button>
+                </div>
+                <div class="connection-status" id="connectionStatus">
+                    <span class="status-indicator disconnected"></span>
+                    <span class="status-label">Disconnected</span>
+                </div>
             </div>
-            <div class="control-buttons">
-                <button id="playBtn" class="btn btn-control btn-play" disabled>
-                    <svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
-                    Play
-                </button>
-                <button id="pauseBtn" class="btn btn-control btn-pause" disabled>
-                    <svg viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
-                    Pause
-                </button>
-                <button id="resumeBtn" class="btn btn-control btn-resume" disabled>
-                    <svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
-                    Resume
-                </button>
-                <button id="stopBtn" class="btn btn-control btn-stop" disabled>
-                    <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16"/></svg>
-                    Stop
-                </button>
-            </div>
-        </section>
 
-        <section class="log-section">
-            <h2>Activity Log</h2>
-            <div class="log-container" id="logContainer">
-                <!-- Log entries will appear here -->
+            <div class="media-library">
+                <div class="panel-label">Media Library</div>
+                <div class="media-list" id="mediaList">
+                    <!-- Media items populated by JS -->
+                </div>
+                <div class="custom-url-input">
+                    <input type="text" id="customVideoUrl" placeholder="Custom video URL...">
+                    <button id="addCustomUrl" class="btn-add-url" title="Add URL">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                    </button>
+                </div>
             </div>
-            <button id="clearLogBtn" class="btn btn-small">Clear Log</button>
-        </section>
+
+            <div class="sidebar-footer">
+                <div class="global-controls">
+                    <div class="panel-label">Quick Actions</div>
+                    <div class="quick-actions">
+                        <button id="playAllBtn" class="btn-action btn-play-all" disabled>
+                            <svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21" fill="currentColor"/></svg>
+                            Play All
+                        </button>
+                        <button id="stopAllBtn" class="btn-action btn-stop-all" disabled>
+                            <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" fill="currentColor"/></svg>
+                            Stop All
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="main-header">
+                <div class="header-title">
+                    <h1>Connected Devices</h1>
+                    <span class="device-count" id="deviceCount">0 devices</span>
+                </div>
+                <div class="header-actions">
+                    <button id="scanDevicesBtn" class="btn-scan">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                        Scan Devices
+                    </button>
+                </div>
+            </header>
+
+            <div class="devices-grid" id="devicesGrid">
+                <!-- Device cards will be populated here -->
+                <div class="empty-state" id="emptyState">
+                    <div class="empty-icon">
+                        <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="8" y="16" width="48" height="32" rx="16"/>
+                            <circle cx="24" cy="32" r="6"/>
+                            <circle cx="40" cy="32" r="6"/>
+                        </svg>
+                    </div>
+                    <h3>No Devices Connected</h3>
+                    <p>Connect to the server and power on your Vision Pro devices</p>
+                </div>
+            </div>
+
+            <!-- Video Preview Panel -->
+            <div class="preview-panel" id="previewPanel">
+                <div class="preview-header">
+                    <div class="preview-device-info">
+                        <span class="preview-device-name" id="previewDeviceName">Select a device</span>
+                        <span class="preview-status" id="previewStatus">—</span>
+                    </div>
+                    <button id="closePreviewBtn" class="btn-close-preview">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+                <div class="preview-content">
+                    <div class="video-preview-container">
+                        <video id="previewVideo" class="preview-video" muted loop></video>
+                        <div class="preview-overlay" id="previewOverlay">
+                            <span class="preview-message">No video playing</span>
+                        </div>
+                    </div>
+                    <div class="preview-controls">
+                        <button id="previewPlayBtn" class="btn-preview-control">
+                            <svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21" fill="currentColor"/></svg>
+                        </button>
+                        <button id="previewPauseBtn" class="btn-preview-control">
+                            <svg viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" fill="currentColor"/><rect x="14" y="4" width="4" height="16" fill="currentColor"/></svg>
+                        </button>
+                        <button id="previewStopBtn" class="btn-preview-control btn-danger">
+                            <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" fill="currentColor"/></svg>
+                        </button>
+                        <div class="preview-video-info">
+                            <span class="preview-video-title" id="previewVideoTitle">—</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Activity Log Panel (collapsible) -->
+        <div class="log-panel" id="logPanel">
+            <div class="log-header" id="logToggle">
+                <span class="log-title">Activity Log</span>
+                <span class="log-badge" id="logBadge">0</span>
+                <svg class="log-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="6,9 12,15 18,9"/>
+                </svg>
+            </div>
+            <div class="log-content" id="logContent">
+                <div class="log-entries" id="logEntries">
+                    <!-- Log entries will appear here -->
+                </div>
+                <button id="clearLogBtn" class="btn-clear-log">Clear</button>
+            </div>
+        </div>
     </div>
 
     <script src="controller.js"></script>

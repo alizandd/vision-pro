@@ -1,7 +1,8 @@
 /**
- * Vision Pro Web Controller
+ * Vision Pro Orchestrator Controller
  *
  * Controls Vision Pro devices via WebSocket connection to the relay server.
+ * Features: Per-device video preview, individual device controls, media library.
  */
 
 class VisionProController {
@@ -10,10 +11,12 @@ class VisionProController {
         this.connected = false;
         this.devices = new Map();
         this.selectedVideoUrl = '';
+        this.selectedDeviceId = null;
         this.controllerId = this.generateId();
         this.reconnectAttempts = 0;
         this.maxReconnectAttempts = 5;
         this.reconnectDelay = 1000;
+        this.logCount = 0;
 
         // Sample videos for testing
         this.presetVideos = [
@@ -36,8 +39,21 @@ class VisionProController {
                 name: 'Tears of Steel',
                 description: 'Sci-fi short film',
                 url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4'
+            },
+            {
+                name: 'For Bigger Blazes',
+                description: 'Google sample video',
+                url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'
+            },
+            {
+                name: 'Subaru Outback',
+                description: 'Demo video',
+                url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4'
             }
         ];
+
+        // Device-specific selected media
+        this.deviceMediaSelections = new Map();
 
         this.init();
     }
@@ -45,8 +61,8 @@ class VisionProController {
     init() {
         this.bindElements();
         this.bindEvents();
-        this.renderPresetVideos();
-        this.log('Controller initialized', 'info');
+        this.renderMediaLibrary();
+        this.log('Orchestrator initialized', 'info');
     }
 
     bindElements() {
@@ -56,51 +72,76 @@ class VisionProController {
         this.connectionStatus = document.getElementById('connectionStatus');
 
         // Devices
-        this.devicesList = document.getElementById('devicesList');
-        this.targetDevices = document.getElementById('targetDevices');
+        this.devicesGrid = document.getElementById('devicesGrid');
+        this.emptyState = document.getElementById('emptyState');
+        this.deviceCount = document.getElementById('deviceCount');
 
-        // Video
-        this.videoUrlInput = document.getElementById('videoUrl');
-        this.loadVideoBtn = document.getElementById('loadVideoBtn');
-        this.presetList = document.getElementById('presetList');
+        // Media Library
+        this.mediaList = document.getElementById('mediaList');
+        this.customVideoUrl = document.getElementById('customVideoUrl');
+        this.addCustomUrlBtn = document.getElementById('addCustomUrl');
 
-        // Controls
-        this.playBtn = document.getElementById('playBtn');
-        this.pauseBtn = document.getElementById('pauseBtn');
-        this.resumeBtn = document.getElementById('resumeBtn');
-        this.stopBtn = document.getElementById('stopBtn');
+        // Global Controls
+        this.playAllBtn = document.getElementById('playAllBtn');
+        this.stopAllBtn = document.getElementById('stopAllBtn');
+        this.scanDevicesBtn = document.getElementById('scanDevicesBtn');
+
+        // Preview Panel
+        this.previewPanel = document.getElementById('previewPanel');
+        this.previewDeviceName = document.getElementById('previewDeviceName');
+        this.previewStatus = document.getElementById('previewStatus');
+        this.previewVideo = document.getElementById('previewVideo');
+        this.previewOverlay = document.getElementById('previewOverlay');
+        this.previewVideoTitle = document.getElementById('previewVideoTitle');
+        this.closePreviewBtn = document.getElementById('closePreviewBtn');
+        this.previewPlayBtn = document.getElementById('previewPlayBtn');
+        this.previewPauseBtn = document.getElementById('previewPauseBtn');
+        this.previewStopBtn = document.getElementById('previewStopBtn');
 
         // Log
-        this.logContainer = document.getElementById('logContainer');
+        this.logPanel = document.getElementById('logPanel');
+        this.logToggle = document.getElementById('logToggle');
+        this.logEntries = document.getElementById('logEntries');
+        this.logBadge = document.getElementById('logBadge');
         this.clearLogBtn = document.getElementById('clearLogBtn');
     }
 
     bindEvents() {
+        // Connection
         this.connectBtn.addEventListener('click', () => this.toggleConnection());
-        this.loadVideoBtn.addEventListener('click', () => this.loadVideo());
-        this.playBtn.addEventListener('click', () => this.sendCommand('play'));
-        this.pauseBtn.addEventListener('click', () => this.sendCommand('pause'));
-        this.resumeBtn.addEventListener('click', () => this.sendCommand('resume'));
-        this.stopBtn.addEventListener('click', () => this.sendCommand('stop'));
+        this.serverUrlInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') this.toggleConnection();
+        });
+
+        // Global Controls
+        this.playAllBtn.addEventListener('click', () => this.sendCommandToAll('play'));
+        this.stopAllBtn.addEventListener('click', () => this.sendCommandToAll('stop'));
+        this.scanDevicesBtn.addEventListener('click', () => this.log('Scanning for devices...', 'info'));
+
+        // Custom URL
+        this.addCustomUrlBtn.addEventListener('click', () => this.addCustomVideo());
+        this.customVideoUrl.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') this.addCustomVideo();
+        });
+
+        // Preview Panel
+        this.closePreviewBtn.addEventListener('click', () => this.closePreviewPanel());
+        this.previewPlayBtn.addEventListener('click', () => this.sendCommandToSelected('play'));
+        this.previewPauseBtn.addEventListener('click', () => this.sendCommandToSelected('pause'));
+        this.previewStopBtn.addEventListener('click', () => this.sendCommandToSelected('stop'));
+
+        // Log Panel
+        this.logToggle.addEventListener('click', () => this.toggleLogPanel());
         this.clearLogBtn.addEventListener('click', () => this.clearLog());
-
-        this.videoUrlInput.addEventListener('input', (e) => {
-            this.selectedVideoUrl = e.target.value;
-            this.updateControlsState();
-        });
-
-        this.videoUrlInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                this.loadVideo();
-            }
-        });
     }
 
     generateId() {
         return 'controller-' + Math.random().toString(36).substring(2, 11);
     }
 
-    // Connection Management
+    // =====================================
+    // CONNECTION MANAGEMENT
+    // =====================================
 
     toggleConnection() {
         if (this.connected) {
@@ -140,7 +181,7 @@ class VisionProController {
             this.ws.send(JSON.stringify({
                 type: 'register',
                 deviceId: this.controllerId,
-                deviceName: 'Web Controller',
+                deviceName: 'Web Orchestrator',
                 deviceType: 'controller'
             }));
         };
@@ -158,7 +199,7 @@ class VisionProController {
             this.connected = false;
             this.updateConnectionStatus('disconnected');
             this.log('Disconnected from server', 'warning');
-            this.updateControlsState();
+            this.updateGlobalControls();
 
             // Attempt reconnection
             if (this.reconnectAttempts < this.maxReconnectAttempts) {
@@ -178,16 +219,17 @@ class VisionProController {
     }
 
     disconnect() {
-        this.reconnectAttempts = this.maxReconnectAttempts; // Prevent auto-reconnect
+        this.reconnectAttempts = this.maxReconnectAttempts;
         if (this.ws) {
             this.ws.close();
         }
         this.devices.clear();
-        this.renderDevicesList();
-        this.updateDeviceSelector();
+        this.renderDevicesGrid();
     }
 
-    // Message Handling
+    // =====================================
+    // MESSAGE HANDLING
+    // =====================================
 
     handleMessage(message) {
         switch (message.type) {
@@ -201,8 +243,7 @@ class VisionProController {
                     message.devices.forEach(device => {
                         this.devices.set(device.deviceId, device);
                     });
-                    this.renderDevicesList();
-                    this.updateDeviceSelector();
+                    this.renderDevicesGrid();
                 }
                 break;
 
@@ -211,17 +252,18 @@ class VisionProController {
                 this.devices.set(message.deviceId, {
                     deviceId: message.deviceId,
                     deviceName: message.deviceName,
-                    state: { playbackState: 'idle', immersiveMode: false }
+                    state: { playbackState: 'idle', immersiveMode: false, currentVideo: null }
                 });
-                this.renderDevicesList();
-                this.updateDeviceSelector();
+                this.renderDevicesGrid();
                 break;
 
             case 'deviceDisconnected':
                 this.log(`Device disconnected: ${message.deviceName}`, 'warning');
                 this.devices.delete(message.deviceId);
-                this.renderDevicesList();
-                this.updateDeviceSelector();
+                if (this.selectedDeviceId === message.deviceId) {
+                    this.closePreviewPanel();
+                }
+                this.renderDevicesGrid();
                 break;
 
             case 'deviceStatus':
@@ -230,7 +272,8 @@ class VisionProController {
                     deviceName: message.deviceName,
                     state: message.state
                 });
-                this.renderDevicesList();
+                this.renderDevicesGrid();
+                this.updatePreviewPanel();
                 this.log(`${message.deviceName}: ${message.state.playbackState}`, 'info');
                 break;
 
@@ -243,159 +286,393 @@ class VisionProController {
                 break;
 
             case 'pong':
-                // Heartbeat response
                 break;
 
             default:
                 console.log('Unknown message:', message);
         }
 
-        this.updateControlsState();
+        this.updateGlobalControls();
     }
 
-    // Commands
+    // =====================================
+    // COMMANDS
+    // =====================================
 
-    sendCommand(action) {
+    sendCommand(action, deviceId, videoUrl = null) {
         if (!this.connected || !this.ws) {
             this.log('Not connected to server', 'error');
             return;
         }
 
-        const targetValue = this.targetDevices.value;
-        const targetDevicesArray = targetValue === 'all' ? ['all'] : [targetValue];
+        const command = {
+            type: 'command',
+            action: action,
+            targetDevices: [deviceId]
+        };
+
+        if ((action === 'play' || action === 'change') && videoUrl) {
+            command.videoUrl = videoUrl;
+        }
+
+        this.ws.send(JSON.stringify(command));
+        this.log(`Sending '${action}' to device...`, 'info');
+    }
+
+    sendCommandToAll(action) {
+        if (!this.connected || !this.ws) {
+            this.log('Not connected to server', 'error');
+            return;
+        }
 
         const command = {
             type: 'command',
             action: action,
-            targetDevices: targetDevicesArray
+            targetDevices: ['all']
         };
 
-        // Include video URL for play and change commands
-        if (action === 'play' || action === 'change') {
-            if (!this.selectedVideoUrl) {
-                this.log('Please select or enter a video URL', 'warning');
-                return;
-            }
+        if ((action === 'play' || action === 'change') && this.selectedVideoUrl) {
             command.videoUrl = this.selectedVideoUrl;
         }
 
         this.ws.send(JSON.stringify(command));
-        this.log(`Sending '${action}' command...`, 'info');
+        this.log(`Sending '${action}' to all devices...`, 'info');
     }
 
-    loadVideo() {
-        const url = this.videoUrlInput.value.trim();
-        if (url) {
-            this.selectedVideoUrl = url;
-            this.log(`Video loaded: ${url}`, 'info');
+    sendCommandToSelected(action) {
+        if (!this.selectedDeviceId) return;
+        const device = this.devices.get(this.selectedDeviceId);
+        if (!device) return;
 
-            // Deselect presets
-            document.querySelectorAll('.preset-item').forEach(item => {
-                item.classList.remove('selected');
-            });
+        const videoUrl = this.deviceMediaSelections.get(this.selectedDeviceId) || 
+                         device.state?.currentVideo || 
+                         this.selectedVideoUrl;
 
-            this.updateControlsState();
-        }
+        this.sendCommand(action, this.selectedDeviceId, videoUrl);
     }
 
-    // UI Updates
+    // =====================================
+    // UI UPDATES
+    // =====================================
 
     updateConnectionStatus(status) {
-        const dot = this.connectionStatus.querySelector('.status-dot');
-        const text = this.connectionStatus.querySelector('.status-text');
+        const indicator = this.connectionStatus.querySelector('.status-indicator');
+        const label = this.connectionStatus.querySelector('.status-label');
 
-        dot.className = 'status-dot ' + status;
+        indicator.className = 'status-indicator ' + status;
 
         const statusText = {
             disconnected: 'Disconnected',
             connecting: 'Connecting...',
             connected: 'Connected'
         };
-        text.textContent = statusText[status] || status;
+        label.textContent = statusText[status] || status;
 
-        this.connectBtn.textContent = status === 'connected' ? 'Disconnect' : 'Connect';
+        this.connectBtn.innerHTML = status === 'connected' 
+            ? '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>'
+            : '<span class="connect-icon"></span>';
+
         this.serverUrlInput.disabled = status === 'connected';
     }
 
-    updateControlsState() {
+    updateGlobalControls() {
         const hasDevices = this.devices.size > 0;
         const hasVideo = !!this.selectedVideoUrl;
         const isConnected = this.connected;
 
-        this.playBtn.disabled = !isConnected || !hasDevices || !hasVideo;
-        this.pauseBtn.disabled = !isConnected || !hasDevices;
-        this.resumeBtn.disabled = !isConnected || !hasDevices;
-        this.stopBtn.disabled = !isConnected || !hasDevices;
-        this.loadVideoBtn.disabled = !isConnected;
+        this.playAllBtn.disabled = !isConnected || !hasDevices || !hasVideo;
+        this.stopAllBtn.disabled = !isConnected || !hasDevices;
     }
 
-    renderDevicesList() {
-        if (this.devices.size === 0) {
-            this.devicesList.innerHTML = '<p class="no-devices">No Vision Pro devices connected</p>';
+    renderDevicesGrid() {
+        // Update device count
+        const count = this.devices.size;
+        this.deviceCount.textContent = `${count} device${count !== 1 ? 's' : ''}`;
+
+        // Show/hide empty state
+        if (count === 0) {
+            this.emptyState.classList.remove('hidden');
+            // Remove existing device cards
+            const existingCards = this.devicesGrid.querySelectorAll('.device-card');
+            existingCards.forEach(card => card.remove());
             return;
         }
 
-        this.devicesList.innerHTML = Array.from(this.devices.values()).map(device => {
-            const state = device.state || {};
-            const playbackState = state.playbackState || 'unknown';
-            const immersive = state.immersiveMode ? '<span class="immersive-indicator">Immersive</span>' : '';
+        this.emptyState.classList.add('hidden');
 
-            return `
-                <div class="device-card">
-                    <div class="device-info">
-                        <span class="device-name">${this.escapeHtml(device.deviceName)}</span>
-                        <span class="device-id">${device.deviceId}</span>
-                    </div>
-                    <div class="device-state">
-                        <span class="state-badge ${playbackState}">${playbackState}</span>
-                        ${immersive}
-                    </div>
-                </div>
-            `;
-        }).join('');
-    }
-
-    updateDeviceSelector() {
-        const currentValue = this.targetDevices.value;
-
-        this.targetDevices.innerHTML = '<option value="all">All Devices</option>';
-
+        // Build device cards
+        const fragment = document.createDocumentFragment();
+        
         this.devices.forEach((device, deviceId) => {
-            const option = document.createElement('option');
-            option.value = deviceId;
-            option.textContent = device.deviceName;
-            this.targetDevices.appendChild(option);
+            const card = this.createDeviceCard(device, deviceId);
+            fragment.appendChild(card);
         });
 
-        // Restore selection if still valid
-        if (currentValue !== 'all' && this.devices.has(currentValue)) {
-            this.targetDevices.value = currentValue;
+        // Clear existing cards and append new ones
+        const existingCards = this.devicesGrid.querySelectorAll('.device-card');
+        existingCards.forEach(card => card.remove());
+        this.devicesGrid.appendChild(fragment);
+    }
+
+    createDeviceCard(device, deviceId) {
+        const state = device.state || {};
+        const playbackState = state.playbackState || 'idle';
+        const currentVideo = state.currentVideo || null;
+        const immersive = state.immersiveMode || false;
+
+        const card = document.createElement('div');
+        card.className = `device-card${this.selectedDeviceId === deviceId ? ' selected' : ''}`;
+        card.dataset.deviceId = deviceId;
+
+        // Get video name from URL
+        const videoName = currentVideo ? this.getVideoNameFromUrl(currentVideo) : null;
+        const selectedMedia = this.deviceMediaSelections.get(deviceId);
+
+        card.innerHTML = `
+            <div class="device-card-header">
+                <div class="device-identity">
+                    <div class="device-icon">
+                        <svg viewBox="0 0 32 32">
+                            <rect x="4" y="8" width="24" height="16" rx="8" fill="none" stroke="currentColor" stroke-width="2"/>
+                            <circle cx="11" cy="16" r="3" fill="currentColor"/>
+                            <circle cx="21" cy="16" r="3" fill="currentColor"/>
+                        </svg>
+                    </div>
+                    <div class="device-meta">
+                        <h3>${this.escapeHtml(device.deviceName)}</h3>
+                        <span class="device-id-badge">${deviceId.substring(0, 12)}...</span>
+                    </div>
+                </div>
+                <div class="device-status">
+                    <span class="status-badge ${playbackState}">
+                        <span class="status-dot"></span>
+                        ${playbackState}
+                    </span>
+                    ${immersive ? `
+                        <span class="immersive-badge">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <circle cx="12" cy="12" r="4"/>
+                            </svg>
+                            Immersive
+                        </span>
+                    ` : ''}
+                </div>
+            </div>
+            <div class="device-card-body">
+                <div class="device-media-section">
+                    <div class="media-selector-row">
+                        <label>Choose media:</label>
+                        <select class="media-select" data-device-id="${deviceId}">
+                            <option value="">Select video...</option>
+                            ${this.presetVideos.map(v => `
+                                <option value="${this.escapeHtml(v.url)}" ${selectedMedia === v.url ? 'selected' : ''}>${this.escapeHtml(v.name)}</option>
+                            `).join('')}
+                        </select>
+                    </div>
+                    <div class="current-video-display">
+                        ${currentVideo ? `
+                            <div class="video-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polygon points="5,3 19,12 5,21" fill="currentColor"/>
+                                </svg>
+                            </div>
+                            <div class="video-info">
+                                <div class="video-title">${this.escapeHtml(videoName || 'Playing')}</div>
+                                <div class="video-url">${this.escapeHtml(currentVideo)}</div>
+                            </div>
+                        ` : `
+                            <span class="no-video-playing">No video playing</span>
+                        `}
+                    </div>
+                    <div class="device-controls">
+                        <button class="btn-device-control btn-device-play" data-action="play" data-device-id="${deviceId}">
+                            <svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21" fill="currentColor"/></svg>
+                            Play
+                        </button>
+                        <button class="btn-device-control btn-device-pause" data-action="pause" data-device-id="${deviceId}">
+                            <svg viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" fill="currentColor"/><rect x="14" y="4" width="4" height="16" fill="currentColor"/></svg>
+                            Pause
+                        </button>
+                        <button class="btn-device-control btn-device-resume" data-action="resume" data-device-id="${deviceId}">
+                            <svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21" fill="currentColor"/></svg>
+                            Resume
+                        </button>
+                        <button class="btn-device-control btn-device-stop" data-action="stop" data-device-id="${deviceId}">
+                            <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" fill="currentColor"/></svg>
+                            Stop
+                        </button>
+                    </div>
+                </div>
+                <div class="device-preview-section">
+                    <div class="preview-thumbnail">
+                        ${currentVideo && playbackState === 'playing' ? `
+                            <video src="${this.escapeHtml(currentVideo)}" muted loop autoplay></video>
+                            <div class="preview-live-badge">
+                                <span class="live-dot"></span>
+                                LIVE
+                            </div>
+                        ` : `
+                            <div class="no-preview-placeholder">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="2" y="2" width="20" height="20" rx="2"/>
+                                    <circle cx="12" cy="12" r="3"/>
+                                </svg>
+                                <span>No preview</span>
+                            </div>
+                        `}
+                        <div class="preview-thumbnail-overlay">
+                            <button class="btn-expand-preview" data-device-id="${deviceId}">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="15,3 21,3 21,9"/>
+                                    <polyline points="9,21 3,21 3,15"/>
+                                    <line x1="21" y1="3" x2="14" y2="10"/>
+                                    <line x1="3" y1="21" x2="10" y2="14"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Bind events
+        this.bindDeviceCardEvents(card, deviceId);
+
+        return card;
+    }
+
+    bindDeviceCardEvents(card, deviceId) {
+        // Media selector
+        const mediaSelect = card.querySelector('.media-select');
+        mediaSelect.addEventListener('change', (e) => {
+            this.deviceMediaSelections.set(deviceId, e.target.value);
+            this.log(`Media selected for device: ${e.target.value.split('/').pop()}`, 'info');
+        });
+
+        // Control buttons
+        const controlBtns = card.querySelectorAll('.btn-device-control');
+        controlBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const action = btn.dataset.action;
+                const targetDeviceId = btn.dataset.deviceId;
+                const videoUrl = this.deviceMediaSelections.get(targetDeviceId);
+                
+                if (action === 'play' && !videoUrl) {
+                    this.log('Please select a video first', 'warning');
+                    return;
+                }
+                
+                this.sendCommand(action, targetDeviceId, videoUrl);
+            });
+        });
+
+        // Expand preview button
+        const expandBtn = card.querySelector('.btn-expand-preview');
+        expandBtn.addEventListener('click', () => {
+            this.selectDevice(deviceId);
+        });
+
+        // Card click to select
+        card.querySelector('.device-card-header').addEventListener('click', () => {
+            this.selectDevice(deviceId);
+        });
+    }
+
+    selectDevice(deviceId) {
+        this.selectedDeviceId = deviceId;
+        
+        // Update card selection state
+        document.querySelectorAll('.device-card').forEach(card => {
+            card.classList.toggle('selected', card.dataset.deviceId === deviceId);
+        });
+
+        this.openPreviewPanel();
+    }
+
+    openPreviewPanel() {
+        if (!this.selectedDeviceId) return;
+        const device = this.devices.get(this.selectedDeviceId);
+        if (!device) return;
+
+        this.previewPanel.classList.add('open');
+        this.updatePreviewPanel();
+    }
+
+    updatePreviewPanel() {
+        if (!this.selectedDeviceId || !this.previewPanel.classList.contains('open')) return;
+        
+        const device = this.devices.get(this.selectedDeviceId);
+        if (!device) return;
+
+        const state = device.state || {};
+        const currentVideo = state.currentVideo;
+        const playbackState = state.playbackState || 'idle';
+
+        this.previewDeviceName.textContent = device.deviceName;
+        this.previewStatus.textContent = playbackState.toUpperCase();
+
+        if (currentVideo && (playbackState === 'playing' || playbackState === 'paused')) {
+            this.previewVideo.src = currentVideo;
+            this.previewOverlay.classList.add('hidden');
+            this.previewVideoTitle.textContent = this.getVideoNameFromUrl(currentVideo) || currentVideo;
+            
+            if (playbackState === 'playing') {
+                this.previewVideo.play().catch(() => {});
+            } else {
+                this.previewVideo.pause();
+            }
+        } else {
+            this.previewVideo.src = '';
+            this.previewOverlay.classList.remove('hidden');
+            this.previewVideoTitle.textContent = '—';
         }
     }
 
-    renderPresetVideos() {
-        this.presetList.innerHTML = this.presetVideos.map((video, index) => `
-            <div class="preset-item" data-index="${index}" data-url="${this.escapeHtml(video.url)}">
-                <div class="preset-name">${this.escapeHtml(video.name)}</div>
-                <div class="preset-description">${this.escapeHtml(video.description)}</div>
+    closePreviewPanel() {
+        this.previewPanel.classList.remove('open');
+        this.previewVideo.pause();
+        this.previewVideo.src = '';
+        this.selectedDeviceId = null;
+
+        document.querySelectorAll('.device-card').forEach(card => {
+            card.classList.remove('selected');
+        });
+    }
+
+    // =====================================
+    // MEDIA LIBRARY
+    // =====================================
+
+    renderMediaLibrary() {
+        this.mediaList.innerHTML = this.presetVideos.map((video, index) => `
+            <div class="media-item" data-index="${index}" data-url="${this.escapeHtml(video.url)}">
+                <div class="media-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="5,3 19,12 5,21" fill="currentColor"/>
+                    </svg>
+                </div>
+                <div class="media-info">
+                    <div class="media-name">${this.escapeHtml(video.name)}</div>
+                    <div class="media-desc">${this.escapeHtml(video.description)}</div>
+                </div>
             </div>
         `).join('');
 
         // Bind click events
-        this.presetList.querySelectorAll('.preset-item').forEach(item => {
+        this.mediaList.querySelectorAll('.media-item').forEach(item => {
             item.addEventListener('click', () => {
                 // Deselect all
-                this.presetList.querySelectorAll('.preset-item').forEach(i => {
+                this.mediaList.querySelectorAll('.media-item').forEach(i => {
                     i.classList.remove('selected');
                 });
 
                 // Select this one
                 item.classList.add('selected');
 
-                // Update video URL
+                // Update selected video URL
                 this.selectedVideoUrl = item.dataset.url;
-                this.videoUrlInput.value = this.selectedVideoUrl;
-                this.updateControlsState();
+                this.updateGlobalControls();
 
                 const video = this.presetVideos[item.dataset.index];
                 this.log(`Selected: ${video.name}`, 'info');
@@ -403,7 +680,47 @@ class VisionProController {
         });
     }
 
-    // Logging
+    addCustomVideo() {
+        const url = this.customVideoUrl.value.trim();
+        if (!url) return;
+
+        // Add to preset videos
+        const name = this.getVideoNameFromUrl(url) || 'Custom Video';
+        this.presetVideos.push({
+            name: name,
+            description: 'Custom URL',
+            url: url
+        });
+
+        this.renderMediaLibrary();
+        this.customVideoUrl.value = '';
+        this.log(`Added custom video: ${name}`, 'success');
+
+        // Select it
+        this.selectedVideoUrl = url;
+        this.updateGlobalControls();
+
+        // Update device selectors
+        this.renderDevicesGrid();
+    }
+
+    getVideoNameFromUrl(url) {
+        try {
+            const pathname = new URL(url).pathname;
+            const filename = pathname.split('/').pop();
+            return filename.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
+        } catch {
+            return null;
+        }
+    }
+
+    // =====================================
+    // LOG PANEL
+    // =====================================
+
+    toggleLogPanel() {
+        this.logPanel.classList.toggle('collapsed');
+    }
 
     log(message, type = 'info') {
         const time = new Date().toLocaleTimeString();
@@ -414,21 +731,28 @@ class VisionProController {
             <span class="log-message">${this.escapeHtml(message)}</span>
         `;
 
-        this.logContainer.appendChild(entry);
-        this.logContainer.scrollTop = this.logContainer.scrollHeight;
+        this.logEntries.appendChild(entry);
+        this.logEntries.scrollTop = this.logEntries.scrollHeight;
+
+        // Update badge
+        this.logCount++;
+        this.logBadge.textContent = this.logCount > 99 ? '99+' : this.logCount;
 
         // Keep log size manageable
-        while (this.logContainer.children.length > 100) {
-            this.logContainer.removeChild(this.logContainer.firstChild);
+        while (this.logEntries.children.length > 100) {
+            this.logEntries.removeChild(this.logEntries.firstChild);
         }
     }
 
     clearLog() {
-        this.logContainer.innerHTML = '';
+        this.logEntries.innerHTML = '';
+        this.logCount = 0;
+        this.logBadge.textContent = '0';
         this.log('Log cleared', 'info');
     }
 
     escapeHtml(text) {
+        if (!text) return '';
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;

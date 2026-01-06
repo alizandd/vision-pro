@@ -2,337 +2,246 @@
 
 **Last Updated**: 2026-01-06
 **Repository**: vision-pro
-**Status**: New/Empty Repository
+**Status**: Active Development
 
 ---
 
 ## Overview
 
-This repository is currently empty and appears to be a new project. This document serves as a guide for AI assistants (like Claude) working on this codebase. It will be updated as the project evolves.
+Vision Pro Remote Controller - A complete system for controlling immersive video playback on Apple Vision Pro devices via a web interface. The system consists of three components that communicate over WebSocket.
 
 ### Repository Information
 - **Repository Name**: vision-pro
 - **Remote URL**: http://local_proxy@127.0.0.1:30432/git/alizandd/vision-pro
-- **Current Branch**: claude/claude-md-mk27b8klqx5sqaip-INL2T
-- **Repository Status**: Empty (no commits, no source files)
+- **Current Branch**: claude/vision-pro-web-controller-scFsv
 
 ---
 
 ## Project Structure
 
-_This section will be updated as the project structure is established._
-
 ```
 vision-pro/
-├── .git/                 # Git repository metadata
-└── CLAUDE.md            # This file - AI assistant guide
-```
-
-### Expected Structure (To Be Confirmed)
-
-Based on the repository name "vision-pro", this project may involve:
-- Vision processing/computer vision
-- Apple Vision Pro development
-- Virtual/Augmented Reality applications
-- 3D graphics or spatial computing
-
-The project structure will likely include:
-```
-vision-pro/
-├── src/                 # Source code
-├── tests/               # Test files
-├── docs/                # Documentation
-├── config/              # Configuration files
-├── package.json         # Dependencies (if Node.js/TypeScript)
-├── requirements.txt     # Dependencies (if Python)
-└── README.md           # Project documentation
+├── VisionProPlayer/                    # visionOS app (Swift/SwiftUI/RealityKit)
+│   └── VisionProPlayer/
+│       ├── VisionProPlayerApp.swift    # App entry point
+│       ├── ContentView.swift           # Main UI view
+│       ├── ImmersiveView.swift         # Full immersive video playback
+│       ├── SettingsView.swift          # Configuration UI
+│       ├── Managers/
+│       │   ├── AppState.swift          # Central state management
+│       │   ├── WebSocketManager.swift  # WebSocket connection handling
+│       │   └── VideoPlayerManager.swift # Video playback control
+│       ├── Models/
+│       │   └── Models.swift            # Data models and protocols
+│       └── Assets.xcassets/            # App assets
+│
+├── server/                             # WebSocket relay server (Node.js)
+│   ├── server.js                       # Main server implementation
+│   ├── config.js                       # Server configuration
+│   └── package.json                    # Node.js dependencies
+│
+├── web-controller/                     # Web-based controller UI
+│   ├── index.html                      # Main HTML page
+│   ├── styles.css                      # Styling
+│   └── controller.js                   # Controller logic
+│
+├── README.md                           # Project documentation
+└── CLAUDE.md                           # This file
 ```
 
 ---
 
 ## Technology Stack
 
-_To be determined. Watch for:_
-- Programming language(s)
-- Frameworks and libraries
-- Build tools
-- Testing frameworks
-- Development dependencies
+### Vision Pro App
+- **Language**: Swift 5
+- **Frameworks**: SwiftUI, RealityKit, AVFoundation
+- **Platform**: visionOS 1.0+
+- **IDE**: Xcode 15+
+
+### WebSocket Server
+- **Runtime**: Node.js 18+
+- **Dependencies**: ws (WebSocket library)
+- **Port**: 8080 (configurable)
+
+### Web Controller
+- **Technologies**: HTML5, CSS3, JavaScript (ES6+)
+- **No build step required** - runs directly in browser
 
 ---
 
 ## Development Workflow
 
-### Branch Strategy
+### Running the System
 
-**Important**: This repository uses a specific branch naming convention:
+1. **Start the WebSocket Server**:
+```bash
+cd server
+npm install
+npm start
+```
+
+2. **Open the Web Controller**:
+```bash
+# Option 1: Open directly
+open web-controller/index.html
+
+# Option 2: Serve with a local server
+cd web-controller && npx serve .
+```
+
+3. **Deploy the Vision Pro App**:
+- Open `VisionProPlayer/VisionProPlayer.xcodeproj` in Xcode
+- Configure signing & capabilities
+- Build and deploy to Vision Pro device
+
+### Branch Strategy
 - Feature branches must start with `claude/`
-- Current working branch: `claude/claude-md-mk27b8klqx5sqaip-INL2T`
-- All development work should be committed to the designated Claude branch
+- Current working branch: `claude/vision-pro-web-controller-scFsv`
 - Push to remote using: `git push -u origin <branch-name>`
 
-### Git Operations
-
-**Pushing Changes:**
-```bash
-git push -u origin claude/claude-md-mk27b8klqx5sqaip-INL2T
-```
-
-**Critical Requirements:**
-- Branch names MUST start with 'claude/' and match the session ID
-- Pushing to wrong branch will fail with 403 error
-- If push fails due to network errors, retry up to 4 times with exponential backoff (2s, 4s, 8s, 16s)
-
-**Fetching/Pulling:**
-```bash
-git fetch origin <branch-name>
-git pull origin <branch-name>
-```
-
 ### Commit Message Convention
-
-_To be established. Common patterns:_
 - Use imperative mood ("Add feature" not "Added feature")
 - First line: brief summary (50 chars or less)
-- Blank line, then detailed description if needed
-- Reference issue numbers when applicable
+- Reference specific components: `[server]`, `[app]`, `[web]`
 
-Example:
+---
+
+## WebSocket Protocol
+
+### Message Types
+
+**Registration (Device → Server)**:
+```json
+{
+  "type": "register",
+  "deviceId": "uuid",
+  "deviceName": "My Vision Pro",
+  "deviceType": "visionpro|controller"
+}
 ```
-Add initial project structure
 
-- Set up directory layout
-- Configure build tools
-- Add basic documentation
+**Commands (Controller → Device)**:
+```json
+{
+  "type": "command",
+  "action": "play|pause|resume|change|stop",
+  "videoUrl": "https://example.com/video.mp4",
+  "targetDevices": ["device-id", "all"]
+}
+```
+
+**Status Updates (Device → Controller)**:
+```json
+{
+  "type": "status",
+  "deviceId": "uuid",
+  "deviceName": "My Vision Pro",
+  "state": "idle|playing|paused|stopped",
+  "currentVideo": "url",
+  "immersiveMode": true
+}
 ```
 
 ---
 
 ## Code Conventions
 
-_This section will be populated as coding standards are established._
+### Swift (Vision Pro App)
+- Use `@MainActor` for UI-related classes
+- Use `@Published` for observable state
+- Follow Apple's Swift API Design Guidelines
+- Use `async/await` for asynchronous operations
 
-### General Principles
-- Write clean, readable, and maintainable code
-- Follow the Single Responsibility Principle
-- Keep functions small and focused
-- Use meaningful variable and function names
-- Comment complex logic, but prefer self-documenting code
+### JavaScript (Web Controller)
+- ES6+ class-based structure
+- Camel case for variables and functions
+- Escape all user input before DOM insertion
+- Use WebSocket with automatic reconnection
 
-### Naming Conventions
-_To be defined based on primary language_
-
-### Code Style
-_To be defined. May include:_
-- Indentation (spaces vs tabs)
-- Line length limits
-- Import/require ordering
-- File organization
+### Node.js (Server)
+- CommonJS modules (`require`)
+- Error handling with try/catch
+- Graceful shutdown handling
 
 ---
 
-## Testing Strategy
+## Key Components
 
-_To be established. May include:_
+### VisionProPlayerApp.swift
+- Main app entry point
+- Manages scene lifecycle
+- Handles immersive space opening/closing
+- Routes commands from WebSocket to video player
 
-### Test Types
-- Unit tests
-- Integration tests
-- End-to-end tests
-- Performance tests
+### WebSocketManager.swift
+- Handles WebSocket connection with exponential backoff reconnection
+- Parses incoming JSON commands
+- Sends status updates to server
+- Supports configurable server URL
 
-### Running Tests
-```bash
-# Commands to be added when test framework is set up
-```
+### VideoPlayerManager.swift
+- AVPlayer-based video playback
+- Creates VideoMaterial for RealityKit
+- Manages playback state (play, pause, resume, stop)
+- Reports state changes via callback
 
-### Coverage Requirements
-_Define minimum code coverage expectations_
-
----
-
-## Build and Deployment
-
-### Local Development Setup
-```bash
-# Setup commands to be added
-# Example:
-# npm install
-# pip install -r requirements.txt
-```
-
-### Building the Project
-```bash
-# Build commands to be added
-```
-
-### Running Locally
-```bash
-# Run commands to be added
-```
-
-### Deployment
-_Deployment process to be documented_
+### ImmersiveView.swift
+- RealityKit-based immersive experience
+- Renders video on a plane in 3D space
+- Positioned 3 meters in front of user
 
 ---
 
-## Dependencies Management
+## Configuration
 
-### Adding Dependencies
-_Guidelines for adding new dependencies:_
-- Evaluate necessity and alternatives
-- Check license compatibility
-- Consider bundle size impact
-- Review security advisories
-- Document why the dependency is needed
+### Server Configuration (server/config.js)
+- `PORT`: WebSocket server port (default: 8080)
+- `HOST`: Server host (default: 0.0.0.0)
 
-### Updating Dependencies
-- Regular security updates
-- Test thoroughly after updates
-- Check for breaking changes
+### Vision Pro App Settings
+- WebSocket Server URL (stored in UserDefaults)
+- Device Name (customizable)
+- Auto-connect on launch
 
 ---
 
-## File Organization
+## Troubleshooting
 
-### Source Code
-_Organize by feature, module, or layer depending on project type_
+### Vision Pro won't connect
+1. Verify Vision Pro and server are on same network
+2. Check server URL in app settings (e.g., `ws://192.168.1.100:8080`)
+3. Check firewall allows port 8080
 
-### Configuration Files
-- Keep configuration separate from code
-- Use environment variables for sensitive data
-- Document all configuration options
+### Video won't play
+1. Verify video URL is accessible
+2. Check video format (H.264, HEVC supported)
+3. CORS must allow access from Vision Pro
 
-### Documentation
-- Keep docs close to the code they document
-- Update docs when code changes
-- Include examples where helpful
+### WebSocket disconnects
+- App implements automatic reconnection with exponential backoff
+- Server implements heartbeat ping/pong
+- Check network stability
 
 ---
 
 ## AI Assistant Guidelines
 
-### Best Practices for Claude
+### Important Files to Know
+- `VisionProPlayer/VisionProPlayer/Managers/` - Core logic
+- `server/server.js` - WebSocket relay implementation
+- `web-controller/controller.js` - Controller logic
 
-1. **Always Read Before Writing**
-   - Never modify files without reading them first
-   - Understand existing patterns and conventions
-   - Look for similar existing implementations
-
-2. **Minimal Changes**
-   - Only make changes that are directly requested
-   - Avoid over-engineering or adding unrequested features
-   - Don't refactor unrelated code unless asked
-
-3. **Security First**
-   - Watch for common vulnerabilities (XSS, SQL injection, command injection)
-   - Validate input at system boundaries
-   - Don't expose sensitive information
-
-4. **Use Appropriate Tools**
-   - Use Read/Edit/Write for file operations (not bash cat/sed)
-   - Use Grep for code search
-   - Use Glob for file pattern matching
-   - Use Task tool for complex exploration
-
-5. **Communication**
-   - Provide clear explanations of changes
-   - Reference specific files and line numbers
-   - Ask for clarification when requirements are unclear
-
-6. **Testing**
-   - Run tests after making changes
-   - Add tests for new functionality
-   - Fix any breaking tests before completing tasks
+### When Making Changes
+1. Read existing implementation first
+2. Follow established patterns
+3. Test WebSocket communication end-to-end
+4. Verify immersive space behavior
 
 ### Common Tasks
-
-#### Adding a New Feature
-1. Understand the requirements
-2. Explore existing code for patterns
-3. Plan the implementation
-4. Write the code following existing conventions
-5. Add tests
-6. Update documentation
-7. Commit with clear message
-
-#### Fixing a Bug
-1. Reproduce the issue
-2. Identify root cause
-3. Fix the minimum necessary code
-4. Add test to prevent regression
-5. Verify fix works
-6. Commit
-
-#### Refactoring
-1. Ensure tests exist and pass
-2. Make incremental changes
-3. Run tests after each change
-4. Keep commits atomic
-5. Update documentation if needed
-
----
-
-## Project-Specific Knowledge
-
-_This section will contain domain-specific information about the project._
-
-### Architecture Decisions
-_Document key architectural choices and rationale_
-
-### Third-Party Integrations
-_List and document external services/APIs used_
-
-### Performance Considerations
-_Document performance requirements and optimization strategies_
-
-### Known Issues and Limitations
-_Track known issues and technical debt_
-
----
-
-## Resources and References
-
-### Documentation
-- _Links to external documentation_
-- _Links to API references_
-- _Links to tutorials or guides_
-
-### Tools
-- _Development tools used_
-- _Debugging tools_
-- _Monitoring and analytics_
-
-### Community
-- _Issue tracker_
-- _Discussion forums_
-- _Contributing guidelines_
-
----
-
-## Changelog
-
-### 2026-01-06
-- Initial CLAUDE.md created
-- Repository initialized but empty
-- Established branch naming conventions and git workflow
-
----
-
-## Notes for Future Updates
-
-When updating this document as the project develops:
-
-1. **Add actual project structure** once files are created
-2. **Document the technology stack** when dependencies are added
-3. **Define code conventions** based on language and framework chosen
-4. **Add build/test commands** when build system is set up
-5. **Document APIs and key modules** as they are developed
-6. **Update examples** with real code from the project
-7. **Add troubleshooting section** for common issues
-8. **Include performance benchmarks** if relevant
-9. **Document environment setup** with actual requirements
-10. **Add links to related resources** as they become available
+- **Add new command**: Update Models.swift, WebSocketManager, VideoPlayerManager, and server.js
+- **Change UI**: Modify ContentView.swift or SettingsView.swift
+- **Modify video playback**: Update VideoPlayerManager.swift and ImmersiveView.swift
 
 ---
 
@@ -340,26 +249,37 @@ When updating this document as the project develops:
 
 ### Essential Commands
 ```bash
+# Start server
+cd server && npm start
+
+# Serve web controller
+cd web-controller && npx serve .
+
 # Git operations
 git status
 git add .
 git commit -m "Message"
-git push -u origin claude/claude-md-mk27b8klqx5sqaip-INL2T
-
-# To be added:
-# - Build commands
-# - Test commands
-# - Run commands
+git push -u origin claude/vision-pro-web-controller-scFsv
 ```
 
-### Important Files
-- `CLAUDE.md` - This file, AI assistant guide
-- _Other important files to be listed as project develops_
-
-### Contact
-- Repository Owner: alizandd
-- _Add other contact information as needed_
+### Server Health Check
+```bash
+curl http://localhost:8080/health
+curl http://localhost:8080/devices
+```
 
 ---
 
-**Remember**: This is a living document. Update it as the project evolves to keep it useful and accurate.
+## Changelog
+
+### 2026-01-06
+- Initial project implementation
+- Created Vision Pro app with WebSocket client
+- Created Node.js WebSocket relay server
+- Created web-based controller UI
+- Implemented full immersive video playback
+- Added reconnection logic with exponential backoff
+
+---
+
+**Remember**: This is a living document. Update it as the project evolves.

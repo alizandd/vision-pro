@@ -1291,9 +1291,53 @@ body {
 }
 
 /* ============================================
+   MOBILE MENU TOGGLE
+   ============================================ */
+
+.mobile-menu-toggle {
+    display: none;
+    width: 44px;
+    height: 44px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.mobile-menu-toggle:hover {
+    background: var(--bg-hover);
+    border-color: var(--accent-primary);
+}
+
+.mobile-menu-toggle svg {
+    width: 24px;
+    height: 24px;
+}
+
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 199;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.sidebar-overlay.visible {
+    opacity: 1;
+}
+
+/* ============================================
    RESPONSIVE DESIGN
    ============================================ */
 
+/* Large Tablet (1200px and below) */
 @media (max-width: 1200px) {
     .device-card-body {
         grid-template-columns: 1fr;
@@ -1304,19 +1348,81 @@ body {
     }
     
     .preview-thumbnail {
-        max-width: 300px;
+        max-width: 100%;
+    }
+    
+    .preview-content {
+        flex-direction: column;
+        gap: 16px;
+    }
+    
+    .preview-controls {
+        flex-direction: row;
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .preview-video-info {
+        text-align: center;
     }
 }
 
+/* Tablet (900px and below) */
 @media (max-width: 900px) {
     :root {
         --sidebar-width: 280px;
     }
+    
+    .main-header {
+        padding: 16px 20px;
+    }
+    
+    .devices-grid {
+        padding: 16px 20px;
+    }
+    
+    .device-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    
+    .device-status {
+        width: 100%;
+        justify-content: flex-start;
+    }
+    
+    .log-header {
+        padding: 12px 20px;
+    }
+    
+    .log-content {
+        padding: 0 20px 16px;
+        flex-direction: column;
+    }
+    
+    .preview-panel.open {
+        height: 50vh;
+    }
 }
 
+/* Mobile/Small Tablet (768px and below) */
 @media (max-width: 768px) {
     .app-container {
         grid-template-columns: 1fr;
+    }
+    
+    .mobile-menu-toggle {
+        display: flex;
+    }
+    
+    .sidebar-overlay {
+        display: block;
+        pointer-events: none;
+    }
+    
+    .sidebar-overlay.visible {
+        pointer-events: auto;
     }
     
     .sidebar {
@@ -1324,9 +1430,11 @@ body {
         left: -100%;
         top: 0;
         bottom: 0;
-        width: 300px;
+        width: 85%;
+        max-width: 320px;
         z-index: 200;
         transition: left 0.3s ease;
+        box-shadow: var(--shadow-lg);
     }
     
     .sidebar.open {
@@ -1337,11 +1445,176 @@ body {
         grid-column: 1;
     }
     
+    .main-header {
+        padding: 12px 16px;
+    }
+    
+    .header-title h1 {
+        font-size: 18px;
+    }
+    
+    .device-count {
+        font-size: 11px;
+        padding: 3px 8px;
+    }
+    
+    .btn-scan {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+    
+    .btn-scan span {
+        display: none;
+    }
+    
+    .devices-grid {
+        padding: 12px 16px;
+        gap: 12px;
+    }
+    
+    .device-card-header {
+        padding: 12px 16px;
+    }
+    
+    .device-identity {
+        gap: 10px;
+    }
+    
+    .device-icon {
+        width: 36px;
+        height: 36px;
+    }
+    
+    .device-icon svg {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .device-meta h3 {
+        font-size: 14px;
+    }
+    
+    .device-media-section {
+        padding: 12px 16px;
+    }
+    
+    .media-selector-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+    }
+    
+    .device-controls {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+    
+    .btn-device-control {
+        padding: 10px 8px;
+        font-size: 11px;
+    }
+    
     .preview-panel {
         width: 100%;
+        left: 0;
+    }
+    
+    .preview-panel.open {
+        height: 60vh;
+    }
+    
+    .preview-header {
+        padding: 12px 16px;
+    }
+    
+    .preview-device-name {
+        font-size: 14px;
+    }
+    
+    .preview-content {
+        padding: 12px 16px;
+    }
+    
+    .preview-controls {
+        gap: 8px;
+    }
+    
+    .btn-preview-control {
+        padding: 10px;
     }
     
     .log-panel {
         grid-column: 1;
+    }
+    
+    .log-header {
+        padding: 10px 16px;
+    }
+    
+    .log-content {
+        padding: 0 16px 12px;
+    }
+    
+    .log-entries {
+        max-height: 80px;
+        padding: 8px;
+        font-size: 10px;
+    }
+}
+
+/* Small Mobile (480px and below) */
+@media (max-width: 480px) {
+    .main-header {
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    
+    .header-title {
+        flex: 1;
+    }
+    
+    .header-actions {
+        display: flex;
+        gap: 8px;
+    }
+    
+    .device-card-body {
+        gap: 0;
+    }
+    
+    .device-preview-section {
+        padding: 12px 16px;
+    }
+    
+    .preview-thumbnail {
+        aspect-ratio: 16 / 10;
+    }
+    
+    .device-controls {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .btn-device-control span {
+        display: none;
+    }
+    
+    .btn-device-control {
+        padding: 12px;
+        justify-content: center;
+    }
+    
+    .preview-panel.open {
+        height: 70vh;
+    }
+    
+    .status-badge {
+        padding: 4px 8px;
+        font-size: 10px;
+    }
+    
+    .immersive-badge {
+        padding: 3px 6px;
+        font-size: 9px;
     }
 }

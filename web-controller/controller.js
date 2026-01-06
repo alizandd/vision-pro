@@ -3,6 +3,8 @@
  *
  * Controls Vision Pro devices via WebSocket connection to the relay server.
  * Features: Per-device video preview, individual device controls, media library.
+ * Responsive design for tablet and mobile views.
+ * Video sync between Vision Pro and web app.
  */
 
 class VisionProController {
@@ -17,6 +19,10 @@ class VisionProController {
         this.maxReconnectAttempts = 5;
         this.reconnectDelay = 1000;
         this.logCount = 0;
+        this.sidebarOpen = false;
+
+        // Device video players for sync
+        this.deviceVideoPreviews = new Map();
 
         // Sample videos for testing
         this.presetVideos = [
@@ -71,6 +77,11 @@ class VisionProController {
         this.connectBtn = document.getElementById('connectBtn');
         this.connectionStatus = document.getElementById('connectionStatus');
 
+        // Mobile Menu
+        this.sidebar = document.getElementById('sidebar');
+        this.sidebarOverlay = document.getElementById('sidebarOverlay');
+        this.mobileMenuBtn = document.getElementById('mobileMenuBtn');
+
         // Devices
         this.devicesGrid = document.getElementById('devicesGrid');
         this.emptyState = document.getElementById('emptyState');
@@ -113,6 +124,14 @@ class VisionProController {
             if (e.key === 'Enter') this.toggleConnection();
         });
 
+        // Mobile Menu
+        if (this.mobileMenuBtn) {
+            this.mobileMenuBtn.addEventListener('click', () => this.toggleSidebar());
+        }
+        if (this.sidebarOverlay) {
+            this.sidebarOverlay.addEventListener('click', () => this.closeSidebar());
+        }
+
         // Global Controls
         this.playAllBtn.addEventListener('click', () => this.sendCommandToAll('play'));
         this.stopAllBtn.addEventListener('click', () => this.sendCommandToAll('stop'));
@@ -133,6 +152,46 @@ class VisionProController {
         // Log Panel
         this.logToggle.addEventListener('click', () => this.toggleLogPanel());
         this.clearLogBtn.addEventListener('click', () => this.clearLog());
+
+        // Handle window resize for responsive behavior
+        window.addEventListener('resize', () => this.handleResize());
+    }
+
+    // =====================================
+    // MOBILE SIDEBAR
+    // =====================================
+
+    toggleSidebar() {
+        this.sidebarOpen = !this.sidebarOpen;
+        this.updateSidebarState();
+    }
+
+    openSidebar() {
+        this.sidebarOpen = true;
+        this.updateSidebarState();
+    }
+
+    closeSidebar() {
+        this.sidebarOpen = false;
+        this.updateSidebarState();
+    }
+
+    updateSidebarState() {
+        if (this.sidebar) {
+            this.sidebar.classList.toggle('open', this.sidebarOpen);
+        }
+        if (this.sidebarOverlay) {
+            this.sidebarOverlay.classList.toggle('visible', this.sidebarOpen);
+        }
+        // Prevent body scroll when sidebar is open on mobile
+        document.body.style.overflow = this.sidebarOpen ? 'hidden' : '';
+    }
+
+    handleResize() {
+        // Close sidebar on larger screens
+        if (window.innerWidth > 768 && this.sidebarOpen) {
+            this.closeSidebar();
+        }
     }
 
     generateId() {
@@ -267,11 +326,19 @@ class VisionProController {
                 break;
 
             case 'deviceStatus':
+                const prevDevice = this.devices.get(message.deviceId);
+                const prevState = prevDevice?.state?.playbackState;
+                const newState = message.state.playbackState;
+                
                 this.devices.set(message.deviceId, {
                     deviceId: message.deviceId,
                     deviceName: message.deviceName,
                     state: message.state
                 });
+                
+                // Sync video preview with device state
+                this.syncVideoPreview(message.deviceId, message.state, prevState);
+                
                 this.renderDevicesGrid();
                 this.updatePreviewPanel();
                 this.log(`${message.deviceName}: ${message.state.playbackState}`, 'info');
@@ -613,10 +680,14 @@ class VisionProController {
         this.previewStatus.textContent = playbackState.toUpperCase();
 
         if (currentVideo && (playbackState === 'playing' || playbackState === 'paused')) {
-            this.previewVideo.src = currentVideo;
+            // Only change src if different to avoid reload
+            if (this.previewVideo.src !== currentVideo) {
+                this.previewVideo.src = currentVideo;
+            }
             this.previewOverlay.classList.add('hidden');
             this.previewVideoTitle.textContent = this.getVideoNameFromUrl(currentVideo) || currentVideo;
             
+            // Sync playback state
             if (playbackState === 'playing') {
                 this.previewVideo.play().catch(() => {});
             } else {
@@ -626,6 +697,66 @@ class VisionProController {
             this.previewVideo.src = '';
             this.previewOverlay.classList.remove('hidden');
             this.previewVideoTitle.textContent = '—';
+        }
+    }
+
+    // =====================================
+    // VIDEO SYNC
+    // =====================================
+
+    /**
+     * Sync video preview with Vision Pro device state
+     * When device plays/pauses, the web preview syncs automatically
+     */
+    syncVideoPreview(deviceId, state, prevState) {
+        const currentVideo = state.currentVideo;
+        const playbackState = state.playbackState;
+        
+        // Find the video element in the device card
+        const card = document.querySelector(`.device-card[data-device-id="${deviceId}"]`);
+        if (!card) return;
+        
+        const videoEl = card.querySelector('.preview-thumbnail video');
+        
+        // Handle video sync based on state change
+        if (playbackState === 'playing' && currentVideo) {
+            // Video started playing on Vision Pro - sync to web
+            if (videoEl) {
+                if (videoEl.src !== currentVideo) {
+                    videoEl.src = currentVideo;
+                }
+                videoEl.play().catch(() => {});
+            }
+            
+            // If this device is selected, also sync the main preview
+            if (this.selectedDeviceId === deviceId && this.previewPanel.classList.contains('open')) {
+                if (this.previewVideo.src !== currentVideo) {
+                    this.previewVideo.src = currentVideo;
+                }
+                this.previewVideo.play().catch(() => {});
+            }
+            
+        } else if (playbackState === 'paused') {
+            // Video paused on Vision Pro - pause web preview
+            if (videoEl) {
+                videoEl.pause();
+            }
+            
+            if (this.selectedDeviceId === deviceId) {
+                this.previewVideo.pause();
+            }
+            
+        } else if (playbackState === 'stopped' || playbackState === 'idle') {
+            // Video stopped on Vision Pro - stop web preview
+            if (videoEl) {
+                videoEl.pause();
+                videoEl.currentTime = 0;
+            }
+            
+            if (this.selectedDeviceId === deviceId) {
+                this.previewVideo.pause();
+                this.previewVideo.currentTime = 0;
+            }
         }
     }
 

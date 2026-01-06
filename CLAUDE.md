@@ -64,9 +64,15 @@ vision-pro/
 - **Dependencies**: ws (WebSocket library)
 - **Port**: 8080 (configurable)
 
-### Web Controller
+### Web Controller (Orchestrator UI)
 - **Technologies**: HTML5, CSS3, JavaScript (ES6+)
+- **Fonts**: Outfit (UI), JetBrains Mono (code)
 - **No build step required** - runs directly in browser
+- **Features**:
+  - Per-device video preview with LIVE badge
+  - Media library sidebar with preset videos
+  - Individual device controls
+  - Expandable full-size preview panel
 
 ---
 
@@ -240,8 +246,17 @@ cd web-controller && npx serve .
 
 ### Common Tasks
 - **Add new command**: Update Models.swift, WebSocketManager, VideoPlayerManager, and server.js
-- **Change UI**: Modify ContentView.swift or SettingsView.swift
+- **Change Vision Pro UI**: Modify ContentView.swift or SettingsView.swift
 - **Modify video playback**: Update VideoPlayerManager.swift and ImmersiveView.swift
+- **Update Web Controller UI**: Modify web-controller/styles.css and controller.js
+
+### Web Controller UI Structure
+The web controller uses a modern dark theme with:
+- **Sidebar**: Server connection, media library, quick actions
+- **Main Content**: Device grid with cards showing status and preview
+- **Device Card**: Name, status badges (PLAYING/PAUSED/IMMERSIVE), media selector, controls, video thumbnail
+- **Preview Panel**: Full-size video preview when device is selected
+- **Activity Log**: Collapsible log panel at the bottom
 
 ---
 
@@ -279,6 +294,14 @@ curl http://localhost:8080/devices
 - Created web-based controller UI
 - Implemented full immersive video playback
 - Added reconnection logic with exponential backoff
+- **[UI Redesign]** Modern Orchestrator-style web interface
+  - Per-device video preview with LIVE indicator
+  - Expandable full-size preview panel
+  - Media library sidebar with preset videos
+  - Individual device playback controls
+  - Status badges (Playing, Paused, Immersive)
+  - Custom video URL support
+  - Activity log panel
 
 ---
 

@@ -36,6 +36,11 @@ struct ContentView: View {
         }
         .padding(32)
         .frame(minWidth: 350, minHeight: 250)
+        // Hide the window when immersive mode is active
+        .opacity(appState.isImmersiveActive ? 0 : 1)
+        .scaleEffect(appState.isImmersiveActive ? 0.95 : 1.0)
+        .allowsHitTesting(!appState.isImmersiveActive)
+        .animation(.easeInOut(duration: 0.3), value: appState.isImmersiveActive)
     }
 }
 

@@ -229,9 +229,13 @@ class VideoPlayerManager: ObservableObject {
     }
 
     /// Cleans up resources
-    private func cleanup() {
-        stop()
-        try? AVAudioSession.sharedInstance().setActive(false)
+    nonisolated private func cleanup() {
+        // Schedule cleanup on MainActor
+        // Note: This may not complete before deallocation in deinit context
+        Task { @MainActor in
+            self.stop()
+            try? AVAudioSession.sharedInstance().setActive(false)
+        }
     }
 
     // MARK: - RealityKit Integration

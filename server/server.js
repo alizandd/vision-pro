@@ -137,14 +137,17 @@ function handleRegistration(ws, message, setClientInfo) {
             }
         });
 
-        console.log(`[Server] Vision Pro registered: ${deviceName} (${deviceId})`);
+        console.log(`[Server] ✅ Vision Pro registered: ${deviceName} (${deviceId})`);
+        console.log(`[Server] Total Vision Pro devices: ${devices.size}`);
 
         // Notify controllers about new device
-        broadcastToControllers({
+        const notification = {
             type: 'deviceConnected',
             deviceId,
             deviceName
-        });
+        };
+        console.log(`[Server] Broadcasting to ${controllers.size} controllers:`, JSON.stringify(notification));
+        broadcastToControllers(notification);
 
         // Send current device list to the new device
         ws.send(JSON.stringify({

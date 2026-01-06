@@ -1,5 +1,4 @@
 import SwiftUI
-import RealityKit
 
 /// Main entry point for the Vision Pro Player application.
 /// This app acts as a remote-controlled video player that receives commands
@@ -90,21 +89,19 @@ struct VisionProPlayerApp: App {
 
             // Open immersive space if not already open
             if !appState.isImmersiveActive {
-                do {
-                    let result = await openImmersiveSpace(id: "ImmersiveVideoSpace")
-                    switch result {
-                    case .opened:
-                        appState.isImmersiveActive = true
-                        print("[App] Immersive space opened")
-                    case .error(let error):
-                        print("[App] Failed to open immersive space: \(error)")
-                        return
-                    case .userCancelled:
-                        print("[App] User cancelled immersive space")
-                        return
-                    @unknown default:
-                        return
-                    }
+                let result = await openImmersiveSpace(id: "ImmersiveVideoSpace")
+                switch result {
+                case .opened:
+                    appState.isImmersiveActive = true
+                    print("[App] Immersive space opened")
+                case .error:
+                    print("[App] Failed to open immersive space")
+                    return
+                case .userCancelled:
+                    print("[App] User cancelled immersive space")
+                    return
+                @unknown default:
+                    return
                 }
             }
 

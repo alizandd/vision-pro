@@ -14,15 +14,15 @@ class WebSocketManager: ObservableObject {
     var onCommand: ((ServerCommand) -> Void)?
 
     /// WebSocket task
-    private var webSocketTask: URLSessionWebSocketTask?
+    nonisolated(unsafe) private var webSocketTask: URLSessionWebSocketTask?
     private var urlSession: URLSession?
 
     /// Reconnection settings
     private var reconnectAttempts: Int = 0
     private let maxReconnectAttempts: Int = 10
     private var isManuallyDisconnected: Bool = false
-    private var reconnectTask: Task<Void, Never>?
-    private var receiveTask: Task<Void, Never>?
+    nonisolated(unsafe) private var reconnectTask: Task<Void, Never>?
+    nonisolated(unsafe) private var receiveTask: Task<Void, Never>?
 
     /// Device info
     private let deviceId: String
@@ -94,16 +94,22 @@ class WebSocketManager: ObservableObject {
     }
 
     /// Disconnects from the WebSocket server
-    func disconnect() {
-        isManuallyDisconnected = true
+    nonisolated func disconnect() {
+        // Cancel tasks and close websocket (can be done from any context)
+        // These are marked nonisolated(unsafe) as cancellation is thread-safe
         reconnectTask?.cancel()
         receiveTask?.cancel()
         webSocketTask?.cancel(with: .normalClosure, reason: nil)
         webSocketTask = nil
-        connectionState = .disconnected
-        isConnected = false
-        reconnectAttempts = 0
-        print("[WebSocket] Disconnected")
+        
+        // Update state on MainActor
+        Task { @MainActor in
+            isManuallyDisconnected = true
+            connectionState = .disconnected
+            isConnected = false
+            reconnectAttempts = 0
+            print("[WebSocket] Disconnected")
+        }
     }
 
     /// Handles successful connection
@@ -230,17 +236,23 @@ class WebSocketManager: ObservableObject {
     /// Sends a message to the server
     func send(_ message: Encodable) {
         guard let webSocketTask = webSocketTask, isConnected else {
-            print("[WebSocket] Cannot send - not connected")
+            print("[WebSocket] Cannot send - not connected (isConnected: \(isConnected))")
             return
         }
 
         do {
             let data = try JSONEncoder().encode(message)
-            guard let text = String(data: data, encoding: .utf8) else { return }
+            guard let text = String(data: data, encoding: .utf8) else {
+                print("[WebSocket] Failed to convert data to string")
+                return
+            }
 
+            print("[WebSocket] Sending message: \(text)")
             webSocketTask.send(.string(text)) { error in
                 if let error = error {
                     print("[WebSocket] Send error: \(error)")
+                } else {
+                    print("[WebSocket] Message sent successfully")
                 }
             }
         } catch {
@@ -254,8 +266,9 @@ class WebSocketManager: ObservableObject {
             deviceId: deviceId,
             deviceName: deviceName
         )
+        print("[WebSocket] Registering device: \(deviceName) with ID: \(deviceId)")
         send(registration)
-        print("[WebSocket] Sent registration")
+        print("[WebSocket] Sent registration message")
     }
 
     /// Sends a status update to the server

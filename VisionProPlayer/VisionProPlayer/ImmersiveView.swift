@@ -30,16 +30,22 @@ struct ImmersiveView: View {
 
             content.add(rootEntity)
 
-            // Store reference for updates
-            self.videoEntity = screenHolder
+            // Store reference for updates - defer to avoid state modification during view update
+            Task { @MainActor in
+                self.videoEntity = screenHolder
+            }
 
         } update: { content in
             // Update video content when videoManager changes
-            updateVideoScreen()
+            Task { @MainActor in
+                updateVideoScreen()
+            }
         }
         .onChange(of: videoManager.playbackState) { _, newState in
             if newState == .playing {
-                updateVideoScreen()
+                Task { @MainActor in
+                    updateVideoScreen()
+                }
             }
         }
         .onAppear {
@@ -58,7 +64,6 @@ struct ImmersiveView: View {
         // Remove existing screen if any
         if let existingScreen = screenEntity {
             existingScreen.removeFromParent()
-            screenEntity = nil
         }
 
         // Create new screen with video material
@@ -76,26 +81,24 @@ struct ImmersiveView: View {
         // For a flat screen, we just use the plane as-is
 
         videoEntity.addChild(newScreen)
-        screenEntity = newScreen
+        
+        // Update state reference after adding to scene
+        Task { @MainActor in
+            self.screenEntity = newScreen
+        }
 
         print("[ImmersiveView] Video screen updated")
     }
 
     /// Creates ambient lighting for the scene
+    /// Note: Simplified for visionOS 1.0 compatibility
     private func createAmbientLight() -> Entity {
         let light = Entity()
-
-        // Add a point light for subtle illumination
-        var pointLight = PointLightComponent()
-        pointLight.intensity = 500
-        pointLight.color = .white
-        pointLight.attenuationRadius = 10
-
-        let pointLightEntity = Entity()
-        pointLightEntity.components.set(pointLight)
-        pointLightEntity.position = SIMD3<Float>(0, 3, 0)
-        light.addChild(pointLightEntity)
-
+        
+        // For visionOS 1.0 compatibility, we use the default lighting
+        // The video material provides its own illumination
+        // Additional lighting can be added in visionOS 2.0+ if needed
+        
         return light
     }
 }

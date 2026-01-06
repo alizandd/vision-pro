@@ -1,0 +1,28 @@
+# Node modules
+node_modules/
+package-lock.json
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Video files in server/videos/ (except README.md)
+server/videos/*
+!server/videos/README.md
+
+# Temporary files
+*.tmp
+.cache/
+

@@ -15,3 +15,5 @@
 [Server] Received message: {"type":"register","deviceId":"controller-av94k2vje","deviceName":"Web Orchestrator","deviceType":"controller"}
 [Server] Controller registered: Web Orchestrator
 [Server] Video list requested: 1 videos found
+[Server] Connection closed from 192.168.88.240
+[Server] Controller disconnected: Web Orchestrator

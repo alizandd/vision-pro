@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+*.xcworkspace
+xcuserdata/
+DerivedData/
+build/
+*.ipa
+
+# IDE
+.idea/
+*.swp
+*.swo
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+
+# Logs
+*.log
+npm-debug.log*

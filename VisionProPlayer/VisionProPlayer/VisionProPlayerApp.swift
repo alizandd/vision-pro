@@ -61,13 +61,14 @@ struct VisionProPlayerApp: App {
         }
 
         // Send status updates when video state changes
-        videoManager.onStateChange = { [weak webSocketManager, weak appState] state in
-            guard let webSocketManager = webSocketManager, let appState = appState else { return }
+        videoManager.onStateChange = { [weak webSocketManager, weak appState, weak videoManager] state in
+            guard let webSocketManager = webSocketManager, let appState = appState, let videoManager = videoManager else { return }
 
             webSocketManager.sendStatus(
                 state: state.rawValue,
                 currentVideo: appState.currentVideoURL,
-                immersiveMode: appState.isImmersiveActive
+                immersiveMode: appState.isImmersiveActive,
+                currentTime: videoManager.currentTime
             )
         }
     }

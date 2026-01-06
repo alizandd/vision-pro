@@ -251,10 +251,11 @@ function handleStatusUpdate(ws, message, clientInfo) {
             playbackState: message.state || 'unknown',
             currentVideo: message.currentVideo || null,
             immersiveMode: message.immersiveMode || false,
+            currentTime: message.currentTime || 0,
             lastUpdate: Date.now()
         };
 
-        console.log(`[Server] Status update from ${clientInfo.deviceName}: ${message.state}`);
+        console.log(`[Server] Status update from ${clientInfo.deviceName}: ${message.state} (time: ${message.currentTime})`);
 
         // Broadcast status to all controllers
         broadcastToControllers({

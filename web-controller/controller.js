@@ -706,10 +706,12 @@ class VisionProController {
     /**
      * Sync video preview with Vision Pro device state
      * When device plays/pauses, the web preview syncs automatically
+     * Also syncs the current playback time for accurate preview
      */
     syncVideoPreview(deviceId, state, prevState) {
         const currentVideo = state.currentVideo;
         const playbackState = state.playbackState;
+        const deviceTime = state.currentTime || 0;
         
         // Find the video element in the device card
         const card = document.querySelector(`.device-card[data-device-id="${deviceId}"]`);
@@ -723,26 +725,40 @@ class VisionProController {
             if (videoEl) {
                 if (videoEl.src !== currentVideo) {
                     videoEl.src = currentVideo;
+                    videoEl.addEventListener('loadedmetadata', () => {
+                        this.syncVideoTime(videoEl, deviceTime);
+                        videoEl.play().catch(() => {});
+                    }, { once: true });
+                } else {
+                    this.syncVideoTime(videoEl, deviceTime);
+                    videoEl.play().catch(() => {});
                 }
-                videoEl.play().catch(() => {});
             }
             
             // If this device is selected, also sync the main preview
             if (this.selectedDeviceId === deviceId && this.previewPanel.classList.contains('open')) {
                 if (this.previewVideo.src !== currentVideo) {
                     this.previewVideo.src = currentVideo;
+                    this.previewVideo.addEventListener('loadedmetadata', () => {
+                        this.syncVideoTime(this.previewVideo, deviceTime);
+                        this.previewVideo.play().catch(() => {});
+                    }, { once: true });
+                } else {
+                    this.syncVideoTime(this.previewVideo, deviceTime);
+                    this.previewVideo.play().catch(() => {});
                 }
-                this.previewVideo.play().catch(() => {});
             }
             
         } else if (playbackState === 'paused') {
-            // Video paused on Vision Pro - pause web preview
+            // Video paused on Vision Pro - pause web preview and sync time
             if (videoEl) {
                 videoEl.pause();
+                this.syncVideoTime(videoEl, deviceTime);
             }
             
             if (this.selectedDeviceId === deviceId) {
                 this.previewVideo.pause();
+                this.syncVideoTime(this.previewVideo, deviceTime);
             }
             
         } else if (playbackState === 'stopped' || playbackState === 'idle') {
@@ -756,6 +772,22 @@ class VisionProController {
                 this.previewVideo.pause();
                 this.previewVideo.currentTime = 0;
             }
+        }
+    }
+
+    /**
+     * Sync video element time with device time
+     * Only seeks if difference is more than 2 seconds to avoid constant seeking
+     */
+    syncVideoTime(videoEl, deviceTime) {
+        if (!videoEl || !deviceTime || isNaN(deviceTime)) return;
+        
+        const currentTime = videoEl.currentTime || 0;
+        const timeDiff = Math.abs(currentTime - deviceTime);
+        
+        // Only seek if difference is more than 2 seconds
+        if (timeDiff > 2) {
+            videoEl.currentTime = deviceTime;
         }
     }
 

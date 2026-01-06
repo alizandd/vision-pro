@@ -51,6 +51,7 @@ struct StatusMessage: Codable {
     let state: String
     let currentVideo: String?
     let immersiveMode: Bool
+    let currentTime: Double?
 }
 
 /// Welcome message received from server

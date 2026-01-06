@@ -11,9 +11,37 @@
 [Server] Available videos: 1
 [Server]   1. BigBuckBunny.mp4
 [Server] ========================================
+[Server] New connection from 127.0.0.1
+[Server] Received message: {"type":"register","deviceId":"49E510B7-B5BE-42AF-9E6A-F3DE37FA664D","deviceName":"Vision Pro","deviceType":"visionpro"}
+[Server] ✅ Vision Pro registered: Vision Pro (49E510B7-B5BE-42AF-9E6A-F3DE37FA664D)
+[Server] Total Vision Pro devices: 1
+[Server] Broadcasting to 0 controllers: {"type":"deviceConnected","deviceId":"49E510B7-B5BE-42AF-9E6A-F3DE37FA664D","deviceName":"Vision Pro"}
 [Server] New connection from 192.168.88.240
-[Server] Received message: {"type":"register","deviceId":"controller-av94k2vje","deviceName":"Web Orchestrator","deviceType":"controller"}
+[Server] Received message: {"type":"register","deviceId":"controller-nad6zxtv2","deviceName":"Web Orchestrator","deviceType":"controller"}
 [Server] Controller registered: Web Orchestrator
 [Server] Video list requested: 1 videos found
-[Server] Connection closed from 192.168.88.240
-[Server] Controller disconnected: Web Orchestrator
+[Server] Received message: {"type":"command","action":"play","targetDevices":["49E510B7-B5BE-42AF-9E6A-F3DE37FA664D"],"videoUrl":"http://192.168.88.250:8080/videos/BigBuckBunny.mp4"}
+[Server] Sent play command to Vision Pro
+[Server] Received message: {"immersiveMode":true,"type":"status","currentVideo":"http://192.168.88.250:8080/videos/BigBuckBunny.mp4","deviceId":"49E510B7-B5BE-42AF-9E6A-F3DE37FA664D","currentTime":0,"state":"stopped","deviceName":"Vision Pro"}
+[Server] Status update from Vision Pro: stopped (time: 0)
+[Server] Received message: {"immersiveMode":true,"type":"status","currentVideo":"http://192.168.88.250:8080/videos/BigBuckBunny.mp4","deviceId":"49E510B7-B5BE-42AF-9E6A-F3DE37FA664D","currentTime":0,"state":"loading","deviceName":"Vision Pro"}
+[Server] Status update from Vision Pro: loading (time: 0)
+[Server] Streaming video: BigBuckBunny.mp4 (0-1/158008374)
+[Server] Streaming video: BigBuckBunny.mp4 (0-158008373/158008374)
+[Server] Streaming video: BigBuckBunny.mp4 (65536-158008373/158008374)
+[Server] Streaming video: BigBuckBunny.mp4 (16030-65535/158008374)
+[Server] Streaming video: BigBuckBunny.mp4 (1130138-158008373/158008374)
+[Server] Received message: {"currentVideo":"http://192.168.88.250:8080/videos/BigBuckBunny.mp4","state":"playing","type":"status","deviceId":"49E510B7-B5BE-42AF-9E6A-F3DE37FA664D","immersiveMode":true,"currentTime":0,"deviceName":"Vision Pro"}
+[Server] Status update from Vision Pro: playing (time: 0)
+[Server] Streaming video: BigBuckBunny.mp4 (0-158008373/158008374)
+[Server] Streaming video: BigBuckBunny.mp4 (31981568-32047103/158008374)
+[Server] Streaming video: BigBuckBunny.mp4 (31784960-31981567/158008374)
+[Server] Streaming video: BigBuckBunny.mp4 (32374784-158008373/158008374)
+[Server] Streaming video: BigBuckBunny.mp4 (655360-851967/158008374)
+[Server] Streaming video: BigBuckBunny.mp4 (917504-1114111/158008374)
+[Server] Streaming video: BigBuckBunny.mp4 (31653888-31916031/158008374)
+[Server] Received message: {"type":"command","action":"stop","targetDevices":["49E510B7-B5BE-42AF-9E6A-F3DE37FA664D"]}
+[Server] Sent stop command to Vision Pro
+[Server] Received message: {"deviceId":"49E510B7-B5BE-42AF-9E6A-F3DE37FA664D","currentTime":0,"currentVideo":"http://192.168.88.250:8080/videos/BigBuckBunny.mp4","deviceName":"Vision Pro","state":"stopped","immersiveMode":true,"type":"status"}
+[Server] Status update from Vision Pro: stopped (time: 0)
+[Server] Streaming video: BigBuckBunny.mp4 (31522816-31653887/158008374)

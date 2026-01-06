@@ -23,6 +23,7 @@ class WebSocketManager: ObservableObject {
     private var isManuallyDisconnected: Bool = false
     nonisolated(unsafe) private var reconnectTask: Task<Void, Never>?
     nonisolated(unsafe) private var receiveTask: Task<Void, Never>?
+    nonisolated(unsafe) private var heartbeatTask: Task<Void, Never>?
 
     /// Device info
     private let deviceId: String
@@ -99,6 +100,7 @@ class WebSocketManager: ObservableObject {
         // These are marked nonisolated(unsafe) as cancellation is thread-safe
         reconnectTask?.cancel()
         receiveTask?.cancel()
+        heartbeatTask?.cancel()
         webSocketTask?.cancel(with: .normalClosure, reason: nil)
         webSocketTask = nil
         
@@ -121,6 +123,9 @@ class WebSocketManager: ObservableObject {
 
         // Register with server
         register()
+        
+        // Start heartbeat to keep connection alive
+        startHeartbeat()
     }
 
     /// Handles connection loss
@@ -129,6 +134,9 @@ class WebSocketManager: ObservableObject {
 
         connectionState = .disconnected
         isConnected = false
+        
+        // Stop heartbeat
+        heartbeatTask?.cancel()
 
         // Attempt reconnection
         scheduleReconnect()
@@ -283,13 +291,39 @@ class WebSocketManager: ObservableObject {
         send(status)
     }
 
+    /// Starts periodic heartbeat to keep connection alive
+    private func startHeartbeat() {
+        // Cancel any existing heartbeat
+        heartbeatTask?.cancel()
+        
+        heartbeatTask = Task {
+            while !Task.isCancelled {
+                // Send ping every 30 seconds
+                try? await Task.sleep(nanoseconds: 30_000_000_000)
+                
+                if !Task.isCancelled && isConnected {
+                    await sendPing()
+                }
+            }
+        }
+        print("[WebSocket] Heartbeat started")
+    }
+    
     /// Sends a ping to keep the connection alive
-    func sendPing() {
+    func sendPing() async {
         guard let webSocketTask = webSocketTask else { return }
 
-        webSocketTask.sendPing { error in
-            if let error = error {
-                print("[WebSocket] Ping error: \(error)")
+        await withCheckedContinuation { continuation in
+            webSocketTask.sendPing { error in
+                if let error = error {
+                    print("[WebSocket] Ping error: \(error)")
+                    Task { @MainActor in
+                        self.handleDisconnect()
+                    }
+                } else {
+                    print("[WebSocket] Ping sent successfully")
+                }
+                continuation.resume()
             }
         }
     }

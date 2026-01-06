@@ -27,6 +27,9 @@ struct VisionProPlayerApp: App {
         }
         .windowStyle(.plain)
         .defaultSize(width: 400, height: 300)
+        .onChange(of: scenePhase) { oldPhase, newPhase in
+            handleScenePhaseChange(from: oldPhase, to: newPhase)
+        }
 
         // Settings window for configuration
         WindowGroup(id: "settings") {
@@ -142,6 +145,38 @@ struct VisionProPlayerApp: App {
                 await dismissImmersiveSpace()
                 appState.isImmersiveActive = false
             }
+        }
+    }
+    
+    /// Handles scene phase changes (app lifecycle events)
+    /// This ensures WebSocket stays connected when headset is passed between users
+    private func handleScenePhaseChange(from oldPhase: ScenePhase, to newPhase: ScenePhase) {
+        print("[App] Scene phase changed: \(oldPhase) -> \(newPhase)")
+        
+        switch newPhase {
+        case .active:
+            // App became active (user put on headset or returned to app)
+            print("[App] App became active - checking WebSocket connection")
+            
+            // If not connected, reconnect
+            if !webSocketManager.isConnected {
+                print("[App] WebSocket disconnected, reconnecting...")
+                webSocketManager.connect()
+            }
+            
+        case .inactive:
+            // App became inactive (transitioning state)
+            print("[App] App became inactive")
+            // Keep connection alive during brief inactive states
+            
+        case .background:
+            // App went to background (headset removed or app minimized)
+            print("[App] App went to background")
+            // Keep connection alive - will auto-reconnect when active
+            // Note: WebSocket has built-in reconnection logic
+            
+        @unknown default:
+            break
         }
     }
 }

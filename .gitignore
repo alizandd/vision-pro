@@ -26,6 +26,11 @@ server/videos/*
 *.tmp
 .cache/
 
+# Large archive files
+Archive.zip
+*.zip
+!*.ipa.zip
+
 
 
 

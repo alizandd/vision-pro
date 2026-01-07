@@ -13,6 +13,7 @@ class VisionProController {
         this.connected = false;
         this.devices = new Map();
         this.selectedVideoUrl = '';
+        this.selectedVideoFormat = 'mono2d';
         this.selectedDeviceId = null;
         this.controllerId = this.generateId();
         this.reconnectAttempts = 0;
@@ -28,8 +29,20 @@ class VisionProController {
         // Video library (loaded from server)
         this.presetVideos = [];
 
-        // Device-specific selected media
+        // Device-specific selected media and format
         this.deviceMediaSelections = new Map();
+        this.deviceFormatSelections = new Map();
+        
+        // Video format options
+        this.videoFormats = [
+            { value: 'mono2d', label: '2D Flat' },
+            { value: 'sbs3d', label: '3D Side-by-Side' },
+            { value: 'ou3d', label: '3D Over-Under' },
+            { value: 'hemisphere180', label: '180° VR' },
+            { value: 'hemisphere180sbs', label: '180° VR 3D' },
+            { value: 'sphere360', label: '360° VR' },
+            { value: 'sphere360ou', label: '360° VR 3D' }
+        ];
 
         this.init();
     }
@@ -467,7 +480,7 @@ class VisionProController {
     // COMMANDS
     // =====================================
 
-    sendCommand(action, deviceId, videoUrl = null) {
+    sendCommand(action, deviceId, videoUrl = null, videoFormat = null) {
         if (!this.connected || !this.ws) {
             this.log('Not connected to server', 'error');
             return;
@@ -481,10 +494,13 @@ class VisionProController {
 
         if ((action === 'play' || action === 'change') && videoUrl) {
             command.videoUrl = videoUrl;
+            // Include video format - use device-specific format or default
+            command.videoFormat = videoFormat || this.deviceFormatSelections.get(deviceId) || 'mono2d';
         }
 
         this.ws.send(JSON.stringify(command));
-        this.log(`Sending '${action}' to device...`, 'info');
+        const formatLabel = this.videoFormats.find(f => f.value === command.videoFormat)?.label || command.videoFormat;
+        this.log(`Sending '${action}' to device... (${formatLabel})`, 'info');
     }
 
     sendCommandToAll(action) {
@@ -501,6 +517,7 @@ class VisionProController {
 
         if ((action === 'play' || action === 'change') && this.selectedVideoUrl) {
             command.videoUrl = this.selectedVideoUrl;
+            command.videoFormat = this.selectedVideoFormat || 'mono2d';
         }
 
         this.ws.send(JSON.stringify(command));
@@ -638,6 +655,14 @@ class VisionProController {
                             `).join('')}
                         </select>
                     </div>
+                    <div class="format-selector-row">
+                        <label>Video format:</label>
+                        <select class="format-select" data-device-id="${deviceId}">
+                            ${this.videoFormats.map(f => `
+                                <option value="${f.value}" ${(this.deviceFormatSelections.get(deviceId) || 'hemisphere180sbs') === f.value ? 'selected' : ''}>${f.label}</option>
+                            `).join('')}
+                        </select>
+                    </div>
                     <div class="current-video-display">
                         ${currentVideo ? `
                             <div class="video-icon">
@@ -724,6 +749,16 @@ class VisionProController {
             this.deviceMediaSelections.set(deviceId, e.target.value);
             this.log(`Media selected for device: ${e.target.value.split('/').pop()}`, 'info');
         });
+        
+        // Format selector
+        const formatSelect = card.querySelector('.format-select');
+        if (formatSelect) {
+            formatSelect.addEventListener('change', (e) => {
+                this.deviceFormatSelections.set(deviceId, e.target.value);
+                const formatLabel = this.videoFormats.find(f => f.value === e.target.value)?.label || e.target.value;
+                this.log(`Format selected: ${formatLabel}`, 'info');
+            });
+        }
 
         // Control buttons
         const controlBtns = card.querySelectorAll('.btn-device-control');
@@ -732,13 +767,14 @@ class VisionProController {
                 const action = btn.dataset.action;
                 const targetDeviceId = btn.dataset.deviceId;
                 const videoUrl = this.deviceMediaSelections.get(targetDeviceId);
+                const videoFormat = this.deviceFormatSelections.get(targetDeviceId);
                 
                 if (action === 'play' && !videoUrl) {
                     this.log('Please select a video first', 'warning');
                     return;
                 }
                 
-                this.sendCommand(action, targetDeviceId, videoUrl);
+                this.sendCommand(action, targetDeviceId, videoUrl, videoFormat);
             });
         });
 

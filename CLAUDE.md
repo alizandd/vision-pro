@@ -301,6 +301,26 @@ curl http://localhost:8080/api/videos
 
 ## Changelog
 
+### 2026-01-08
+- **[Stereoscopic & Immersive Video Support]** Full support for VR and 3D video formats
+  - New `VideoFormat` enum with 7 format types:
+    - `mono2d` - Standard 2D flat video
+    - `sbs3d` - Stereoscopic Side-by-Side 3D
+    - `ou3d` - Stereoscopic Over-Under 3D
+    - `hemisphere180` - 180° VR (equirectangular)
+    - `hemisphere180sbs` - 180° VR Stereoscopic
+    - `sphere360` - 360° VR (full sphere)
+    - `sphere360ou` - 360° VR Stereoscopic
+  - Hemisphere mesh generation for 180° content
+  - Format-aware entity creation in `VideoPlayerManager`
+  - Dynamic screen positioning (flat screen vs immersive dome)
+- **[Web Controller Format Selector]** Per-device video format selection
+  - Dropdown to select video format before playback
+  - Default format set to `hemisphere180sbs` for VR content
+  - Format sent with play/change commands
+- **[Protocol Update]** WebSocket command now includes `videoFormat` field
+  - Backwards compatible - defaults to `mono2d` if not specified
+
 ### 2026-01-07
 - **[Local Video Storage]** Server now serves videos from local folder
   - Videos stored in `server/videos/` directory

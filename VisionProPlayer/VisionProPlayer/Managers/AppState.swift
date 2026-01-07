@@ -9,6 +9,9 @@ class AppState: ObservableObject {
 
     /// The URL of the currently playing or queued video
     @Published var currentVideoURL: String?
+    
+    /// Current video format (stereoscopic type, projection, etc.)
+    @Published var currentVideoFormat: VideoFormat = .mono2D
 
     /// Current playback state
     @Published var playbackState: PlaybackState = .idle
@@ -58,6 +61,7 @@ class AppState: ObservableObject {
     func reset() {
         self.isImmersiveActive = false
         self.currentVideoURL = nil
+        self.currentVideoFormat = .mono2D
         self.playbackState = .idle
         self.lastError = nil
     }

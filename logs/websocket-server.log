@@ -8,30 +8,129 @@
 [Server] Health Check: http://0.0.0.0:8080/health
 [Server] Device List: http://0.0.0.0:8080/devices
 [Server] ========================================
-[Server] Available videos: 1
+[Server] Available videos: 2
 [Server]   1. BigBuckBunny.mp4
+[Server]   2. VRCarRender001.mp4
 [Server] ========================================
-[Server] New connection from 127.0.0.1
-[Server] Received message: {"type":"register","deviceId":"49E510B7-B5BE-42AF-9E6A-F3DE37FA664D","deviceName":"Vision Pro","deviceType":"visionpro"}
-[Server] ✅ Vision Pro registered: Vision Pro (49E510B7-B5BE-42AF-9E6A-F3DE37FA664D)
-[Server] Total Vision Pro devices: 1
-[Server] Broadcasting to 0 controllers: {"type":"deviceConnected","deviceId":"49E510B7-B5BE-42AF-9E6A-F3DE37FA664D","deviceName":"Vision Pro"}
-[Server] New connection from 192.168.88.240
-[Server] Received message: {"type":"register","deviceId":"controller-nad6zxtv2","deviceName":"Web Orchestrator","deviceType":"controller"}
+[Server] New connection from 192.168.88.250
+[Server] Received message: {"type":"register","deviceId":"controller-t4jnvklxk","deviceName":"Web Orchestrator","deviceType":"controller"}
 [Server] Controller registered: Web Orchestrator
-[Server] Video list requested: 1 videos found
-[Server] Received message: {"type":"command","action":"play","targetDevices":["49E510B7-B5BE-42AF-9E6A-F3DE37FA664D"],"videoUrl":"http://192.168.88.250:8080/videos/BigBuckBunny.mp4"}
+[Server] Video list requested: 2 videos found
+[Server] Connection closed from 192.168.88.250
+[Server] Controller disconnected: Web Orchestrator
+[Server] New connection from 127.0.0.1
+[Server] Received message: {"type":"register","deviceType":"visionpro","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","deviceName":"Vision Pro"}
+[Server] ✅ Vision Pro registered: Vision Pro (776ADE85-EDEA-4EE1-9D01-7ED54A7448F5)
+[Server] Total Vision Pro devices: 1
+[Server] Broadcasting to 0 controllers: {"type":"deviceConnected","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","deviceName":"Vision Pro"}
+[Server] New connection from 192.168.88.250
+[Server] Received message: {"type":"register","deviceId":"controller-yh0jlmnpl","deviceName":"Web Orchestrator","deviceType":"controller"}
+[Server] Controller registered: Web Orchestrator
+[Server] Video list requested: 2 videos found
+[Server] Received message: {"type":"command","action":"play","targetDevices":["776ADE85-EDEA-4EE1-9D01-7ED54A7448F5"],"videoUrl":"http://192.168.88.250:8080/videos/VRCarRender001.mp4","videoFormat":"sphere360ou"}
 [Server] Sent play command to Vision Pro
-[Server] Received message: {"immersiveMode":true,"type":"status","currentVideo":"http://192.168.88.250:8080/videos/BigBuckBunny.mp4","deviceId":"49E510B7-B5BE-42AF-9E6A-F3DE37FA664D","currentTime":0,"state":"stopped","deviceName":"Vision Pro"}
+[Server] Received message: {"currentVideo":"http://192.168.88.250:8080/videos/VRCarRender001.mp4","state":"stopped","deviceName":"Vision Pro","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","type":"status","currentTime":0,"immersiveMode":true}
 [Server] Status update from Vision Pro: stopped (time: 0)
-[Server] Received message: {"immersiveMode":true,"type":"status","currentVideo":"http://192.168.88.250:8080/videos/BigBuckBunny.mp4","deviceId":"49E510B7-B5BE-42AF-9E6A-F3DE37FA664D","currentTime":0,"state":"loading","deviceName":"Vision Pro"}
+[Server] Received message: {"currentVideo":"http://192.168.88.250:8080/videos/VRCarRender001.mp4","state":"loading","deviceName":"Vision Pro","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","type":"status","currentTime":0,"immersiveMode":true}
+[Server] Status update from Vision Pro: loading (time: 0)
+[Server] Streaming video: VRCarRender001.mp4 (0-1/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (0-1545712200/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (540315-1545712200/1545712201)
+[Server] Received message: {"type":"status","currentTime":0,"state":"playing","deviceName":"Vision Pro","immersiveMode":true,"currentVideo":"http://192.168.88.250:8080/videos/VRCarRender001.mp4","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5"}
+[Server] Status update from Vision Pro: playing (time: 0)
+[Server] Streaming video: VRCarRender001.mp4 (0-1545712200/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (31719424-1545712200/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (28639232-28704767/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (25624576-30408703/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (28704768-28770303/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (34078720-34144255/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (30408704-1545712200/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (34144256-34209791/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (34209792-34275327/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (38141952-38207487/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (41549824-41615359/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (38862848-39387135/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (41615360-41680895/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (41680896-41746431/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (39387136-39780351/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (41746432-41811967/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (40370176-41549823/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (41811968-41877503/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (41877504-41943039/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (44761088-1545712200/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (41943040-42008575/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (42008576-42074111/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (42074112-42139647/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (42139648-42205183/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (46399488-46465023/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (46465024-46530559/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (46530560-46596095/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (42205184-42270719/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (46596096-46661631/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (42270720-44761087/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (46661632-46727167/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (46727168-46792703/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (50724864-57540607/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (46792704-46858239/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (50790400-50855935/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (46858240-50724863/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (50855936-50921471/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (50921472-50987007/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (49545216-49676287/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (50987008-51052543/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (20643840-28639231/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (49676288-49741823/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (49741824-49807359/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (51052544-51118079/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (49807360-50724863/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (51118080-51183615/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (54198272-1545712200/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (51183616-51249151/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (51249152-51314687/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (51314688-54198271/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (54263808-54329343/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (54329344-54394879/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (52428800-52494335/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (54394880-1545712200/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (52494336-52559871/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (52559872-52625407/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (52625408-53542911/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (57606144-57671679/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (53542912-54198271/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (57671680-57737215/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (57737216-57802751/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (57802752-58130431/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (58195968-1545712200/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (58785792-58851327/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (58851328-59375615/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (59834368-1545712200/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (63569920-63635455/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (63635456-64159743/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (64618496-1545712200/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (220069888-1545712200/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (220954624-1545712200/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (225312768-1545712200/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (71499776-71565311/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (281477120-1545712200/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (9437184-38141951/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (71565312-71630847/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (87162880-1545712200/1545712201)
+[Server] Received message: {"type":"command","action":"stop","targetDevices":["776ADE85-EDEA-4EE1-9D01-7ED54A7448F5"]}
+[Server] Sent stop command to Vision Pro
+[Server] Received message: {"type":"status","currentTime":0,"deviceName":"Vision Pro","state":"stopped","immersiveMode":true,"currentVideo":"http://192.168.88.250:8080/videos/VRCarRender001.mp4","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5"}
+[Server] Status update from Vision Pro: stopped (time: 0)
+[Server] Received message: {"type":"command","action":"play","targetDevices":["776ADE85-EDEA-4EE1-9D01-7ED54A7448F5"],"videoUrl":"http://192.168.88.250:8080/videos/BigBuckBunny.mp4","videoFormat":"sphere360ou"}
+[Server] Sent play command to Vision Pro
+[Server] Received message: {"type":"status","currentVideo":"http://192.168.88.250:8080/videos/BigBuckBunny.mp4","currentTime":0,"deviceName":"Vision Pro","immersiveMode":true,"deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","state":"stopped"}
+[Server] Status update from Vision Pro: stopped (time: 0)
+[Server] Received message: {"type":"status","currentVideo":"http://192.168.88.250:8080/videos/BigBuckBunny.mp4","currentTime":0,"deviceName":"Vision Pro","immersiveMode":true,"deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","state":"loading"}
 [Server] Status update from Vision Pro: loading (time: 0)
 [Server] Streaming video: BigBuckBunny.mp4 (0-1/158008374)
 [Server] Streaming video: BigBuckBunny.mp4 (0-158008373/158008374)
 [Server] Streaming video: BigBuckBunny.mp4 (65536-158008373/158008374)
 [Server] Streaming video: BigBuckBunny.mp4 (16030-65535/158008374)
 [Server] Streaming video: BigBuckBunny.mp4 (1130138-158008373/158008374)
-[Server] Received message: {"currentVideo":"http://192.168.88.250:8080/videos/BigBuckBunny.mp4","state":"playing","type":"status","deviceId":"49E510B7-B5BE-42AF-9E6A-F3DE37FA664D","immersiveMode":true,"currentTime":0,"deviceName":"Vision Pro"}
+[Server] Received message: {"deviceName":"Vision Pro","currentTime":0,"immersiveMode":true,"type":"status","state":"playing","currentVideo":"http://192.168.88.250:8080/videos/BigBuckBunny.mp4","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5"}
 [Server] Status update from Vision Pro: playing (time: 0)
 [Server] Streaming video: BigBuckBunny.mp4 (0-158008373/158008374)
 [Server] Streaming video: BigBuckBunny.mp4 (31981568-32047103/158008374)
@@ -40,8 +139,112 @@
 [Server] Streaming video: BigBuckBunny.mp4 (655360-851967/158008374)
 [Server] Streaming video: BigBuckBunny.mp4 (917504-1114111/158008374)
 [Server] Streaming video: BigBuckBunny.mp4 (31653888-31916031/158008374)
-[Server] Received message: {"type":"command","action":"stop","targetDevices":["49E510B7-B5BE-42AF-9E6A-F3DE37FA664D"]}
-[Server] Sent stop command to Vision Pro
-[Server] Received message: {"deviceId":"49E510B7-B5BE-42AF-9E6A-F3DE37FA664D","currentTime":0,"currentVideo":"http://192.168.88.250:8080/videos/BigBuckBunny.mp4","deviceName":"Vision Pro","state":"stopped","immersiveMode":true,"type":"status"}
-[Server] Status update from Vision Pro: stopped (time: 0)
 [Server] Streaming video: BigBuckBunny.mp4 (31522816-31653887/158008374)
+[Server] Streaming video: BigBuckBunny.mp4 (31719424-31916031/158008374)
+[Server] Streaming video: BigBuckBunny.mp4 (31784960-31916031/158008374)
+[Server] Streaming video: BigBuckBunny.mp4 (32309248-158008373/158008374)
+[Server] Received message: {"type":"command","action":"stop","targetDevices":["776ADE85-EDEA-4EE1-9D01-7ED54A7448F5"]}
+[Server] Sent stop command to Vision Pro
+[Server] Received message: {"type":"status","state":"stopped","immersiveMode":true,"currentTime":0,"deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","currentVideo":"http://192.168.88.250:8080/videos/BigBuckBunny.mp4","deviceName":"Vision Pro"}
+[Server] Status update from Vision Pro: stopped (time: 0)
+[Server] Streaming video: BigBuckBunny.mp4 (32440320-158008373/158008374)
+[Server] Connection closed from 127.0.0.1
+[Server] Vision Pro disconnected: Vision Pro
+[Server] New connection from 127.0.0.1
+[Server] Received message: {"deviceName":"Vision Pro","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","deviceType":"visionpro","type":"register"}
+[Server] ✅ Vision Pro registered: Vision Pro (776ADE85-EDEA-4EE1-9D01-7ED54A7448F5)
+[Server] Total Vision Pro devices: 1
+[Server] Broadcasting to 1 controllers: {"type":"deviceConnected","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","deviceName":"Vision Pro"}
+[Server] Received message: {"type":"command","action":"play","targetDevices":["776ADE85-EDEA-4EE1-9D01-7ED54A7448F5"],"videoUrl":"http://192.168.88.250:8080/videos/VRCarRender001.mp4","videoFormat":"sphere360ou"}
+[Server] Sent play command to Vision Pro
+[Server] Received message: {"deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","deviceName":"Vision Pro","immersiveMode":true,"currentVideo":"http://192.168.88.250:8080/videos/VRCarRender001.mp4","currentTime":0,"state":"stopped","type":"status"}
+[Server] Status update from Vision Pro: stopped (time: 0)
+[Server] Received message: {"currentVideo":"http://192.168.88.250:8080/videos/VRCarRender001.mp4","state":"loading","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","deviceName":"Vision Pro","currentTime":0,"immersiveMode":true,"type":"status"}
+[Server] Status update from Vision Pro: loading (time: 0)
+[Server] Streaming video: VRCarRender001.mp4 (0-1/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (0-1545712200/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (540315-1545712200/1545712201)
+[Server] Received message: {"deviceName":"Vision Pro","immersiveMode":true,"type":"status","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","currentVideo":"http://192.168.88.250:8080/videos/VRCarRender001.mp4","state":"playing","currentTime":0}
+[Server] Status update from Vision Pro: playing (time: 0)
+[Server] Streaming video: VRCarRender001.mp4 (0-1545712200/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (23068672-1545712200/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (24969216-25034751/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (41549824-41615359/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (38338560-39059455/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (41615360-41680895/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (39059456-39518207/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (41680896-41746431/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (41746432-41811967/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (39861908-41549823/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (41811968-41877503/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (41877504-41943039/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (44761088-1545712200/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (41943040-42008575/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (42008576-42074111/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (42074112-42139647/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (42139648-42205183/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (42205184-42270719/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (42270720-42336255/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (42336256-42401791/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (42401792-42467327/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (42467328-42532863/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (42532864-42598399/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (42598400-42663935/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (42663936-42729471/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (42729472-42795007/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (42795008-42860543/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (51642368-51707903/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (51707904-51773439/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (42860544-42926079/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (51773440-51838975/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (51838976-51904511/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (51904512-51970047/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (42926080-42991615/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (51970048-52035583/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (42991616-44761087/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (52035584-52101119/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (54198272-55771135/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (52101120-52166655/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (52166656-52232191/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (55771136-63504383/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (52232192-52297727/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (52297728-54198271/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (56360960-56426495/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (56819712-1545712200/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (56426496-56492031/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (56492032-56557567/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (56557568-56819711/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (58458112-58523647/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (58523648-59572223/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (59572224-59703295/1545712201)
+[Server] Streaming video: VRCarRender001.mp4 (60030976-1545712200/1545712201)
+[Server] Received message: {"type":"command","action":"stop","targetDevices":["776ADE85-EDEA-4EE1-9D01-7ED54A7448F5"]}
+[Server] Sent stop command to Vision Pro
+[Server] Received message: {"deviceName":"Vision Pro","type":"status","immersiveMode":true,"currentVideo":"http://192.168.88.250:8080/videos/VRCarRender001.mp4","state":"stopped","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","currentTime":0}
+[Server] Status update from Vision Pro: stopped (time: 0)
+[Server] Received message: {"type":"command","action":"play","targetDevices":["776ADE85-EDEA-4EE1-9D01-7ED54A7448F5"],"videoUrl":"http://192.168.88.250:8080/videos/BigBuckBunny.mp4","videoFormat":"hemisphere180sbs"}
+[Server] Sent play command to Vision Pro
+[Server] Received message: {"deviceName":"Vision Pro","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","immersiveMode":true,"type":"status","state":"stopped","currentTime":0,"currentVideo":"http://192.168.88.250:8080/videos/BigBuckBunny.mp4"}
+[Server] Status update from Vision Pro: stopped (time: 0)
+[Server] Received message: {"currentVideo":"http://192.168.88.250:8080/videos/BigBuckBunny.mp4","deviceName":"Vision Pro","currentTime":0,"deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","type":"status","immersiveMode":true,"state":"loading"}
+[Server] Status update from Vision Pro: loading (time: 0)
+[Server] Streaming video: BigBuckBunny.mp4 (0-1/158008374)
+[Server] Streaming video: BigBuckBunny.mp4 (0-158008373/158008374)
+[Server] Streaming video: BigBuckBunny.mp4 (65536-158008373/158008374)
+[Server] Streaming video: BigBuckBunny.mp4 (16030-65535/158008374)
+[Server] Streaming video: BigBuckBunny.mp4 (1130138-158008373/158008374)
+[Server] Received message: {"deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","currentVideo":"http://192.168.88.250:8080/videos/BigBuckBunny.mp4","deviceName":"Vision Pro","state":"playing","immersiveMode":true,"currentTime":0,"type":"status"}
+[Server] Status update from Vision Pro: playing (time: 0)
+[Server] Streaming video: BigBuckBunny.mp4 (0-158008373/158008374)
+[Server] Streaming video: BigBuckBunny.mp4 (31981568-32047103/158008374)
+[Server] Streaming video: BigBuckBunny.mp4 (31784960-31981567/158008374)
+[Server] Streaming video: BigBuckBunny.mp4 (32374784-158008373/158008374)
+[Server] Streaming video: BigBuckBunny.mp4 (655360-851967/158008374)
+[Server] Streaming video: BigBuckBunny.mp4 (917504-1114111/158008374)
+[Server] Streaming video: BigBuckBunny.mp4 (31653888-31784959/158008374)
+[Server] Streaming video: BigBuckBunny.mp4 (31522816-31653887/158008374)
+[Server] Streaming video: BigBuckBunny.mp4 (31719424-31784959/158008374)
+[Server] Streaming video: BigBuckBunny.mp4 (31850496-31981567/158008374)
+[Server] Streaming video: BigBuckBunny.mp4 (32309248-158008373/158008374)
+[Server] Connection closed from 127.0.0.1
+[Server] Vision Pro disconnected: Vision Pro

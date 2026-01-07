@@ -90,6 +90,11 @@ struct VisionProPlayerApp: App {
             }
 
             appState.currentVideoURL = videoUrl
+            
+            // Set video format (default to mono2D if not specified)
+            let format = command.videoFormat ?? .mono2D
+            appState.currentVideoFormat = format
+            print("[App] Video format: \(format.displayName)")
 
             // Open immersive space if not already open
             if !appState.isImmersiveActive {
@@ -109,9 +114,9 @@ struct VisionProPlayerApp: App {
                 }
             }
 
-            // Start video playback
+            // Start video playback with format
             try? await Task.sleep(nanoseconds: 500_000_000) // Brief delay for space to initialize
-            videoManager.play(url: videoUrl)
+            videoManager.play(url: videoUrl, format: format)
 
         case .pause:
             videoManager.pause()
@@ -126,6 +131,10 @@ struct VisionProPlayerApp: App {
             }
 
             appState.currentVideoURL = videoUrl
+            
+            // Set video format (default to mono2D if not specified)
+            let format = command.videoFormat ?? .mono2D
+            appState.currentVideoFormat = format
 
             // Open immersive space if not already open
             if !appState.isImmersiveActive {
@@ -136,7 +145,7 @@ struct VisionProPlayerApp: App {
             }
 
             try? await Task.sleep(nanoseconds: 300_000_000)
-            videoManager.play(url: videoUrl)
+            videoManager.play(url: videoUrl, format: format)
 
         case .stop:
             videoManager.stop()

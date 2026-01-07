@@ -7,12 +7,14 @@ struct ServerCommand: Codable {
     let type: String
     let action: CommandAction
     let videoUrl: String?
+    let videoFormat: VideoFormat?
     let timestamp: Int?
 
     enum CodingKeys: String, CodingKey {
         case type
         case action
         case videoUrl
+        case videoFormat
         case timestamp
     }
 
@@ -22,6 +24,14 @@ struct ServerCommand: Codable {
         let actionString = try container.decode(String.self, forKey: .action)
         action = CommandAction(rawValue: actionString) ?? .stop
         videoUrl = try container.decodeIfPresent(String.self, forKey: .videoUrl)
+        
+        // Parse video format - support both enum value and raw string
+        if let formatString = try container.decodeIfPresent(String.self, forKey: .videoFormat) {
+            videoFormat = VideoFormat(rawValue: formatString)
+        } else {
+            videoFormat = nil
+        }
+        
         timestamp = try container.decodeIfPresent(Int.self, forKey: .timestamp)
     }
 }
@@ -84,6 +94,59 @@ enum PlaybackState: String {
     case paused
     case stopped
     case error
+}
+
+// MARK: - Video Format
+
+/// Video projection and stereoscopy formats
+enum VideoFormat: String, Codable, CaseIterable {
+    /// Regular 2D flat video (default)
+    case mono2D = "mono2d"
+    /// Stereoscopic Side-by-Side (left eye on left, right eye on right)
+    case sideBySide3D = "sbs3d"
+    /// Stereoscopic Over-Under (left eye on top, right eye on bottom)
+    case overUnder3D = "ou3d"
+    /// 180° equirectangular (hemisphere)
+    case hemisphere180 = "hemisphere180"
+    /// 180° stereoscopic Side-by-Side
+    case hemisphere180SBS = "hemisphere180sbs"
+    /// 360° equirectangular (full sphere)
+    case sphere360 = "sphere360"
+    /// 360° stereoscopic Over-Under
+    case sphere360OU = "sphere360ou"
+    
+    /// Human-readable display name
+    var displayName: String {
+        switch self {
+        case .mono2D: return "2D Flat"
+        case .sideBySide3D: return "3D Side-by-Side"
+        case .overUnder3D: return "3D Over-Under"
+        case .hemisphere180: return "180° VR"
+        case .hemisphere180SBS: return "180° VR 3D"
+        case .sphere360: return "360° VR"
+        case .sphere360OU: return "360° VR 3D"
+        }
+    }
+    
+    /// Whether this format is stereoscopic (3D)
+    var isStereoscopic: Bool {
+        switch self {
+        case .sideBySide3D, .overUnder3D, .hemisphere180SBS, .sphere360OU:
+            return true
+        default:
+            return false
+        }
+    }
+    
+    /// Whether this format is immersive (180° or 360°)
+    var isImmersive: Bool {
+        switch self {
+        case .hemisphere180, .hemisphere180SBS, .sphere360, .sphere360OU:
+            return true
+        default:
+            return false
+        }
+    }
 }
 
 // MARK: - App Configuration

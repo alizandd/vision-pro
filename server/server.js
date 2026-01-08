@@ -78,7 +78,7 @@ const httpServer = http.createServer((req, res) => {
 function handleVideoListRequest(req, res) {
     try {
         const files = fs.readdirSync(VIDEOS_DIR);
-        
+
         // Filter for video files only
         const videoExtensions = ['.mp4', '.mov', '.m4v', '.avi', '.mkv', '.webm'];
         const videoFiles = files.filter(file => {
@@ -92,7 +92,7 @@ function handleVideoListRequest(req, res) {
             const stats = fs.statSync(filePath);
             const ext = path.extname(filename);
             const name = path.basename(filename, ext);
-            
+
             return {
                 filename: filename,
                 name: name.replace(/[-_]/g, ' '),
@@ -347,7 +347,7 @@ function handleRegistration(ws, message, setClientInfo) {
  * Handle commands from controllers
  */
 function handleCommand(ws, message, clientInfo) {
-    const { action, videoUrl, targetDevices } = message;
+    const { action, videoUrl, videoFormat, targetDevices } = message;
 
     if (!action) {
         sendError(ws, 'Missing action in command');
@@ -378,6 +378,7 @@ function handleCommand(ws, message, clientInfo) {
         type: 'command',
         action,
         videoUrl: videoUrl || null,
+        videoFormat: videoFormat || null,
         timestamp: Date.now()
     };
 
@@ -504,7 +505,7 @@ httpServer.listen(config.port, config.host, () => {
     console.log(`[Server] Health Check: http://${config.host}:${config.port}/health`);
     console.log(`[Server] Device List: http://${config.host}:${config.port}/devices`);
     console.log(`[Server] ========================================`);
-    
+
     // List available videos on startup
     try {
         const files = fs.readdirSync(VIDEOS_DIR);

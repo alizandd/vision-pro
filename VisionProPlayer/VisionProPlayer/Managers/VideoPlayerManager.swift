@@ -270,7 +270,7 @@ class VideoPlayerManager: ObservableObject {
             print("[VideoPlayer] ✅ Creating HEMISPHERE mesh (radius: 5.0, segments: 64) for 180° VR content")
             mesh = createHemisphereMesh(radius: 5.0, segments: 64)
             
-        case .sphere360, .sphere360OU:
+        case .sphere360, .sphere360OU, .sphere360SBS:
             // Full sphere for 360° content
             print("[VideoPlayer] ✅ Creating SPHERE mesh (radius: 5.0) for 360° VR content")
             mesh = MeshResource.generateSphere(radius: 5.0)

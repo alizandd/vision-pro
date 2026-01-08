@@ -181,7 +181,7 @@ struct ImmersiveView: View {
             // 180° content uses hemisphere mesh, dimensions are radius-based
             return (5.0, 5.0)
             
-        case .sphere360, .sphere360OU:
+        case .sphere360, .sphere360OU, .sphere360SBS:
             // 360° content uses full sphere, dimensions are radius-based
             return (5.0, 5.0)
         }

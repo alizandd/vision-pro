@@ -114,6 +114,8 @@ enum VideoFormat: String, Codable, CaseIterable {
     case sphere360 = "sphere360"
     /// 360° stereoscopic Over-Under
     case sphere360OU = "sphere360ou"
+    /// 360° stereoscopic Side-by-Side
+    case sphere360SBS = "sphere360sbs"
     
     /// Human-readable display name
     var displayName: String {
@@ -124,14 +126,15 @@ enum VideoFormat: String, Codable, CaseIterable {
         case .hemisphere180: return "180° VR"
         case .hemisphere180SBS: return "180° VR 3D"
         case .sphere360: return "360° VR"
-        case .sphere360OU: return "360° VR 3D"
+        case .sphere360OU: return "360° VR 3D (OU)"
+        case .sphere360SBS: return "360° VR 3D (SBS)"
         }
     }
     
     /// Whether this format is stereoscopic (3D)
     var isStereoscopic: Bool {
         switch self {
-        case .sideBySide3D, .overUnder3D, .hemisphere180SBS, .sphere360OU:
+        case .sideBySide3D, .overUnder3D, .hemisphere180SBS, .sphere360OU, .sphere360SBS:
             return true
         default:
             return false
@@ -141,7 +144,7 @@ enum VideoFormat: String, Codable, CaseIterable {
     /// Whether this format is immersive (180° or 360°)
     var isImmersive: Bool {
         switch self {
-        case .hemisphere180, .hemisphere180SBS, .sphere360, .sphere360OU:
+        case .hemisphere180, .hemisphere180SBS, .sphere360, .sphere360OU, .sphere360SBS:
             return true
         default:
             return false

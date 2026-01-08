@@ -32,7 +32,7 @@ class VisionProController {
         // Device-specific selected media and format
         this.deviceMediaSelections = new Map();
         this.deviceFormatSelections = new Map();
-        
+
         // Video format options
         this.videoFormats = [
             { value: 'mono2d', label: '2D Flat' },
@@ -41,7 +41,8 @@ class VisionProController {
             { value: 'hemisphere180', label: '180° VR' },
             { value: 'hemisphere180sbs', label: '180° VR 3D' },
             { value: 'sphere360', label: '360° VR' },
-            { value: 'sphere360ou', label: '360° VR 3D' }
+            { value: 'sphere360ou', label: '360° VR 3D (OU)' },
+            { value: 'sphere360sbs', label: '360° VR 3D (SBS)' }
         ];
 
         this.init();
@@ -62,10 +63,10 @@ class VisionProController {
     setDefaultServerUrl() {
         const currentHost = window.location.hostname;
         const wsPort = 8080; // WebSocket server port
-        
+
         // Construct WebSocket URL based on current host
         const defaultWsUrl = `ws://${currentHost}:${wsPort}`;
-        
+
         // Set the value in the input field
         if (this.serverUrlInput) {
             this.serverUrlInput.value = defaultWsUrl;
@@ -297,13 +298,13 @@ class VisionProController {
         try {
             this.log('Fetching video library from server...', 'info');
             const response = await fetch(`${this.serverBaseUrl}/api/videos`);
-            
+
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
 
             const data = await response.json();
-            
+
             if (data.videos && Array.isArray(data.videos)) {
                 // Convert server video list to preset format
                 this.presetVideos = data.videos.map(video => ({
@@ -314,10 +315,10 @@ class VisionProController {
                 }));
 
                 this.log(`Loaded ${data.count} video(s) from server`, 'success');
-                
+
                 // Update media library display
                 this.updateMediaLibrary();
-                
+
                 // Re-render device cards to show updated video list
                 this.renderDevicesGrid();
             } else {
@@ -370,18 +371,18 @@ class VisionProController {
                     <div class="media-desc">${this.escapeHtml(video.description)}</div>
                 </div>
             `;
-            
+
             item.addEventListener('click', () => {
                 this.selectedVideoUrl = video.url;
                 this.log(`Selected: ${video.name}`, 'info');
-                
+
                 // Highlight selected item
                 document.querySelectorAll('.media-item').forEach(i => i.classList.remove('selected'));
                 item.classList.add('selected');
-                
+
                 this.updateGlobalControls();
             });
-            
+
             mediaLibrary.appendChild(item);
         });
     }
@@ -440,21 +441,21 @@ class VisionProController {
                 const prevDevice = this.devices.get(message.deviceId);
                 const prevState = prevDevice?.state?.playbackState;
                 const newState = message.state.playbackState;
-                
+
                 this.devices.set(message.deviceId, {
                     deviceId: message.deviceId,
                     deviceName: message.deviceName,
                     state: message.state
                 });
-                
+
                 // First render the grid, then sync video
                 // This ensures the video element exists before we try to sync it
                 this.renderDevicesGrid();
                 this.updatePreviewPanel();
-                
+
                 // Sync video preview with device state AFTER render
                 this.syncVideoPreview(message.deviceId, message.state, prevState);
-                
+
                 this.log(`${message.deviceName}: ${message.state.playbackState}`, 'info');
                 break;
 
@@ -529,9 +530,9 @@ class VisionProController {
         const device = this.devices.get(this.selectedDeviceId);
         if (!device) return;
 
-        const videoUrl = this.deviceMediaSelections.get(this.selectedDeviceId) || 
-                         device.state?.currentVideo || 
-                         this.selectedVideoUrl;
+        const videoUrl = this.deviceMediaSelections.get(this.selectedDeviceId) ||
+            device.state?.currentVideo ||
+            this.selectedVideoUrl;
 
         this.sendCommand(action, this.selectedDeviceId, videoUrl);
     }
@@ -553,7 +554,7 @@ class VisionProController {
         };
         label.textContent = statusText[status] || status;
 
-        this.connectBtn.innerHTML = status === 'connected' 
+        this.connectBtn.innerHTML = status === 'connected'
             ? '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>'
             : '<span class="connect-icon"></span>';
 
@@ -587,7 +588,7 @@ class VisionProController {
 
         // Build device cards
         const fragment = document.createDocumentFragment();
-        
+
         this.devices.forEach((device, deviceId) => {
             const card = this.createDeviceCard(device, deviceId);
             fragment.appendChild(card);
@@ -749,7 +750,7 @@ class VisionProController {
             this.deviceMediaSelections.set(deviceId, e.target.value);
             this.log(`Media selected for device: ${e.target.value.split('/').pop()}`, 'info');
         });
-        
+
         // Format selector
         const formatSelect = card.querySelector('.format-select');
         if (formatSelect) {
@@ -757,7 +758,7 @@ class VisionProController {
             if (!this.deviceFormatSelections.has(deviceId)) {
                 this.deviceFormatSelections.set(deviceId, 'hemisphere180sbs');
             }
-            
+
             formatSelect.addEventListener('change', (e) => {
                 this.deviceFormatSelections.set(deviceId, e.target.value);
                 const formatLabel = this.videoFormats.find(f => f.value === e.target.value)?.label || e.target.value;
@@ -773,12 +774,12 @@ class VisionProController {
                 const targetDeviceId = btn.dataset.deviceId;
                 const videoUrl = this.deviceMediaSelections.get(targetDeviceId);
                 const videoFormat = this.deviceFormatSelections.get(targetDeviceId);
-                
+
                 if (action === 'play' && !videoUrl) {
                     this.log('Please select a video first', 'warning');
                     return;
                 }
-                
+
                 this.sendCommand(action, targetDeviceId, videoUrl, videoFormat);
             });
         });
@@ -797,7 +798,7 @@ class VisionProController {
 
     selectDevice(deviceId) {
         this.selectedDeviceId = deviceId;
-        
+
         // Update card selection state
         document.querySelectorAll('.device-card').forEach(card => {
             card.classList.toggle('selected', card.dataset.deviceId === deviceId);
@@ -817,7 +818,7 @@ class VisionProController {
 
     updatePreviewPanel() {
         if (!this.selectedDeviceId || !this.previewPanel.classList.contains('open')) return;
-        
+
         const device = this.devices.get(this.selectedDeviceId);
         if (!device) return;
 
@@ -832,17 +833,17 @@ class VisionProController {
             // Only change src if different to avoid reload (compare without protocol differences)
             const currentSrc = this.previewVideo.src || '';
             const isSameVideo = currentSrc.endsWith(currentVideo.split('/').pop()) || currentSrc === currentVideo;
-            
+
             if (!isSameVideo) {
                 this.previewVideo.src = currentVideo;
             }
             this.previewOverlay.classList.add('hidden');
             this.previewVideoTitle.textContent = this.getVideoNameFromUrl(currentVideo) || currentVideo;
-            
+
             // Sync playback state without restarting
             if (playbackState === 'playing') {
                 if (this.previewVideo.paused) {
-                    this.previewVideo.play().catch(() => {});
+                    this.previewVideo.play().catch(() => { });
                 }
             } else {
                 if (!this.previewVideo.paused) {
@@ -872,13 +873,13 @@ class VisionProController {
         const currentVideo = state.currentVideo;
         const playbackState = state.playbackState;
         const deviceTime = state.currentTime || 0;
-        
+
         // Find the video element in the device card
         const card = document.querySelector(`.device-card[data-device-id="${deviceId}"]`);
         if (!card) return;
-        
+
         const videoEl = card.querySelector('.preview-thumbnail video');
-        
+
         // Handle video sync based on state change
         if (playbackState === 'playing' && currentVideo) {
             // Video started playing on Vision Pro - sync to web
@@ -887,47 +888,47 @@ class VisionProController {
                     videoEl.src = currentVideo;
                     videoEl.addEventListener('loadedmetadata', () => {
                         this.syncVideoTime(videoEl, deviceTime);
-                        videoEl.play().catch(() => {});
+                        videoEl.play().catch(() => { });
                     }, { once: true });
                 } else {
                     this.syncVideoTime(videoEl, deviceTime);
-                    videoEl.play().catch(() => {});
+                    videoEl.play().catch(() => { });
                 }
             }
-            
+
             // If this device is selected, also sync the main preview
             if (this.selectedDeviceId === deviceId && this.previewPanel.classList.contains('open')) {
                 if (this.previewVideo.src !== currentVideo) {
                     this.previewVideo.src = currentVideo;
                     this.previewVideo.addEventListener('loadedmetadata', () => {
                         this.syncVideoTime(this.previewVideo, deviceTime);
-                        this.previewVideo.play().catch(() => {});
+                        this.previewVideo.play().catch(() => { });
                     }, { once: true });
                 } else {
                     this.syncVideoTime(this.previewVideo, deviceTime);
-                    this.previewVideo.play().catch(() => {});
+                    this.previewVideo.play().catch(() => { });
                 }
             }
-            
+
         } else if (playbackState === 'paused') {
             // Video paused on Vision Pro - pause web preview and sync time
             if (videoEl) {
                 videoEl.pause();
                 this.syncVideoTime(videoEl, deviceTime);
             }
-            
+
             if (this.selectedDeviceId === deviceId) {
                 this.previewVideo.pause();
                 this.syncVideoTime(this.previewVideo, deviceTime);
             }
-            
+
         } else if (playbackState === 'stopped' || playbackState === 'idle') {
             // Video stopped on Vision Pro - stop web preview
             if (videoEl) {
                 videoEl.pause();
                 videoEl.currentTime = 0;
             }
-            
+
             if (this.selectedDeviceId === deviceId) {
                 this.previewVideo.pause();
                 this.previewVideo.currentTime = 0;
@@ -941,10 +942,10 @@ class VisionProController {
      */
     syncVideoTime(videoEl, deviceTime) {
         if (!videoEl || !deviceTime || isNaN(deviceTime)) return;
-        
+
         const currentTime = videoEl.currentTime || 0;
         const timeDiff = Math.abs(currentTime - deviceTime);
-        
+
         // Only seek if difference is more than 2 seconds
         if (timeDiff > 2) {
             videoEl.currentTime = deviceTime;

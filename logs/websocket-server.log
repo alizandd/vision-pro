@@ -248,3 +248,7 @@
 [Server] Streaming video: BigBuckBunny.mp4 (32309248-158008373/158008374)
 [Server] Connection closed from 127.0.0.1
 [Server] Vision Pro disconnected: Vision Pro
+[Server] Connection closed from 192.168.88.250
+[Server] Controller disconnected: Web Orchestrator
+[Server] Received SIGTERM, shutting down...
+[Server] Server closed

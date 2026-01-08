@@ -7,3 +7,5 @@
  HTTP  1/8/2026 12:29:08 AM 192.168.88.250 Returned 304 in 3 ms
  HTTP  1/8/2026 12:29:08 AM 192.168.88.250 GET /controller.js
  HTTP  1/8/2026 12:29:08 AM 192.168.88.250 Returned 200 in 4 ms
+
+ INFO  Gracefully shutting down. Please wait...

@@ -219,8 +219,12 @@ class WebSocketManager: ObservableObject {
                 print("[WebSocket] Registered: \(registered.message)")
 
             case "command":
+                // Log raw JSON for debugging
+                if let jsonString = String(data: data, encoding: .utf8) {
+                    print("[WebSocket] Raw command JSON: \(jsonString)")
+                }
                 let command = try JSONDecoder().decode(ServerCommand.self, from: data)
-                print("[WebSocket] Command: \(command.action)")
+                print("[WebSocket] Command: \(command.action), Format: \(command.videoFormat?.displayName ?? "nil")")
                 onCommand?(command)
 
             case "error":

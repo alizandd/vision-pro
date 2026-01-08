@@ -753,6 +753,11 @@ class VisionProController {
         // Format selector
         const formatSelect = card.querySelector('.format-select');
         if (formatSelect) {
+            // Initialize default format if not already set
+            if (!this.deviceFormatSelections.has(deviceId)) {
+                this.deviceFormatSelections.set(deviceId, 'hemisphere180sbs');
+            }
+            
             formatSelect.addEventListener('change', (e) => {
                 this.deviceFormatSelections.set(deviceId, e.target.value);
                 const formatLabel = this.videoFormats.find(f => f.value === e.target.value)?.label || e.target.value;

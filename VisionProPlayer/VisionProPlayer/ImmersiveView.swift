@@ -115,19 +115,17 @@ struct ImmersiveView: View {
         print("[ImmersiveView] Creating screen for format: \(format.displayName)")
         
         // Adjust holder position based on format
-        #if targetEnvironment(simulator)
-        // In simulator, always use flat screen position (immersive doesn't work well)
-        videoEntity.position = SIMD3<Float>(0, 1.5, -3)
-        print("[ImmersiveView] Simulator mode - using flat screen position")
-        #else
+        // For immersive content (180°/360°), center at origin so user is inside the dome/sphere
+        // For flat content, position in front of user
         if format.isImmersive {
             // For 180°/360° content, center at eye level
             videoEntity.position = SIMD3<Float>(0, 1.5, 0)
+            print("[ImmersiveView] Immersive format - centering at origin")
         } else {
             // For flat screens, position in front of user
             videoEntity.position = SIMD3<Float>(0, 1.5, -3)
+            print("[ImmersiveView] Flat format - positioning screen in front")
         }
-        #endif
         
         // Calculate screen dimensions based on format
         let (width, height) = getScreenDimensions(for: format)
@@ -143,13 +141,12 @@ struct ImmersiveView: View {
         // Position the screen relative to holder
         newScreen.position = SIMD3<Float>(0, 0, 0)
         
-        // For immersive content, ensure correct orientation (not needed in simulator)
-        #if !targetEnvironment(simulator)
+        // For immersive content, ensure correct orientation
         if format.isImmersive {
             // Rotate 180° on Y axis so front of hemisphere faces user
             newScreen.orientation = simd_quatf(angle: .pi, axis: SIMD3<Float>(0, 1, 0))
+            print("[ImmersiveView] Applied 180° rotation for immersive content")
         }
-        #endif
 
         videoEntity.addChild(newScreen)
         

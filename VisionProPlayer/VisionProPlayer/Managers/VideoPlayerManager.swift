@@ -256,28 +256,28 @@ class VideoPlayerManager: ObservableObject {
         
         print("[VideoPlayer] Creating entity for format: \(currentFormat.displayName)")
         
-        // Check if running in simulator - use flat plane as fallback
-        #if targetEnvironment(simulator)
-        print("[VideoPlayer] Running in Simulator - using flat plane fallback for all formats")
-        let mesh = MeshResource.generatePlane(width: width, height: height)
-        let entity = ModelEntity(mesh: mesh, materials: [videoMaterial])
-        return entity
-        #else
-
         // Create appropriate mesh based on video format
+        // Note: In simulator, stereoscopic 3D won't look correct but mesh shape will be visible
+        #if targetEnvironment(simulator)
+        print("[VideoPlayer] Running in Simulator - mesh will be created but stereoscopic 3D won't render correctly")
+        #endif
+        
         let mesh: MeshResource
         
         switch currentFormat {
         case .hemisphere180, .hemisphere180SBS:
             // 180° hemisphere mesh for VR180 content
+            print("[VideoPlayer] ✅ Creating HEMISPHERE mesh (radius: 5.0, segments: 64) for 180° VR content")
             mesh = createHemisphereMesh(radius: 5.0, segments: 64)
             
         case .sphere360, .sphere360OU:
             // Full sphere for 360° content
+            print("[VideoPlayer] ✅ Creating SPHERE mesh (radius: 5.0) for 360° VR content")
             mesh = MeshResource.generateSphere(radius: 5.0)
             
         default:
             // Flat plane for 2D and flat 3D content
+            print("[VideoPlayer] ✅ Creating FLAT PLANE mesh (width: \(width), height: \(height)) for 2D/flat content")
             mesh = MeshResource.generatePlane(width: width, height: height)
         }
 
@@ -290,7 +290,6 @@ class VideoPlayerManager: ObservableObject {
         }
         
         return entity
-        #endif
     }
     
     /// Creates a hemisphere mesh for 180° VR content

@@ -1,28 +1,5 @@
 import Foundation
 
-/// Information about a locally stored video file
-struct LocalVideo: Codable, Identifiable {
-    let id: String
-    let filename: String
-    let name: String
-    let url: String  // file:// URL
-    let size: Int64
-    let modified: Date
-    let fileExtension: String
-    
-    enum CodingKeys: String, CodingKey {
-        case id, filename, name, url, size, modified
-        case fileExtension = "extension"
-    }
-}
-
-/// Message to send local video list to server
-struct LocalVideosMessage: Codable {
-    let type: String = "localVideos"
-    let deviceId: String
-    let videos: [LocalVideo]
-}
-
 /// Manages local video files stored on the Vision Pro device.
 /// Videos should be placed in the app's Documents folder.
 @MainActor

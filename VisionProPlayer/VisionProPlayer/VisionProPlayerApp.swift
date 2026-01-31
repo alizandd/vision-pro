@@ -64,6 +64,10 @@ struct VisionProPlayerApp: App {
 
     /// Sets up syncing of local videos with server when connected
     private func setupLocalVideoSync() {
+        // Capture references for closure
+        let wsManager = webSocketManager
+        let localManager = localVideoManager
+        
         // When connection state changes to connected, send local videos
         // Using a simple polling approach since we can't easily observe @Published from here
         Task { @MainActor in
@@ -71,13 +75,13 @@ struct VisionProPlayerApp: App {
             while true {
                 try? await Task.sleep(nanoseconds: 1_000_000_000) // Check every second
                 
-                let isNowConnected = webSocketManager.isConnected
+                let isNowConnected = wsManager.isConnected
                 
                 // When we just connected, send local videos
                 if isNowConnected && !wasConnected {
                     // Small delay to ensure registration is complete
                     try? await Task.sleep(nanoseconds: 500_000_000)
-                    webSocketManager.sendLocalVideos(localVideoManager.localVideos)
+                    wsManager.sendLocalVideos(localManager.localVideos)
                 }
                 
                 wasConnected = isNowConnected
@@ -87,39 +91,38 @@ struct VisionProPlayerApp: App {
     
     /// Sets up the command handling pipeline between WebSocket and video player
     private func setupCommandHandling() {
+        // Capture references for closures
+        let state = appState
+        let vidManager = videoManager
+        let wsManager = webSocketManager
+        
         // Handle incoming commands from WebSocket
-        webSocketManager.onCommand = { [weak appState, weak videoManager] command in
-            guard let appState = appState, let videoManager = videoManager else { return }
-
+        webSocketManager.onCommand = { command in
             Task { @MainActor in
-                await handleCommand(command, appState: appState, videoManager: videoManager)
+                await self.handleCommand(command, appState: state, videoManager: vidManager)
             }
         }
 
         // Send status updates when video state changes
-        videoManager.onStateChange = { [weak webSocketManager, weak appState, weak videoManager] state in
-            guard let webSocketManager = webSocketManager, let appState = appState, let videoManager = videoManager else { return }
-
-            webSocketManager.sendStatus(
-                state: state.rawValue,
-                currentVideo: appState.currentVideoURL,
-                immersiveMode: appState.isImmersiveActive,
-                currentTime: videoManager.currentTime
+        videoManager.onStateChange = { playbackState in
+            wsManager.sendStatus(
+                state: playbackState.rawValue,
+                currentVideo: state.currentVideoURL,
+                immersiveMode: state.isImmersiveActive,
+                currentTime: vidManager.currentTime
             )
         }
         
         // Handle player ready callback for proper lifecycle
-        videoManager.onPlayerReady = { [weak webSocketManager, weak appState, weak videoManager] in
-            guard let webSocketManager = webSocketManager, let appState = appState, let videoManager = videoManager else { return }
-            
+        videoManager.onPlayerReady = {
             print("[App] Video player ready, starting playback")
-            videoManager.startPlayback()
+            vidManager.startPlayback()
             
             // Update status
-            webSocketManager.sendStatus(
+            wsManager.sendStatus(
                 state: PlaybackState.playing.rawValue,
-                currentVideo: appState.currentVideoURL,
-                immersiveMode: appState.isImmersiveActive,
+                currentVideo: state.currentVideoURL,
+                immersiveMode: state.isImmersiveActive,
                 currentTime: 0
             )
         }

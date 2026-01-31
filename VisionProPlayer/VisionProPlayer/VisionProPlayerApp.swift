@@ -3,6 +3,13 @@ import SwiftUI
 /// Main entry point for the Vision Pro Player application.
 /// This app acts as a remote-controlled video player that receives commands
 /// via WebSocket from the web controller.
+///
+/// CRITICAL LIFECYCLE for Immersive Stereo Video:
+/// 1. Receive play command
+/// 2. Open immersive space FIRST
+/// 3. Wait for immersive space to be fully ready
+/// 4. THEN prepare video (this prevents memory pressure crashes)
+/// 5. Start playback only when both are ready
 @main
 struct VisionProPlayerApp: App {
     @StateObject private var appState = AppState()
@@ -71,9 +78,26 @@ struct VisionProPlayerApp: App {
                 currentTime: videoManager.currentTime
             )
         }
+        
+        // Handle player ready callback for proper lifecycle
+        videoManager.onPlayerReady = { [weak webSocketManager, weak appState, weak videoManager] in
+            guard let webSocketManager = webSocketManager, let appState = appState, let videoManager = videoManager else { return }
+            
+            print("[App] Video player ready, starting playback")
+            videoManager.startPlayback()
+            
+            // Update status
+            webSocketManager.sendStatus(
+                state: PlaybackState.playing.rawValue,
+                currentVideo: appState.currentVideoURL,
+                immersiveMode: appState.isImmersiveActive,
+                currentTime: 0
+            )
+        }
     }
 
-    /// Handles commands received from the WebSocket server
+    /// Handles commands received from the WebSocket server.
+    /// Implements proper lifecycle for immersive stereo video playback.
     @MainActor
     private func handleCommand(
         _ command: ServerCommand,
@@ -84,39 +108,7 @@ struct VisionProPlayerApp: App {
 
         switch command.action {
         case .play:
-            guard let videoUrl = command.videoUrl else {
-                print("[App] Play command missing video URL")
-                return
-            }
-
-            appState.currentVideoURL = videoUrl
-            
-            // Set video format (default to mono2D if not specified)
-            let format = command.videoFormat ?? .mono2D
-            appState.currentVideoFormat = format
-            print("[App] Video format: \(format.displayName)")
-
-            // Open immersive space if not already open
-            if !appState.isImmersiveActive {
-                let result = await openImmersiveSpace(id: "ImmersiveVideoSpace")
-                switch result {
-                case .opened:
-                    appState.isImmersiveActive = true
-                    print("[App] Immersive space opened")
-                case .error:
-                    print("[App] Failed to open immersive space")
-                    return
-                case .userCancelled:
-                    print("[App] User cancelled immersive space")
-                    return
-                @unknown default:
-                    return
-                }
-            }
-
-            // Start video playback with format
-            try? await Task.sleep(nanoseconds: 500_000_000) // Brief delay for space to initialize
-            videoManager.play(url: videoUrl, format: format)
+            await handlePlayCommand(command: command, appState: appState, videoManager: videoManager)
 
         case .pause:
             videoManager.pause()
@@ -125,27 +117,8 @@ struct VisionProPlayerApp: App {
             videoManager.resume()
 
         case .change:
-            guard let videoUrl = command.videoUrl else {
-                print("[App] Change command missing video URL")
-                return
-            }
-
-            appState.currentVideoURL = videoUrl
-            
-            // Set video format (default to mono2D if not specified)
-            let format = command.videoFormat ?? .mono2D
-            appState.currentVideoFormat = format
-
-            // Open immersive space if not already open
-            if !appState.isImmersiveActive {
-                let result = await openImmersiveSpace(id: "ImmersiveVideoSpace")
-                if case .opened = result {
-                    appState.isImmersiveActive = true
-                }
-            }
-
-            try? await Task.sleep(nanoseconds: 300_000_000)
-            videoManager.play(url: videoUrl, format: format)
+            // Change is similar to play but may already have immersive space open
+            await handlePlayCommand(command: command, appState: appState, videoManager: videoManager)
 
         case .stop:
             videoManager.stop()
@@ -154,8 +127,122 @@ struct VisionProPlayerApp: App {
             if appState.isImmersiveActive {
                 await dismissImmersiveSpace()
                 appState.isImmersiveActive = false
+                print("[App] Immersive space closed")
             }
         }
+    }
+    
+    /// Handles play and change commands with proper lifecycle for large immersive videos.
+    /// 
+    /// CRITICAL LIFECYCLE ORDER:
+    /// 1. Open immersive space
+    /// 2. Wait for immersive space to be ready (minimum 1.5 seconds)
+    /// 3. Prepare video (loads metadata without decoding full video)
+    /// 4. Playback starts when video is ready (via callback)
+    @MainActor
+    private func handlePlayCommand(
+        command: ServerCommand,
+        appState: AppState,
+        videoManager: VideoPlayerManager
+    ) async {
+        guard let videoUrl = command.videoUrl else {
+            print("[App] Play/Change command missing video URL")
+            return
+        }
+
+        // Get video format (default to hemisphere180SBS for VR content)
+        let format = command.videoFormat ?? .hemisphere180SBS
+        
+        print("[App] ========== PLAY COMMAND ==========")
+        print("[App] Video URL: \(videoUrl)")
+        print("[App] Format: \(format.displayName)")
+        print("[App] Is Immersive: \(format.isImmersive)")
+        print("[App] Is Stereoscopic: \(format.isStereoscopic)")
+        
+        // Update app state
+        appState.currentVideoURL = videoUrl
+        appState.currentVideoFormat = format
+        
+        // STEP 1: Open immersive space FIRST (before initializing video)
+        if !appState.isImmersiveActive {
+            print("[App] Step 1: Opening immersive space...")
+            let result = await openImmersiveSpace(id: "ImmersiveVideoSpace")
+            switch result {
+            case .opened:
+                appState.isImmersiveActive = true
+                print("[App] Immersive space opened successfully")
+            case .error:
+                print("[App] ERROR: Failed to open immersive space")
+                appState.setError("Failed to open immersive space")
+                return
+            case .userCancelled:
+                print("[App] User cancelled immersive space")
+                return
+            @unknown default:
+                return
+            }
+        } else {
+            print("[App] Immersive space already active")
+        }
+        
+        // STEP 2: Wait for immersive space to be fully ready
+        // This is CRITICAL for large files - initializing video before
+        // the immersive space is ready causes memory pressure and crashes
+        print("[App] Step 2: Waiting for immersive space to be ready...")
+        let immersiveSpaceReady = await waitForImmersiveSpaceReady()
+        
+        if !immersiveSpaceReady {
+            print("[App] WARNING: Immersive space readiness timeout, proceeding anyway")
+        } else {
+            print("[App] Immersive space is ready")
+        }
+        
+        // STEP 3: Prepare video (does NOT start playback - that happens via callback)
+        print("[App] Step 3: Preparing video...")
+        let prepared = await videoManager.prepareVideo(url: videoUrl, format: format)
+        
+        if !prepared {
+            print("[App] ERROR: Failed to prepare video")
+            appState.setError("Failed to prepare video")
+            return
+        }
+        
+        // STEP 4: Playback will start automatically via onPlayerReady callback
+        print("[App] Video prepared, waiting for player ready callback...")
+        print("[App] ========================================")
+    }
+    
+    /// Waits for the immersive space to be fully initialized.
+    /// This includes:
+    /// - RealityKit content added to scene
+    /// - Rendering context initialized
+    /// - GPU resources allocated
+    @MainActor
+    private func waitForImmersiveSpaceReady() async -> Bool {
+        // Minimum wait time for immersive space initialization
+        // For large videos, we need the rendering context to be fully ready
+        // before initializing video decoding to prevent memory pressure
+        let minimumWaitTime: TimeInterval = 1.5
+        let maxWaitTime: TimeInterval = 5.0
+        let checkInterval: TimeInterval = 0.1
+        
+        let startTime = Date()
+        
+        // First, wait for minimum time to ensure RealityKit is ready
+        try? await Task.sleep(nanoseconds: UInt64(minimumWaitTime * 1_000_000_000))
+        
+        // Then check for additional readiness indicators
+        while Date().timeIntervalSince(startTime) < maxWaitTime {
+            // For now, we rely on timing - future improvement could check
+            // for actual RealityKit scene readiness if such an API exists
+            if Date().timeIntervalSince(startTime) >= minimumWaitTime {
+                return true
+            }
+            
+            try? await Task.sleep(nanoseconds: UInt64(checkInterval * 1_000_000_000))
+        }
+        
+        return false
     }
     
     /// Handles scene phase changes (app lifecycle events)

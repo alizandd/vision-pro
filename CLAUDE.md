@@ -301,6 +301,35 @@ curl http://localhost:8080/api/videos
 
 ## Changelog
 
+### 2026-01-31
+- **[Critical Stereo 180° SBS Fixes]** Major rewrite to fix stereoscopic video playback
+  - **Playback Lifecycle Overhaul** - Fixed crashes on large (~20GB) videos:
+    1. Open immersive space FIRST
+    2. Wait for immersive space to be fully ready (1.5+ seconds)
+    3. THEN initialize video player (prevents memory pressure)
+    4. Start playback only when both are ready
+  - **Memory-Safe Video Loading** - Optimized for large immersive files:
+    - `AVURLAsset` with streaming options (no full file load)
+    - 30-second forward buffer (configurable)
+    - Deferred video initialization
+    - Proper cleanup of all observers
+  - **Improved Hemisphere Geometry** - Correct 180° FOV rendering:
+    - Front-facing hemisphere only (no content behind viewer)
+    - Proper equirectangular UV mapping
+    - 128 segments for smooth curvature
+    - 10m radius for immersive scale
+  - **New Views/ImmersiveVideoPlayer.swift** - AVPlayerViewController wrapper
+    - For future use with system player integration
+    - Includes stereo metadata detection
+  - **New STEREO_VIDEO_GUIDE.md** - Comprehensive documentation:
+    - Explains why native player works but custom app doesn't
+    - Instructions for adding spatial metadata to videos
+    - MV-HEVC conversion guidance
+    - Troubleshooting steps
+  - **Important Limitation**: RealityKit's `VideoMaterial` doesn't support per-eye
+    stereoscopic rendering. Videos MUST have spatial metadata for stereo to work.
+    See STEREO_VIDEO_GUIDE.md for solutions.
+
 ### 2026-01-08
 - **[Stereoscopic & Immersive Video Support]** Full support for VR and 3D video formats
   - New `VideoFormat` enum with 7 format types:

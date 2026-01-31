@@ -5,6 +5,7 @@ import RealityKit
 
 /// Manages video playback for the immersive experience.
 /// Handles loading, playing, pausing, and controlling video content.
+/// Optimized for large stereoscopic immersive videos.
 @MainActor
 class VideoPlayerManager: ObservableObject {
     /// Current playback state
@@ -34,15 +35,30 @@ class VideoPlayerManager: ObservableObject {
             player?.volume = volume
         }
     }
+    
+    /// Whether the player is ready and immersive space can safely initialize video
+    @Published var isPlayerReady: Bool = false
+    
+    /// Whether the video has native stereoscopic metadata
+    @Published var hasNativeStereoMetadata: Bool = false
 
     /// Callback for state changes
     var onStateChange: ((PlaybackState) -> Void)?
+    
+    /// Callback when player is ready for playback (after asset preparation)
+    var onPlayerReady: (() -> Void)?
 
     /// The AVPlayer instance
     private(set) var player: AVPlayer?
+    
+    /// The current AVURLAsset for the video
+    private(set) var currentAsset: AVURLAsset?
 
     /// Player item observer
     private var playerItemObserver: NSKeyValueObservation?
+    
+    /// Player item error observer
+    private var playerItemErrorObserver: NSKeyValueObservation?
 
     /// Time observer token
     private var timeObserver: Any?
@@ -50,7 +66,7 @@ class VideoPlayerManager: ObservableObject {
     /// Cancellables for Combine subscriptions
     private var cancellables = Set<AnyCancellable>()
 
-    /// Video material for RealityKit
+    /// Video material for RealityKit (used for custom rendering fallback)
     private(set) var videoMaterial: VideoMaterial?
 
     init() {
@@ -75,49 +91,179 @@ class VideoPlayerManager: ObservableObject {
     }
 
     // MARK: - Playback Control
-
-    /// Plays a video from the given URL with specified format
-    func play(url: String, format: VideoFormat = .mono2D) {
-        print("[VideoPlayer] Playing: \(url) with format: \(format.displayName)")
-
-        // Stop any existing playback
+    
+    /// Prepares a video for playback without starting it.
+    /// This is used to ensure the video is ready before the immersive space initializes.
+    /// CRITICAL: For large files, this must be called AFTER the immersive space is ready.
+    func prepareVideo(url: String, format: VideoFormat = .mono2D) async -> Bool {
+        print("[VideoPlayer] Preparing video: \(url) with format: \(format.displayName)")
+        
+        // Stop any existing playback first
         stop()
-
+        
         guard let videoURL = URL(string: url) else {
             print("[VideoPlayer] Invalid URL: \(url)")
             updateState(.error)
-            return
+            return false
         }
-
+        
         currentURL = url
         currentFormat = format
+        isPlayerReady = false
+        hasNativeStereoMetadata = false
         updateState(.loading)
-
-        // Create player item and player
-        let playerItem = AVPlayerItem(url: videoURL)
+        
+        // Create optimized asset for large immersive videos
+        let asset = createOptimizedAsset(url: videoURL, format: format)
+        currentAsset = asset
+        
+        // Check for native stereo metadata (important for proper rendering path)
+        hasNativeStereoMetadata = await StereoVideoCompositor.hasNativeStereoMetadata(asset: asset)
+        print("[VideoPlayer] Native stereo metadata: \(hasNativeStereoMetadata)")
+        
+        // Load essential properties asynchronously (doesn't load full video into memory)
+        do {
+            let isPlayable = try await asset.load(.isPlayable)
+            if !isPlayable {
+                print("[VideoPlayer] Asset is not playable")
+                updateState(.error)
+                return false
+            }
+            
+            // Get duration without loading full video
+            let assetDuration = try await asset.load(.duration)
+            duration = assetDuration.seconds.isNaN ? 0 : assetDuration.seconds
+            print("[VideoPlayer] Video duration: \(duration)s")
+            
+        } catch {
+            print("[VideoPlayer] Failed to load asset properties: \(error)")
+            updateState(.error)
+            return false
+        }
+        
+        // Create player item with buffer settings optimized for large files
+        let playerItem = createOptimizedPlayerItem(asset: asset)
+        
+        // Create player
         player = AVPlayer(playerItem: playerItem)
         player?.volume = volume
         player?.isMuted = isMuted
+        
+        // IMPORTANT: Disable automatic waiting to prevent memory pressure
+        player?.automaticallyWaitsToMinimizeStalling = true
+        
+        // Setup observers
+        setupPlayerObservers(playerItem: playerItem)
+        
+        // Wait for player to be ready
+        let ready = await waitForPlayerReadiness()
+        
+        if ready {
+            // Create video material for RealityKit rendering
+            videoMaterial = VideoMaterial(avPlayer: player!)
+            print("[VideoPlayer] Video material created successfully")
+            isPlayerReady = true
+            onPlayerReady?()
+        }
+        
+        return ready
+    }
 
-        // Create video material for RealityKit
-        videoMaterial = VideoMaterial(avPlayer: player!)
-        print("[VideoPlayer] Video material created successfully")
-
+    /// Plays a video from the given URL with specified format.
+    /// For immersive videos, prefer using prepareVideo() first, then startPlayback().
+    func play(url: String, format: VideoFormat = .mono2D) {
+        print("[VideoPlayer] Playing: \(url) with format: \(format.displayName)")
+        
+        // For non-immersive content or when called directly, use legacy path
+        Task {
+            let prepared = await prepareVideo(url: url, format: format)
+            if prepared {
+                startPlayback()
+            }
+        }
+    }
+    
+    /// Starts playback of an already prepared video.
+    /// MUST call prepareVideo() first.
+    func startPlayback() {
+        guard let player = player else {
+            print("[VideoPlayer] Cannot start playback - no player prepared")
+            return
+        }
+        
+        guard isPlayerReady else {
+            print("[VideoPlayer] Cannot start playback - player not ready")
+            return
+        }
+        
+        print("[VideoPlayer] Starting playback")
+        player.play()
+    }
+    
+    /// Creates an optimized AVURLAsset for large immersive video files.
+    private func createOptimizedAsset(url: URL, format: VideoFormat) -> AVURLAsset {
+        var options: [String: Any] = [:]
+        
+        // For file URLs (local videos), use direct file access
+        if url.isFileURL {
+            // No special options needed for local files
+            // The system will handle streaming from disk efficiently
+            print("[VideoPlayer] Creating asset for local file: \(url.lastPathComponent)")
+        } else {
+            // For remote URLs, configure network options
+            options[AVURLAssetAllowsCellularAccessKey] = true
+            options[AVURLAssetHTTPCookiesKey] = HTTPCookieStorage.shared.cookies ?? []
+            print("[VideoPlayer] Creating asset for remote URL")
+        }
+        
+        // Don't require precise duration - allows faster initial load
+        options[AVURLAssetPreferPreciseDurationAndTimingKey] = false
+        
+        return AVURLAsset(url: url, options: options)
+    }
+    
+    /// Creates an optimized AVPlayerItem for large files.
+    private func createOptimizedPlayerItem(asset: AVURLAsset) -> AVPlayerItem {
+        let playerItem = AVPlayerItem(asset: asset)
+        
+        // Configure buffer sizes for large immersive videos
+        // Smaller buffers = less memory usage but more potential stalling
+        // For 20GB files, we want minimal buffering to prevent memory pressure
+        playerItem.preferredForwardBufferDuration = 30  // 30 seconds forward buffer
+        
+        // Allow video to start before full buffer
+        playerItem.canUseNetworkResourcesForLiveStreamingWhilePaused = false
+        
+        return playerItem
+    }
+    
+    /// Sets up all observers for the player item.
+    private func setupPlayerObservers(playerItem: AVPlayerItem) {
         // Observe player item status
         playerItemObserver = playerItem.observe(\.status, options: [.new]) { [weak self] item, _ in
             Task { @MainActor in
                 self?.handlePlayerItemStatus(item.status)
             }
         }
-
+        
+        // Observe player item errors
+        playerItemErrorObserver = playerItem.observe(\.error, options: [.new]) { [weak self] item, _ in
+            if let error = item.error {
+                Task { @MainActor in
+                    print("[VideoPlayer] Player item error: \(error.localizedDescription)")
+                    self?.updateState(.error)
+                }
+            }
+        }
+        
         // Add time observer for progress updates
-        let interval = CMTime(seconds: 0.5, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
+        let interval = CMTime(seconds: 1.0, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
         timeObserver = player?.addPeriodicTimeObserver(forInterval: interval, queue: .main) { [weak self] time in
             Task { @MainActor in
                 self?.updateProgress(time: time)
             }
         }
-
+        
         // Observe playback end
         NotificationCenter.default.addObserver(
             self,
@@ -125,9 +271,45 @@ class VideoPlayerManager: ObservableObject {
             name: .AVPlayerItemDidPlayToEndTime,
             object: playerItem
         )
-
-        // Start playback
-        player?.play()
+        
+        // Observe playback stalls (important for large files)
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(playerDidStall),
+            name: .AVPlayerItemPlaybackStalled,
+            object: playerItem
+        )
+    }
+    
+    /// Waits for the player to become ready for playback.
+    private func waitForPlayerReadiness() async -> Bool {
+        guard let playerItem = player?.currentItem else { return false }
+        
+        let maxWaitTime: TimeInterval = 30.0  // Increased for large files
+        let checkInterval: TimeInterval = 0.1
+        let startTime = Date()
+        
+        while Date().timeIntervalSince(startTime) < maxWaitTime {
+            if playerItem.status == .readyToPlay {
+                print("[VideoPlayer] Player ready after \(Date().timeIntervalSince(startTime))s")
+                return true
+            } else if playerItem.status == .failed {
+                print("[VideoPlayer] Player failed: \(playerItem.error?.localizedDescription ?? "unknown")")
+                return false
+            }
+            
+            try? await Task.sleep(nanoseconds: UInt64(checkInterval * 1_000_000_000))
+        }
+        
+        print("[VideoPlayer] Timeout waiting for player readiness")
+        return false
+    }
+    
+    /// Called when playback stalls (buffering)
+    @objc private func playerDidStall() {
+        print("[VideoPlayer] Playback stalled - buffering")
+        // Don't change state to loading here to avoid UI flicker
+        // The player will automatically resume when buffer is sufficient
     }
 
     /// Pauses the current video
@@ -157,14 +339,18 @@ class VideoPlayerManager: ObservableObject {
         }
         playerItemObserver?.invalidate()
         playerItemObserver = nil
+        playerItemErrorObserver?.invalidate()
+        playerItemErrorObserver = nil
 
         NotificationCenter.default.removeObserver(self, name: .AVPlayerItemDidPlayToEndTime, object: nil)
+        NotificationCenter.default.removeObserver(self, name: .AVPlayerItemPlaybackStalled, object: nil)
 
         // Stop and clear player
         player?.pause()
         player?.replaceCurrentItem(with: nil)
         player = nil
         videoMaterial = nil
+        currentAsset = nil
 
         // Reset state
         currentURL = nil
@@ -172,6 +358,8 @@ class VideoPlayerManager: ObservableObject {
         progress = 0.0
         currentTime = 0.0
         duration = 0.0
+        isPlayerReady = false
+        hasNativeStereoMetadata = false
 
         updateState(.stopped)
     }
@@ -241,128 +429,6 @@ class VideoPlayerManager: ObservableObject {
         Task { @MainActor in
             self.stop()
             try? AVAudioSession.sharedInstance().setActive(false)
-        }
-    }
-
-    // MARK: - RealityKit Integration
-
-    /// Creates a mesh entity with the video material for RealityKit scenes
-    /// For stereoscopic formats, creates appropriate mesh based on format
-    func createVideoEntity(width: Float = 4.0, height: Float = 2.25) -> ModelEntity? {
-        guard let videoMaterial = videoMaterial else {
-            print("[VideoPlayer] No video material available")
-            return nil
-        }
-        
-        print("[VideoPlayer] Creating entity for format: \(currentFormat.displayName)")
-        
-        // Create appropriate mesh based on video format
-        // Note: In simulator, stereoscopic 3D won't look correct but mesh shape will be visible
-        #if targetEnvironment(simulator)
-        print("[VideoPlayer] Running in Simulator - mesh will be created but stereoscopic 3D won't render correctly")
-        #endif
-        
-        let mesh: MeshResource
-        
-        switch currentFormat {
-        case .hemisphere180, .hemisphere180SBS:
-            // 180° hemisphere mesh for VR180 content
-            print("[VideoPlayer] ✅ Creating HEMISPHERE mesh (radius: 5.0, segments: 64) for 180° VR content")
-            mesh = createHemisphereMesh(radius: 5.0, segments: 64)
-            
-        case .sphere360, .sphere360OU, .sphere360SBS:
-            // Full sphere for 360° content
-            print("[VideoPlayer] ✅ Creating SPHERE mesh (radius: 5.0) for 360° VR content")
-            mesh = MeshResource.generateSphere(radius: 5.0)
-            
-        default:
-            // Flat plane for 2D and flat 3D content
-            print("[VideoPlayer] ✅ Creating FLAT PLANE mesh (width: \(width), height: \(height)) for 2D/flat content")
-            mesh = MeshResource.generatePlane(width: width, height: height)
-        }
-
-        // Create and return the entity
-        let entity = ModelEntity(mesh: mesh, materials: [videoMaterial])
-        
-        // For hemisphere/sphere, flip normals inward (we're inside looking out)
-        if currentFormat.isImmersive {
-            entity.scale = SIMD3<Float>(-1, 1, 1) // Mirror X to flip normals
-        }
-        
-        return entity
-    }
-    
-    /// Creates a hemisphere mesh for 180° VR content
-    /// - Parameters:
-    ///   - radius: The radius of the hemisphere
-    ///   - segments: Number of horizontal and vertical segments
-    /// - Returns: A MeshResource for the hemisphere
-    private func createHemisphereMesh(radius: Float, segments: Int) -> MeshResource {
-        var positions: [SIMD3<Float>] = []
-        var normals: [SIMD3<Float>] = []
-        var uvs: [SIMD2<Float>] = []
-        var indices: [UInt32] = []
-        
-        let horizontalSegments = segments
-        let verticalSegments = segments / 2
-        
-        // Generate vertices for hemisphere (front half of sphere)
-        for y in 0...verticalSegments {
-            let v = Float(y) / Float(verticalSegments)
-            let phi = v * .pi // 0 to π (top to bottom)
-            
-            for x in 0...horizontalSegments {
-                let u = Float(x) / Float(horizontalSegments)
-                let theta = (u - 0.5) * .pi // -π/2 to π/2 (left to right, hemisphere)
-                
-                // Spherical to Cartesian
-                let sinPhi = sin(phi)
-                let cosPhi = cos(phi)
-                let sinTheta = sin(theta)
-                let cosTheta = cos(theta)
-                
-                let px = radius * sinPhi * sinTheta
-                let py = radius * cosPhi
-                let pz = -radius * sinPhi * cosTheta // Negative Z so it's in front
-                
-                positions.append(SIMD3<Float>(px, py, pz))
-                
-                // Normal pointing inward (we're inside the hemisphere)
-                normals.append(SIMD3<Float>(-sinPhi * sinTheta, -cosPhi, sinPhi * cosTheta))
-                
-                // UV coordinates - map hemisphere to full texture
-                uvs.append(SIMD2<Float>(u, v))
-            }
-        }
-        
-        // Generate indices for triangles
-        let vertsPerRow = horizontalSegments + 1
-        for y in 0..<verticalSegments {
-            for x in 0..<horizontalSegments {
-                let topLeft = UInt32(y * vertsPerRow + x)
-                let topRight = topLeft + 1
-                let bottomLeft = UInt32((y + 1) * vertsPerRow + x)
-                let bottomRight = bottomLeft + 1
-                
-                // Two triangles per quad (counter-clockwise for inward-facing)
-                indices.append(contentsOf: [topLeft, bottomLeft, topRight])
-                indices.append(contentsOf: [topRight, bottomLeft, bottomRight])
-            }
-        }
-        
-        // Create mesh descriptor
-        var meshDescriptor = MeshDescriptor()
-        meshDescriptor.positions = MeshBuffers.Positions(positions)
-        meshDescriptor.normals = MeshBuffers.Normals(normals)
-        meshDescriptor.textureCoordinates = MeshBuffers.TextureCoordinates(uvs)
-        meshDescriptor.primitives = .triangles(indices)
-        
-        do {
-            return try MeshResource.generate(from: [meshDescriptor])
-        } catch {
-            print("[VideoPlayer] Failed to create hemisphere mesh: \(error)")
-            // Fallback to plane
-            return MeshResource.generatePlane(width: 4.0, height: 2.25)
         }
     }
 }

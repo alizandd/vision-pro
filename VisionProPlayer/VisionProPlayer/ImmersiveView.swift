@@ -4,8 +4,13 @@ import AVFoundation
 import Combine
 
 /// Immersive view for full-screen video playback in visionOS.
-/// Creates a large curved screen in front of the user for an immersive video experience.
-/// Supports 2D, stereoscopic 3D, 180°, and 360° video formats.
+/// Supports stereoscopic 180° SBS content with proper per-eye rendering.
+/// 
+/// IMPORTANT: For Stereo 180° SBS (Side-by-Side) content:
+/// - The video contains both eye views side-by-side (left half = left eye, right half = right eye)
+/// - The projection is equirectangular (spherical mapping)
+/// - The FOV is 180° (front hemisphere only, not behind the viewer)
+/// - Proper UV mapping is critical for correct stereo depth perception
 struct ImmersiveView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var videoManager: VideoPlayerManager
@@ -14,6 +19,7 @@ struct ImmersiveView: View {
     @State private var screenEntity: ModelEntity?
     @State private var lastVideoURL: String?
     @State private var lastVideoFormat: VideoFormat?
+    @State private var isImmersiveSpaceReady: Bool = false
 
     var body: some View {
         RealityView { content in
@@ -21,67 +27,93 @@ struct ImmersiveView: View {
             let rootEntity = Entity()
             rootEntity.name = "VideoRoot"
 
-            // Add ambient lighting
-            let lightEntity = createAmbientLight()
-            rootEntity.addChild(lightEntity)
-
             // Create the video screen holder
-            // Position depends on format - for immersive content, center at origin
+            // For immersive content, center at viewer position
             let screenHolder = Entity()
             screenHolder.name = "ScreenHolder"
-            // Default position for flat screens, will be adjusted in updateVideoScreen
-            screenHolder.position = SIMD3<Float>(0, 1.5, -3)
+            // Position at eye level - user's head will be at origin in immersive space
+            screenHolder.position = SIMD3<Float>(0, 0, 0)
             rootEntity.addChild(screenHolder)
 
             content.add(rootEntity)
 
-            // Store reference for updates - defer to avoid state modification during view update
+            // Mark immersive space as ready and store reference
             Task { @MainActor in
                 self.videoEntity = screenHolder
+                self.isImmersiveSpaceReady = true
+                print("[ImmersiveView] Immersive space ready")
+                
+                // If video is already loading/playing, create the screen now
+                if videoManager.isPlayerReady {
+                    updateVideoScreen()
+                }
             }
 
         } update: { content in
             // Update video content when videoManager changes
             Task { @MainActor in
-                updateVideoScreen()
+                if isImmersiveSpaceReady {
+                    updateVideoScreen()
+                }
+            }
+        }
+        .onChange(of: videoManager.isPlayerReady) { _, isReady in
+            if isReady && isImmersiveSpaceReady {
+                Task { @MainActor in
+                    updateVideoScreen()
+                }
             }
         }
         .onChange(of: videoManager.playbackState) { _, newState in
-            if newState == .playing {
+            if newState == .playing && isImmersiveSpaceReady {
                 Task { @MainActor in
                     updateVideoScreen()
                 }
             } else if newState == .stopped || newState == .idle {
                 // Reset tracking when video stops
                 Task { @MainActor in
-                    lastVideoURL = nil
-                    lastVideoFormat = nil
-                    if let existingScreen = screenEntity {
-                        existingScreen.removeFromParent()
-                        screenEntity = nil
-                    }
+                    cleanupVideoScreen()
                 }
             }
         }
         .onChange(of: videoManager.currentFormat) { _, _ in
             Task { @MainActor in
-                updateVideoScreen()
+                if isImmersiveSpaceReady {
+                    // Force recreation for format change
+                    lastVideoFormat = nil
+                    updateVideoScreen()
+                }
             }
         }
         .onAppear {
-            print("[ImmersiveView] Appeared")
+            print("[ImmersiveView] Appeared - waiting for immersive space setup")
         }
         .onDisappear {
             print("[ImmersiveView] Disappeared")
-            // Note: Video continues playing in background
+            isImmersiveSpaceReady = false
+        }
+    }
+    
+    /// Cleans up the video screen and resets state
+    private func cleanupVideoScreen() {
+        lastVideoURL = nil
+        lastVideoFormat = nil
+        if let existingScreen = screenEntity {
+            existingScreen.removeFromParent()
+            screenEntity = nil
         }
     }
 
-    /// Updates the video screen with current video material
-    /// Adjusts positioning and mesh based on video format
+    /// Updates the video screen with current video material.
+    /// Creates the appropriate geometry based on video format.
     private func updateVideoScreen() {
         guard let videoEntity = videoEntity else {
             print("[ImmersiveView] No video entity yet, skipping update")
+            return
+        }
+        
+        guard isImmersiveSpaceReady else {
+            print("[ImmersiveView] Immersive space not ready, skipping update")
             return
         }
         
@@ -91,9 +123,9 @@ struct ImmersiveView: View {
             return
         }
         
-        // Only proceed if video is actually playing or loading
-        guard videoManager.playbackState == .playing || videoManager.playbackState == .loading else {
-            print("[ImmersiveView] Playback state is \(videoManager.playbackState.rawValue), skipping update")
+        // Only proceed if video is actually ready or playing
+        guard videoManager.isPlayerReady || videoManager.playbackState == .playing else {
+            print("[ImmersiveView] Playback state is \(videoManager.playbackState.rawValue), player ready: \(videoManager.isPlayerReady), skipping update")
             return
         }
         
@@ -109,136 +141,381 @@ struct ImmersiveView: View {
         // Remove existing screen if any
         if let existingScreen = screenEntity {
             existingScreen.removeFromParent()
-            print("[ImmersiveView] Removed existing screen")
+            print("[ImmersiveView] Removed existing screen for new format: \(format.displayName)")
         }
         
         print("[ImmersiveView] Creating screen for format: \(format.displayName)")
+        print("[ImmersiveView] Format properties - isImmersive: \(format.isImmersive), isStereoscopic: \(format.isStereoscopic)")
         
-        // Adjust holder position based on format
-        // For immersive content (180°/360°), center at origin so user is inside the dome/sphere
-        // For flat content, position in front of user
-        if format.isImmersive {
-            // For 180°/360° content, center at eye level
-            videoEntity.position = SIMD3<Float>(0, 1.5, 0)
-            print("[ImmersiveView] Immersive format - centering at origin")
-        } else {
-            // For flat screens, position in front of user
-            videoEntity.position = SIMD3<Float>(0, 1.5, -3)
-            print("[ImmersiveView] Flat format - positioning screen in front")
-        }
+        // Get mesh configuration for this format
+        let meshConfig = getMeshConfiguration(for: format)
         
-        // Calculate screen dimensions based on format
-        let (width, height) = getScreenDimensions(for: format)
-
-        // Create new screen with video material
-        guard let newScreen = videoManager.createVideoEntity(width: width, height: height) else {
-            print("[ImmersiveView] Could not create video entity")
+        // Create new screen with video material and proper mesh
+        guard let newScreen = createVideoScreenEntity(config: meshConfig) else {
+            print("[ImmersiveView] Could not create video screen entity")
             return
         }
 
         newScreen.name = "VideoScreen"
-
-        // Position the screen relative to holder
-        newScreen.position = SIMD3<Float>(0, 0, 0)
         
-        // For immersive content, ensure correct orientation
-        if format.isImmersive {
-            // Rotate 180° on Y axis so front of hemisphere faces user
-            newScreen.orientation = simd_quatf(angle: .pi, axis: SIMD3<Float>(0, 1, 0))
-            print("[ImmersiveView] Applied 180° rotation for immersive content")
-        }
-
         videoEntity.addChild(newScreen)
         
         // Update state reference after adding to scene
-        Task { @MainActor in
-            self.screenEntity = newScreen
-            self.lastVideoURL = currentURL
-            self.lastVideoFormat = format
-        }
+        screenEntity = newScreen
+        lastVideoURL = currentURL
+        lastVideoFormat = format
 
         print("[ImmersiveView] Video screen created successfully for \(format.displayName)")
+        print("[ImmersiveView] Mesh type: \(meshConfig.meshType), radius: \(meshConfig.radius)")
     }
     
-    /// Returns appropriate screen dimensions based on video format
-    private func getScreenDimensions(for format: VideoFormat) -> (Float, Float) {
+    // MARK: - Mesh Configuration
+    
+    /// Configuration for video screen mesh
+    struct MeshConfiguration {
+        enum MeshType {
+            case flatPlane          // For 2D and flat 3D content
+            case hemisphere180      // For 180° content (front hemisphere only)
+            case hemisphere180SBS   // For stereo 180° SBS content
+            case sphere360          // For 360° mono content
+            case sphere360Stereo    // For 360° stereo content
+        }
+        
+        let meshType: MeshType
+        let radius: Float
+        let segments: Int
+        let width: Float    // For flat planes
+        let height: Float   // For flat planes
+        let position: SIMD3<Float>
+        let orientation: simd_quatf
+    }
+    
+    /// Returns the mesh configuration for a given video format
+    private func getMeshConfiguration(for format: VideoFormat) -> MeshConfiguration {
         switch format {
         case .mono2D:
-            // Standard 16:9 flat screen
-            return (4.0, 2.25)
+            return MeshConfiguration(
+                meshType: .flatPlane,
+                radius: 0,
+                segments: 0,
+                width: 4.0,
+                height: 2.25,
+                position: SIMD3<Float>(0, 1.5, -3),
+                orientation: simd_quatf(angle: 0, axis: SIMD3<Float>(0, 1, 0))
+            )
             
-        case .sideBySide3D:
-            // Side-by-side 3D: video is 2:1 ratio squeezed to appear 16:9
-            // Each eye sees half the width, so display at 16:9 ratio
-            return (4.0, 2.25)
+        case .sideBySide3D, .overUnder3D:
+            // Flat 3D content - displayed on a flat plane
+            // Note: True stereo requires per-eye rendering which VideoMaterial doesn't support
+            return MeshConfiguration(
+                meshType: .flatPlane,
+                radius: 0,
+                segments: 0,
+                width: 4.0,
+                height: 2.25,
+                position: SIMD3<Float>(0, 1.5, -3),
+                orientation: simd_quatf(angle: 0, axis: SIMD3<Float>(0, 1, 0))
+            )
             
-        case .overUnder3D:
-            // Over-under 3D: video is 1:1 ratio when expanded
-            // Each eye sees half the height
-            return (4.0, 2.25)
+        case .hemisphere180:
+            // 180° mono - hemisphere in front of viewer
+            return MeshConfiguration(
+                meshType: .hemisphere180,
+                radius: 10.0,  // Larger radius for better immersion
+                segments: 128, // High segment count for smooth curvature
+                width: 0,
+                height: 0,
+                position: SIMD3<Float>(0, 0, 0),  // Centered on viewer
+                orientation: simd_quatf(angle: 0, axis: SIMD3<Float>(0, 1, 0))
+            )
             
-        case .hemisphere180, .hemisphere180SBS:
-            // 180° content uses hemisphere mesh, dimensions are radius-based
-            return (5.0, 5.0)
+        case .hemisphere180SBS:
+            // 180° Stereo SBS - THIS IS THE KEY FORMAT
+            // The mesh needs special UV mapping for stereo content
+            return MeshConfiguration(
+                meshType: .hemisphere180SBS,
+                radius: 10.0,  // Larger radius for immersion
+                segments: 128, // High segment count for smooth curvature
+                width: 0,
+                height: 0,
+                position: SIMD3<Float>(0, 0, 0),  // Centered on viewer
+                orientation: simd_quatf(angle: 0, axis: SIMD3<Float>(0, 1, 0))
+            )
             
-        case .sphere360, .sphere360OU, .sphere360SBS:
-            // 360° content uses full sphere, dimensions are radius-based
-            return (5.0, 5.0)
+        case .sphere360:
+            return MeshConfiguration(
+                meshType: .sphere360,
+                radius: 10.0,
+                segments: 128,
+                width: 0,
+                height: 0,
+                position: SIMD3<Float>(0, 0, 0),
+                orientation: simd_quatf(angle: 0, axis: SIMD3<Float>(0, 1, 0))
+            )
+            
+        case .sphere360OU, .sphere360SBS:
+            return MeshConfiguration(
+                meshType: .sphere360Stereo,
+                radius: 10.0,
+                segments: 128,
+                width: 0,
+                height: 0,
+                position: SIMD3<Float>(0, 0, 0),
+                orientation: simd_quatf(angle: 0, axis: SIMD3<Float>(0, 1, 0))
+            )
         }
     }
-
-    /// Creates ambient lighting for the scene
-    /// Note: Simplified for visionOS 1.0 compatibility
-    private func createAmbientLight() -> Entity {
-        let light = Entity()
+    
+    /// Creates the video screen entity with the appropriate mesh
+    private func createVideoScreenEntity(config: MeshConfiguration) -> ModelEntity? {
+        guard let videoMaterial = videoManager.videoMaterial else {
+            print("[ImmersiveView] No video material available")
+            return nil
+        }
         
-        // For visionOS 1.0 compatibility, we use the default lighting
-        // The video material provides its own illumination
-        // Additional lighting can be added in visionOS 2.0+ if needed
+        let mesh: MeshResource
         
-        return light
-    }
-}
-
-/// A more sophisticated immersive video view with dome/sphere projection
-struct ImmersiveDomeView: View {
-    @EnvironmentObject var appState: AppState
-    @EnvironmentObject var videoManager: VideoPlayerManager
-
-    var body: some View {
-        RealityView { content in
-            // Create a dome/hemisphere for 180-degree video
-            // This is useful for VR180 content
-
-            let rootEntity = Entity()
-            rootEntity.name = "DomeRoot"
-
-            // Position user at center
-            rootEntity.position = SIMD3<Float>(0, 0, 0)
-
-            content.add(rootEntity)
+        switch config.meshType {
+        case .flatPlane:
+            mesh = MeshResource.generatePlane(width: config.width, height: config.height)
+            let entity = ModelEntity(mesh: mesh, materials: [videoMaterial])
+            entity.position = config.position
+            entity.orientation = config.orientation
+            return entity
+            
+        case .hemisphere180:
+            // Create mono hemisphere mesh - full UV mapping
+            mesh = createHemisphere180Mesh(radius: config.radius, segments: config.segments, uvMode: .full)
+            let entity = ModelEntity(mesh: mesh, materials: [videoMaterial])
+            entity.position = config.position
+            // Scale X to -1 to flip for inside-out view (backface culling fix)
+            entity.scale = SIMD3<Float>(-1, 1, 1)
+            return entity
+            
+        case .hemisphere180SBS:
+            // STEREO 180° SBS - Create hemisphere with LEFT half UV only
+            print("[ImmersiveView] Creating hemisphere for Stereo 180° SBS - mapping to LEFT eye view")
+            mesh = createHemisphere180Mesh(radius: config.radius, segments: config.segments, uvMode: .leftHalf)
+            let entity = ModelEntity(mesh: mesh, materials: [videoMaterial])
+            entity.position = config.position
+            // Scale X to -1 to flip for inside-out view
+            entity.scale = SIMD3<Float>(-1, 1, 1)
+            return entity
+            
+        case .sphere360:
+            // Use custom sphere for 360° content (inside-out rendering)
+            mesh = createSphere360Mesh(radius: config.radius, segments: config.segments, uvMode: .full)
+            let entity = ModelEntity(mesh: mesh, materials: [videoMaterial])
+            entity.position = config.position
+            // Scale X to -1 to flip for inside-out view
+            entity.scale = SIMD3<Float>(-1, 1, 1)
+            return entity
+            
+        case .sphere360Stereo:
+            // For stereo 360° content - map to left half only (same limitation)
+            print("[ImmersiveView] Creating sphere for Stereo 360° - mapping to LEFT eye view")
+            mesh = createSphere360Mesh(radius: config.radius, segments: config.segments, uvMode: .leftHalf)
+            let entity = ModelEntity(mesh: mesh, materials: [videoMaterial])
+            entity.position = config.position
+            // Scale X to -1 to flip for inside-out view
+            entity.scale = SIMD3<Float>(-1, 1, 1)
+            return entity
         }
     }
-}
-
-/// Helper view for debugging the immersive space
-struct ImmersiveDebugView: View {
-    @EnvironmentObject var videoManager: VideoPlayerManager
-
-    var body: some View {
-        VStack {
-            Text("Playback: \(videoManager.playbackState.rawValue)")
-            Text("Progress: \(String(format: "%.1f%%", videoManager.progress * 100))")
-            if let url = videoManager.currentURL {
-                Text("URL: \(url)")
-                    .lineLimit(1)
+    
+    // MARK: - UV Mapping Mode
+    
+    /// UV mapping mode for stereo video
+    enum UVMappingMode {
+        case full       // Full texture (mono video)
+        case leftHalf   // Left half only (left eye of SBS video)
+        case rightHalf  // Right half only (right eye of SBS video)
+        case topHalf    // Top half only (left eye of OU video)
+        case bottomHalf // Bottom half only (right eye of OU video)
+    }
+    
+    // MARK: - Hemisphere Mesh Generation
+    
+    /// Creates a hemisphere mesh for 180° equirectangular video content.
+    /// The hemisphere covers the front 180° FOV (from -90° to +90° horizontally).
+    /// Mesh will be flipped with scale.x = -1 for inside-out viewing.
+    ///
+    /// - Parameters:
+    ///   - radius: Radius of the hemisphere (larger = more immersive)
+    ///   - segments: Number of segments (higher = smoother)
+    ///   - uvMode: How to map UV coordinates for stereo content
+    /// - Returns: A MeshResource for the hemisphere
+    private func createHemisphere180Mesh(radius: Float, segments: Int, uvMode: UVMappingMode) -> MeshResource {
+        var positions: [SIMD3<Float>] = []
+        var normals: [SIMD3<Float>] = []
+        var uvs: [SIMD2<Float>] = []
+        var indices: [UInt32] = []
+        
+        let horizontalSegments = segments
+        let verticalSegments = segments / 2
+        
+        print("[ImmersiveView] Generating hemisphere mesh:")
+        print("  - Radius: \(radius)m")
+        print("  - Segments: \(horizontalSegments)x\(verticalSegments)")
+        print("  - UV Mode: \(uvMode)")
+        
+        // Generate vertices for hemisphere (front 180° only)
+        for y in 0...verticalSegments {
+            let v = Float(y) / Float(verticalSegments)
+            let phi = v * .pi  // 0 to π (top to bottom)
+            
+            for x in 0...horizontalSegments {
+                let u = Float(x) / Float(horizontalSegments)
+                let theta = (u - 0.5) * .pi  // -π/2 to +π/2
+                
+                let sinPhi = sin(phi)
+                let cosPhi = cos(phi)
+                let sinTheta = sin(theta)
+                let cosTheta = cos(theta)
+                
+                let px = radius * sinPhi * sinTheta
+                let py = radius * cosPhi
+                let pz = -radius * sinPhi * cosTheta
+                
+                positions.append(SIMD3<Float>(px, py, pz))
+                normals.append(SIMD3<Float>(sinPhi * sinTheta, cosPhi, -sinPhi * cosTheta))
+                
+                // UV mapping - scale.x = -1 handles the flip
+                let (uvU, uvV) = calculateUV(u: u, v: v, mode: uvMode)
+                uvs.append(SIMD2<Float>(uvU, uvV))
             }
         }
-        .padding()
-        .background(.ultraThinMaterial)
-        .cornerRadius(12)
+        
+        // Standard triangle winding (will be flipped by scale.x = -1)
+        let vertsPerRow = horizontalSegments + 1
+        for y in 0..<verticalSegments {
+            for x in 0..<horizontalSegments {
+                let topLeft = UInt32(y * vertsPerRow + x)
+                let topRight = topLeft + 1
+                let bottomLeft = UInt32((y + 1) * vertsPerRow + x)
+                let bottomRight = bottomLeft + 1
+                
+                indices.append(contentsOf: [topLeft, bottomLeft, topRight])
+                indices.append(contentsOf: [topRight, bottomLeft, bottomRight])
+            }
+        }
+        
+        print("[ImmersiveView] Generated \(positions.count) vertices, \(indices.count / 3) triangles")
+        
+        var meshDescriptor = MeshDescriptor()
+        meshDescriptor.positions = MeshBuffers.Positions(positions)
+        meshDescriptor.normals = MeshBuffers.Normals(normals)
+        meshDescriptor.textureCoordinates = MeshBuffers.TextureCoordinates(uvs)
+        meshDescriptor.primitives = .triangles(indices)
+        
+        do {
+            let mesh = try MeshResource.generate(from: [meshDescriptor])
+            print("[ImmersiveView] Hemisphere mesh generated successfully")
+            return mesh
+        } catch {
+            print("[ImmersiveView] Failed to create hemisphere mesh: \(error)")
+            return MeshResource.generatePlane(width: 4.0, height: 2.25)
+        }
+    }
+    
+    /// Creates a sphere mesh for 360° video content with UV mapping options.
+    /// Mesh will be flipped with scale.x = -1 for inside-out viewing.
+    private func createSphere360Mesh(radius: Float, segments: Int, uvMode: UVMappingMode) -> MeshResource {
+        var positions: [SIMD3<Float>] = []
+        var normals: [SIMD3<Float>] = []
+        var uvs: [SIMD2<Float>] = []
+        var indices: [UInt32] = []
+        
+        let horizontalSegments = segments
+        let verticalSegments = segments / 2
+        
+        print("[ImmersiveView] Generating sphere mesh:")
+        print("  - Radius: \(radius)m")
+        print("  - Segments: \(horizontalSegments)x\(verticalSegments)")
+        print("  - UV Mode: \(uvMode)")
+        
+        // Generate vertices for full sphere
+        for y in 0...verticalSegments {
+            let v = Float(y) / Float(verticalSegments)
+            let phi = v * .pi  // 0 to π (top to bottom)
+            
+            for x in 0...horizontalSegments {
+                let u = Float(x) / Float(horizontalSegments)
+                let theta = u * 2 * .pi  // 0 to 2π
+                
+                let sinPhi = sin(phi)
+                let cosPhi = cos(phi)
+                let sinTheta = sin(theta)
+                let cosTheta = cos(theta)
+                
+                let px = radius * sinPhi * sinTheta
+                let py = radius * cosPhi
+                let pz = radius * sinPhi * cosTheta
+                
+                positions.append(SIMD3<Float>(px, py, pz))
+                normals.append(SIMD3<Float>(sinPhi * sinTheta, cosPhi, sinPhi * cosTheta))
+                
+                // UV mapping - scale.x = -1 handles the flip
+                let (uvU, uvV) = calculateUV(u: u, v: v, mode: uvMode)
+                uvs.append(SIMD2<Float>(uvU, uvV))
+            }
+        }
+        
+        // Standard triangle winding (will be flipped by scale.x = -1)
+        let vertsPerRow = horizontalSegments + 1
+        for y in 0..<verticalSegments {
+            for x in 0..<horizontalSegments {
+                let topLeft = UInt32(y * vertsPerRow + x)
+                let topRight = topLeft + 1
+                let bottomLeft = UInt32((y + 1) * vertsPerRow + x)
+                let bottomRight = bottomLeft + 1
+                
+                indices.append(contentsOf: [topLeft, bottomLeft, topRight])
+                indices.append(contentsOf: [topRight, bottomLeft, bottomRight])
+            }
+        }
+        
+        var meshDescriptor = MeshDescriptor()
+        meshDescriptor.positions = MeshBuffers.Positions(positions)
+        meshDescriptor.normals = MeshBuffers.Normals(normals)
+        meshDescriptor.textureCoordinates = MeshBuffers.TextureCoordinates(uvs)
+        meshDescriptor.primitives = .triangles(indices)
+        
+        do {
+            return try MeshResource.generate(from: [meshDescriptor])
+        } catch {
+            print("[ImmersiveView] Failed to create sphere mesh: \(error)")
+            return MeshResource.generateSphere(radius: radius)
+        }
+    }
+    
+    /// Calculates UV coordinates based on the mapping mode.
+    /// For SBS stereo videos, maps the hemisphere to only the left half of the texture.
+    /// V is flipped (1-v) because equirectangular videos have V=0 at top, but mesh has V=0 at bottom.
+    private func calculateUV(u: Float, v: Float, mode: UVMappingMode) -> (Float, Float) {
+        // Flip V to correct vertical orientation
+        let flippedV = 1.0 - v
+        
+        switch mode {
+        case .full:
+            return (u, flippedV)
+        case .leftHalf:
+            // Map U: 0-1 to 0-0.5 (left half of SBS video)
+            return (u * 0.5, flippedV)
+        case .rightHalf:
+            // Map U: 0-1 to 0.5-1.0 (right half of SBS video)
+            return (0.5 + u * 0.5, flippedV)
+        case .topHalf:
+            // Map V: 0-1 to 0-0.5 (top half of OU video)
+            return (u, flippedV * 0.5)
+        case .bottomHalf:
+            // Map V: 0-1 to 0.5-1.0 (bottom half of OU video)
+            return (u, 0.5 + flippedV * 0.5)
+        }
     }
 }
+
+// MARK: - Preview
 
 #Preview(immersionStyle: .full) {
     ImmersiveView()

@@ -33,6 +33,9 @@ class VisionProController {
         this.deviceMediaSelections = new Map();
         this.deviceFormatSelections = new Map();
 
+        // Device local videos (videos stored on device, not server)
+        this.deviceLocalVideos = new Map();
+
         // Video format options
         this.videoFormats = [
             { value: 'mono2d', label: '2D Flat' },
@@ -398,6 +401,20 @@ class VisionProController {
         return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
     }
 
+    /**
+     * Get local videos for a specific device
+     */
+    getLocalVideosForDevice(deviceId) {
+        return this.deviceLocalVideos.get(deviceId) || [];
+    }
+
+    /**
+     * Check if a video URL is a local file (file:// protocol)
+     */
+    isLocalVideo(url) {
+        return url && url.startsWith('file://');
+    }
+
     // =====================================
     // MESSAGE HANDLING
     // =====================================
@@ -413,6 +430,11 @@ class VisionProController {
                 if (message.devices) {
                     message.devices.forEach(device => {
                         this.devices.set(device.deviceId, device);
+                        // Store local videos if present
+                        if (device.localVideos && device.localVideos.length > 0) {
+                            this.deviceLocalVideos.set(device.deviceId, device.localVideos);
+                            this.log(`Device ${device.deviceName} has ${device.localVideos.length} local video(s)`, 'info');
+                        }
                     });
                     this.renderDevicesGrid();
                 }
@@ -461,6 +483,13 @@ class VisionProController {
 
             case 'commandAck':
                 this.log(`Command '${message.action}' sent to ${message.targetCount} device(s)`, 'success');
+                break;
+
+            case 'deviceLocalVideos':
+                // Received local videos list from a device
+                this.deviceLocalVideos.set(message.deviceId, message.videos || []);
+                this.log(`${message.deviceName}: ${message.videos?.length || 0} local video(s) found`, 'success');
+                this.renderDevicesGrid();
                 break;
 
             case 'error':
@@ -651,9 +680,22 @@ class VisionProController {
                         <label>Choose media:</label>
                         <select class="media-select" data-device-id="${deviceId}">
                             <option value="">Select video...</option>
-                            ${this.presetVideos.map(v => `
-                                <option value="${this.escapeHtml(v.url)}" ${selectedMedia === v.url ? 'selected' : ''}>${this.escapeHtml(v.name)}</option>
-                            `).join('')}
+                            ${this.getLocalVideosForDevice(deviceId).length > 0 ? `
+                                <optgroup label="📱 On Device (Local)">
+                                    ${this.getLocalVideosForDevice(deviceId).map(v => `
+                                        <option value="${this.escapeHtml(v.url)}" data-local="true" ${selectedMedia === v.url ? 'selected' : ''}>
+                                            ${this.escapeHtml(v.name)} (${this.formatFileSize(v.size)})
+                                        </option>
+                                    `).join('')}
+                                </optgroup>
+                            ` : ''}
+                            ${this.presetVideos.length > 0 ? `
+                                <optgroup label="🌐 Server Videos">
+                                    ${this.presetVideos.map(v => `
+                                        <option value="${this.escapeHtml(v.url)}" ${selectedMedia === v.url ? 'selected' : ''}>${this.escapeHtml(v.name)}</option>
+                                    `).join('')}
+                                </optgroup>
+                            ` : ''}
                         </select>
                     </div>
                     <div class="format-selector-row">
@@ -666,14 +708,17 @@ class VisionProController {
                     </div>
                     <div class="current-video-display">
                         ${currentVideo ? `
-                            <div class="video-icon">
+                            <div class="video-icon ${this.isLocalVideo(currentVideo) ? 'local' : 'server'}">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <polygon points="5,3 19,12 5,21" fill="currentColor"/>
                                 </svg>
                             </div>
                             <div class="video-info">
-                                <div class="video-title">${this.escapeHtml(videoName || 'Playing')}</div>
-                                <div class="video-url">${this.escapeHtml(currentVideo)}</div>
+                                <div class="video-title">
+                                    ${this.isLocalVideo(currentVideo) ? '<span class="local-badge">LOCAL</span>' : ''}
+                                    ${this.escapeHtml(videoName || 'Playing')}
+                                </div>
+                                <div class="video-url">${this.escapeHtml(this.isLocalVideo(currentVideo) ? 'Playing from device storage' : currentVideo)}</div>
                             </div>
                         ` : `
                             <span class="no-video-playing">No video playing</span>

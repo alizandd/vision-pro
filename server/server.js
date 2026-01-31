@@ -260,6 +260,10 @@ function handleMessage(ws, message, clientInfo, setClientInfo) {
             handleStatusUpdate(ws, message, clientInfo);
             break;
 
+        case 'localVideos':
+            handleLocalVideos(ws, message, clientInfo);
+            break;
+
         case 'ping':
             ws.send(JSON.stringify({ type: 'pong', timestamp: Date.now() }));
             break;
@@ -327,11 +331,12 @@ function handleRegistration(ws, message, setClientInfo) {
 
         console.log(`[Server] Controller registered: ${deviceName}`);
 
-        // Send current device list to controller
+        // Send current device list to controller (including local videos)
         const deviceList = Array.from(devices.entries()).map(([id, data]) => ({
             deviceId: id,
             deviceName: data.info.deviceName,
-            state: data.state
+            state: data.state,
+            localVideos: data.localVideos || []
         }));
 
         ws.send(JSON.stringify({
@@ -430,6 +435,45 @@ function handleStatusUpdate(ws, message, clientInfo) {
             state: device.state
         });
     }
+}
+
+/**
+ * Handle local videos list from Vision Pro devices
+ */
+function handleLocalVideos(ws, message, clientInfo) {
+    if (!clientInfo || clientInfo.deviceType !== 'visionpro') {
+        return;
+    }
+
+    const device = devices.get(clientInfo.deviceId);
+    if (device) {
+        // Store local videos in device data
+        device.localVideos = message.videos || [];
+
+        console.log(`[Server] Received ${device.localVideos.length} local videos from ${clientInfo.deviceName}`);
+        device.localVideos.forEach((video, i) => {
+            console.log(`[Server]   ${i + 1}. ${video.name} (${formatFileSize(video.size)})`);
+        });
+
+        // Broadcast local videos to all controllers
+        broadcastToControllers({
+            type: 'deviceLocalVideos',
+            deviceId: clientInfo.deviceId,
+            deviceName: clientInfo.deviceName,
+            videos: device.localVideos
+        });
+    }
+}
+
+/**
+ * Format file size for display
+ */
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
 /**

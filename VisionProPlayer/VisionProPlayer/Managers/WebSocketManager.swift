@@ -295,6 +295,16 @@ class WebSocketManager: ObservableObject {
         )
         send(status)
     }
+    
+    /// Sends the list of local videos to the server
+    func sendLocalVideos(_ videos: [LocalVideo]) {
+        let message = LocalVideosMessage(
+            deviceId: deviceId,
+            videos: videos
+        )
+        print("[WebSocket] Sending \(videos.count) local videos to server")
+        send(message)
+    }
 
     /// Starts periodic heartbeat to keep connection alive
     private func startHeartbeat() {
@@ -374,5 +384,18 @@ extension StatusMessage {
         try container.encode(currentVideo, forKey: .currentVideo)
         try container.encode(immersiveMode, forKey: .immersiveMode)
         try container.encode(currentTime, forKey: .currentTime)
+    }
+}
+
+extension LocalVideosMessage {
+    enum CodingKeys: String, CodingKey {
+        case type, deviceId, videos
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(type, forKey: .type)
+        try container.encode(deviceId, forKey: .deviceId)
+        try container.encode(videos, forKey: .videos)
     }
 }

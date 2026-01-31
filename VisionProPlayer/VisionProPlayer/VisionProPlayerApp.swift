@@ -15,6 +15,7 @@ struct VisionProPlayerApp: App {
     @StateObject private var appState = AppState()
     @StateObject private var webSocketManager = WebSocketManager()
     @StateObject private var videoManager = VideoPlayerManager()
+    @StateObject private var localVideoManager = LocalVideoManager()
 
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.openImmersiveSpace) private var openImmersiveSpace
@@ -27,9 +28,14 @@ struct VisionProPlayerApp: App {
                 .environmentObject(appState)
                 .environmentObject(webSocketManager)
                 .environmentObject(videoManager)
+                .environmentObject(localVideoManager)
                 .onAppear {
                     setupCommandHandling()
+                    setupLocalVideoSync()
                     webSocketManager.connect()
+                    
+                    // Scan local videos on startup
+                    localVideoManager.scanVideos()
                 }
         }
         .windowStyle(.plain)
@@ -56,6 +62,29 @@ struct VisionProPlayerApp: App {
         .immersionStyle(selection: .constant(.full), in: .full)
     }
 
+    /// Sets up syncing of local videos with server when connected
+    private func setupLocalVideoSync() {
+        // When connection state changes to connected, send local videos
+        // Using a simple polling approach since we can't easily observe @Published from here
+        Task { @MainActor in
+            var wasConnected = false
+            while true {
+                try? await Task.sleep(nanoseconds: 1_000_000_000) // Check every second
+                
+                let isNowConnected = webSocketManager.isConnected
+                
+                // When we just connected, send local videos
+                if isNowConnected && !wasConnected {
+                    // Small delay to ensure registration is complete
+                    try? await Task.sleep(nanoseconds: 500_000_000)
+                    webSocketManager.sendLocalVideos(localVideoManager.localVideos)
+                }
+                
+                wasConnected = isNowConnected
+            }
+        }
+    }
+    
     /// Sets up the command handling pipeline between WebSocket and video player
     private func setupCommandHandling() {
         // Handle incoming commands from WebSocket

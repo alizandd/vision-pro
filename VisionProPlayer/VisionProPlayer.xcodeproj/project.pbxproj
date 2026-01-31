@@ -17,6 +17,7 @@
 		A11111111111111111111118 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A22222222222222222222229 /* SettingsView.swift */; };
 		A11111111111111111111119 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2222222222222222222222A /* Models.swift */; };
 		A1111111111111111111111A /* ImmersiveVideoPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2222222222222222222222C /* ImmersiveVideoPlayer.swift */; };
+		A1111111111111111111111B /* LocalVideoManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2222222222222222222222D /* LocalVideoManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -32,6 +33,7 @@
 		A2222222222222222222222A /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		A2222222222222222222222B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A2222222222222222222222C /* ImmersiveVideoPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImmersiveVideoPlayer.swift; sourceTree = "<group>"; };
+		A2222222222222222222222D /* LocalVideoManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalVideoManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -83,6 +85,7 @@
 				A22222222222222222222225 /* WebSocketManager.swift */,
 				A22222222222222222222226 /* VideoPlayerManager.swift */,
 				A22222222222222222222227 /* AppState.swift */,
+				A2222222222222222222222D /* LocalVideoManager.swift */,
 			);
 			path = Managers;
 			sourceTree = "<group>";
@@ -181,6 +184,7 @@
 				A11111111111111111111118 /* SettingsView.swift in Sources */,
 				A11111111111111111111119 /* Models.swift in Sources */,
 				A1111111111111111111111A /* ImmersiveVideoPlayer.swift in Sources */,
+				A1111111111111111111111B /* LocalVideoManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

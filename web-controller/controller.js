@@ -745,20 +745,45 @@ class VisionProController {
                 </div>
                 <div class="device-preview-section">
                     <div class="preview-thumbnail">
-                        ${currentVideo && (playbackState === 'playing' || playbackState === 'paused') ? `
-                            <video src="${this.escapeHtml(currentVideo)}" muted loop></video>
-                            ${playbackState === 'playing' ? `
-                                <div class="preview-live-badge">
-                                    <span class="live-dot"></span>
-                                    LIVE
+                        ${currentVideo && (playbackState === 'playing' || playbackState === 'paused') ? (
+                            this.isLocalVideo(currentVideo) ? `
+                                <div class="local-video-placeholder">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="2" y="3" width="20" height="14" rx="2"/>
+                                        <polygon points="10,8 10,13 14,10.5" fill="currentColor"/>
+                                        <line x1="2" y1="20" x2="22" y2="20"/>
+                                        <line x1="6" y1="20" x2="6" y2="17"/>
+                                        <line x1="18" y1="20" x2="18" y2="17"/>
+                                    </svg>
+                                    <span>Playing on Device</span>
+                                    <small>Local video - no web preview</small>
                                 </div>
+                                ${playbackState === 'playing' ? `
+                                    <div class="preview-live-badge local">
+                                        <span class="live-dot"></span>
+                                        LOCAL
+                                    </div>
+                                ` : `
+                                    <div class="preview-paused-badge">
+                                        <span class="paused-icon">❚❚</span>
+                                        PAUSED
+                                    </div>
+                                `}
                             ` : `
-                                <div class="preview-paused-badge">
-                                    <span class="paused-icon">❚❚</span>
-                                    PAUSED
-                                </div>
-                            `}
-                        ` : `
+                                <video src="${this.escapeHtml(currentVideo)}" muted loop></video>
+                                ${playbackState === 'playing' ? `
+                                    <div class="preview-live-badge">
+                                        <span class="live-dot"></span>
+                                        LIVE
+                                    </div>
+                                ` : `
+                                    <div class="preview-paused-badge">
+                                        <span class="paused-icon">❚❚</span>
+                                        PAUSED
+                                    </div>
+                                `}
+                            `
+                        ) : `
                             <div class="no-preview-placeholder">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <rect x="2" y="2" width="20" height="20" rx="2"/>
@@ -875,24 +900,46 @@ class VisionProController {
         this.previewStatus.textContent = playbackState.toUpperCase();
 
         if (currentVideo && (playbackState === 'playing' || playbackState === 'paused')) {
-            // Only change src if different to avoid reload (compare without protocol differences)
-            const currentSrc = this.previewVideo.src || '';
-            const isSameVideo = currentSrc.endsWith(currentVideo.split('/').pop()) || currentSrc === currentVideo;
-
-            if (!isSameVideo) {
-                this.previewVideo.src = currentVideo;
-            }
-            this.previewOverlay.classList.add('hidden');
-            this.previewVideoTitle.textContent = this.getVideoNameFromUrl(currentVideo) || currentVideo;
-
-            // Sync playback state without restarting
-            if (playbackState === 'playing') {
-                if (this.previewVideo.paused) {
-                    this.previewVideo.play().catch(() => { });
-                }
+            // Check if it's a local video (file:// URL)
+            if (this.isLocalVideo(currentVideo)) {
+                // Local videos can't be previewed in browser
+                this.previewVideo.pause();
+                this.previewVideo.src = '';
+                this.previewOverlay.classList.remove('hidden');
+                this.previewOverlay.innerHTML = `
+                    <div class="local-video-overlay">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="48" height="48">
+                            <rect x="2" y="3" width="20" height="14" rx="2"/>
+                            <polygon points="10,8 10,13 14,10.5" fill="currentColor"/>
+                            <line x1="2" y1="20" x2="22" y2="20"/>
+                            <line x1="6" y1="20" x2="6" y2="17"/>
+                            <line x1="18" y1="20" x2="18" y2="17"/>
+                        </svg>
+                        <span>${playbackState === 'playing' ? 'Playing' : 'Paused'} on Device</span>
+                        <small>Local video - no web preview available</small>
+                    </div>
+                `;
+                this.previewVideoTitle.textContent = this.getVideoNameFromUrl(currentVideo) || 'Local Video';
             } else {
-                if (!this.previewVideo.paused) {
-                    this.previewVideo.pause();
+                // Server video - can preview
+                const currentSrc = this.previewVideo.src || '';
+                const isSameVideo = currentSrc.endsWith(currentVideo.split('/').pop()) || currentSrc === currentVideo;
+
+                if (!isSameVideo) {
+                    this.previewVideo.src = currentVideo;
+                }
+                this.previewOverlay.classList.add('hidden');
+                this.previewVideoTitle.textContent = this.getVideoNameFromUrl(currentVideo) || currentVideo;
+
+                // Sync playback state without restarting
+                if (playbackState === 'playing') {
+                    if (this.previewVideo.paused) {
+                        this.previewVideo.play().catch(() => { });
+                    }
+                } else {
+                    if (!this.previewVideo.paused) {
+                        this.previewVideo.pause();
+                    }
                 }
             }
         } else {
@@ -901,6 +948,7 @@ class VisionProController {
                 this.previewVideo.src = '';
             }
             this.previewOverlay.classList.remove('hidden');
+            this.previewOverlay.innerHTML = `<span>No video playing</span>`;
             this.previewVideoTitle.textContent = '—';
         }
     }
@@ -913,11 +961,17 @@ class VisionProController {
      * Sync video preview with Vision Pro device state
      * When device plays/pauses, the web preview syncs automatically
      * Also syncs the current playback time for accurate preview
+     * Note: Local videos (file://) cannot be previewed in browser
      */
     syncVideoPreview(deviceId, state, prevState) {
         const currentVideo = state.currentVideo;
         const playbackState = state.playbackState;
         const deviceTime = state.currentTime || 0;
+
+        // Skip sync for local videos - browser can't play file:// URLs
+        if (this.isLocalVideo(currentVideo)) {
+            return;
+        }
 
         // Find the video element in the device card
         const card = document.querySelector(`.device-card[data-device-id="${deviceId}"]`);

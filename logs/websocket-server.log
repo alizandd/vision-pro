@@ -8,13 +8,506 @@
 [Server] Health Check: http://0.0.0.0:8080/health
 [Server] Device List: http://0.0.0.0:8080/devices
 [Server] ========================================
-[Server] Available videos: 4
+[Server] Available videos: 7
 [Server]   1. BigBuckBunny.mp4
 [Server]   2. VRCarRender001.mp4
-[Server]   3. output.mp4
-[Server]   4. output_fixed.mp4
+[Server]   3. VRCarRender001_original.mp4
+[Server]   4. output.mp4
+[Server]   5. output_fixed.mp4
+[Server]   6. stream8k_br200_sp0.mp4
+[Server]   7. stream_br200_sp0.mp4
 [Server] ========================================
+[Server] New connection from 127.0.0.1
+[Server] Received message: {"deviceType":"visionpro","deviceName":"Vision Pro","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","type":"register"}
+[Server] ✅ Vision Pro registered: Vision Pro (776ADE85-EDEA-4EE1-9D01-7ED54A7448F5)
+[Server] Total Vision Pro devices: 1
+[Server] Broadcasting to 0 controllers: {"type":"deviceConnected","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","deviceName":"Vision Pro"}
+[Server] Received message: {"deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","type":"localVideos","videos":[{"extension":"mp4","id":"59BEF1BF-411A-4AE9-9789-64A49C5DDFB7","size":158008374,"name":"BigBuckBunny","filename":"BigBuckBunny.MP4","url":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/7C3FB5EA-71FA-4081-AD22-CE463581BA51/Documents/Videos/BigBuckBunny.MP4","modified":284804946},{"extension":"mp4","id":"1B237162-86E9-42E2-83BC-393A97962741","size":101904873,"name":"output fixed","filename":"output_fixed.mp4","url":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/7C3FB5EA-71FA-4081-AD22-CE463581BA51/Documents/Videos/output_fixed.mp4","modified":791591931.2680626}]}
+[Server] Received 2 local videos from Vision Pro
+[Server]   1. BigBuckBunny (150.69 MB)
+[Server]   2. output fixed (97.18 MB)
 [Server] New connection from 192.168.70.131
-[Server] Received message: {"type":"register","deviceId":"controller-12q4jmms0","deviceName":"Web Orchestrator","deviceType":"controller"}
+[Server] Received message: {"type":"register","deviceId":"controller-ria24b3qj","deviceName":"Web Orchestrator","deviceType":"controller"}
 [Server] Controller registered: Web Orchestrator
-[Server] Video list requested: 4 videos found
+[Server] Video list requested: 7 videos found
+[Server] Received message: {"type":"command","action":"play","targetDevices":["776ADE85-EDEA-4EE1-9D01-7ED54A7448F5"],"videoUrl":"http://192.168.70.131:8080/videos/stream8k_br200_sp0.mp4","videoFormat":"hemisphere180sbs"}
+[Server] Sent play command to Vision Pro
+[Server] Received message: {"currentVideo":"http://192.168.70.131:8080/videos/stream8k_br200_sp0.mp4","type":"status","state":"stopped","currentTime":0,"deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","immersiveMode":true,"deviceName":"Vision Pro"}
+[Server] Status update from Vision Pro: stopped (time: 0)
+[Server] Received message: {"currentVideo":"http://192.168.70.131:8080/videos/stream8k_br200_sp0.mp4","type":"status","state":"loading","currentTime":0,"deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","immersiveMode":true,"deviceName":"Vision Pro"}
+[Server] Status update from Vision Pro: loading (time: 0)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (0-1/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (0-114157184/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (540318-114157184/114157185)
+[Server] Received message: {"currentTime":0,"state":"playing","deviceName":"Vision Pro","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","currentVideo":"http://192.168.70.131:8080/videos/stream8k_br200_sp0.mp4","type":"status","immersiveMode":true}
+[Server] Status update from Vision Pro: playing (time: 0)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (0-114157184/114157185)
+[Server] Received message: {"type":"status","currentTime":0,"deviceName":"Vision Pro","state":"playing","currentVideo":"http://192.168.70.131:8080/videos/stream8k_br200_sp0.mp4","immersiveMode":true,"deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5"}
+[Server] Status update from Vision Pro: playing (time: 0)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (0-114157184/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (59800887-59834367/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (19529728-114157184/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (30605312-31195135/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (31391744-31850495/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (32128664-114157184/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (37945344-38010879/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (25296896-25690111/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (38010880-38076415/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (26017792-27590655/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (38076416-38141951/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (38141952-114157184/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (56033280-56098815/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (56098816-56623103/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (56623104-114157184/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (58851328-58916863/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (58916864-58982399/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (58982400-59047935/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (59047936-59113471/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (59113472-59179007/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (59179008-59244543/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (59244544-59310079/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (59310080-59375615/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (59375616-59441151/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (59441152-59506687/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (59506688-59572223/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (59572224-59637759/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (59637760-59703295/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (59703296-59768831/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (59768832-59834367/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (59834368-59899903/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (59899904-59965439/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (59965440-60030975/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (60030976-60096511/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (60096512-60162047/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (9240576-31326207/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (60162048-60227583/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (60227584-60293119/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (60293120-60358655/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (60358656-60424191/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (60424192-60489727/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (60489728-60555263/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (60555264-106430463/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (71630848-72024063/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (72220672-72548351/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (72629912-114157184/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (77725696-114157184/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (78315520-78381055/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (19660800-50200575/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (78381056-78446591/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (78446592-78512127/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (78512128-78577663/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (78577664-78643199/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (78643200-78708735/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (78708736-78774271/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (78774272-78839807/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (78839808-78905343/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (78905344-78970879/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (78970880-79036415/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (79036416-79101951/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (79101952-114157184/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (97320960-114157184/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (99024896-99090431/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (40042496-69599231/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (99090432-99155967/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (99614720-99680255/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (99680256-99745791/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (99745792-99811327/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (99811328-99876863/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (99876864-99942399/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (99942400-100007935/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (100007936-100073471/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (100073472-100139007/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (100139008-100204543/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (100204544-100270079/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (100270080-114157184/114157185)
+[Server] Received message: {"deviceName":"Vision Pro","currentVideo":"http://192.168.70.131:8080/videos/stream8k_br200_sp0.mp4","currentTime":4.542,"state":"stopped","type":"status","immersiveMode":true,"deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5"}
+[Server] Status update from Vision Pro: stopped (time: 4.542)
+[Server] Received message: {"type":"command","action":"stop","targetDevices":["776ADE85-EDEA-4EE1-9D01-7ED54A7448F5"]}
+[Server] Sent stop command to Vision Pro
+[Server] Received message: {"deviceName":"Vision Pro","immersiveMode":true,"currentTime":0,"deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","currentVideo":"http://192.168.70.131:8080/videos/stream8k_br200_sp0.mp4","type":"status","state":"stopped"}
+[Server] Status update from Vision Pro: stopped (time: 0)
+[Server] Received message: {"type":"command","action":"play","targetDevices":["776ADE85-EDEA-4EE1-9D01-7ED54A7448F5"],"videoUrl":"http://192.168.70.131:8080/videos/stream8k_br200_sp0.mp4","videoFormat":"sphere360sbs"}
+[Server] Sent play command to Vision Pro
+[Server] Received message: {"currentTime":0,"type":"status","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","immersiveMode":true,"currentVideo":"http://192.168.70.131:8080/videos/stream8k_br200_sp0.mp4","deviceName":"Vision Pro","state":"stopped"}
+[Server] Status update from Vision Pro: stopped (time: 0)
+[Server] Received message: {"currentTime":0,"type":"status","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","immersiveMode":true,"currentVideo":"http://192.168.70.131:8080/videos/stream8k_br200_sp0.mp4","deviceName":"Vision Pro","state":"loading"}
+[Server] Status update from Vision Pro: loading (time: 0)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (0-1/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (0-114157184/114157185)
+[Server] Received message: {"deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","deviceName":"Vision Pro","immersiveMode":true,"currentVideo":"http://192.168.70.131:8080/videos/stream8k_br200_sp0.mp4","state":"playing","currentTime":0,"type":"status"}
+[Server] Status update from Vision Pro: playing (time: 0)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (540318-114157184/114157185)
+[Server] Received message: {"type":"status","state":"playing","currentVideo":"http://192.168.70.131:8080/videos/stream8k_br200_sp0.mp4","deviceName":"Vision Pro","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","immersiveMode":true,"currentTime":0}
+[Server] Status update from Vision Pro: playing (time: 0)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (30801920-106889215/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (17956864-107610111/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (33095680-114157184/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (34734080-34799615/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (34799616-35127295/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (35520512-35651583/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (35651584-114157184/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (44761088-114157184/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (46399488-46465023/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (10354688-19267583/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (46465024-46530559/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (46661632-46727167/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (46727168-46792703/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (46792704-46858239/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (46858240-46923775/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (46923776-46989311/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (46989312-47054847/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (19529728-20840447/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (47054848-47120383/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (47120384-47448063/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (22413312-35520511/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (47513600-47579135/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (47579136-47644671/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (47644672-47775743/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (48037888-114157184/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (62455808-114157184/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (63045632-63111167/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (7602176-35520511/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (63111168-63176703/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (63176704-63242239/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (63242240-63307775/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (63307776-63373311/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (63373312-63438847/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (63438848-63504383/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (63504384-63569919/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (63569920-63635455/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (63897600-63963135/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (63963136-64028671/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (64028672-64094207/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (64094208-64159743/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (64159744-114157184/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (19922944-25559039/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (82771968-114157184/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (86507520-87490559/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (25296896-25559039/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (87490560-87556095/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (25690112-55181311/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (87556096-87621631/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (87621632-87687167/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (87687168-87752703/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (87752704-87818239/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (87818240-87883775/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (87883776-87949311/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (87949312-88014847/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (88080384-88145919/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (88145920-88211455/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (88211456-88276991/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (88276992-88342527/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (88342528-88408063/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (88408064-88473599/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (88473600-88539135/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (88539136-88604671/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (88604672-88670207/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (88670208-114157184/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (103153664-114157184/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (107413504-108462079/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (45940736-76349439/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (108462080-108527615/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (108527616-108593151/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (108593152-108658687/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (109051904-109117439/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (109117440-109182975/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (109182976-109248511/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (109248512-109314047/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (109314048-109379583/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (109379584-109445119/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (109445120-109510655/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (109510656-109576191/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (109576192-109641727/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (109641728-114157184/114157185)
+[Server] Received message: {"state":"stopped","type":"status","immersiveMode":true,"currentTime":4.542,"currentVideo":"http://192.168.70.131:8080/videos/stream8k_br200_sp0.mp4","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","deviceName":"Vision Pro"}
+[Server] Status update from Vision Pro: stopped (time: 4.542)
+[Server] Received message: {"type":"command","action":"stop","targetDevices":["776ADE85-EDEA-4EE1-9D01-7ED54A7448F5"]}
+[Server] Sent stop command to Vision Pro
+[Server] Received message: {"deviceName":"Vision Pro","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","state":"stopped","type":"status","currentVideo":"http://192.168.70.131:8080/videos/stream8k_br200_sp0.mp4","immersiveMode":true,"currentTime":0}
+[Server] Status update from Vision Pro: stopped (time: 0)
+[Server] Received message: {"type":"command","action":"play","targetDevices":["776ADE85-EDEA-4EE1-9D01-7ED54A7448F5"],"videoUrl":"http://192.168.70.131:8080/videos/stream_br200_sp0.mp4","videoFormat":"sphere360sbs"}
+[Server] Sent play command to Vision Pro
+[Server] Received message: {"type":"status","currentTime":0,"deviceName":"Vision Pro","state":"stopped","currentVideo":"http://192.168.70.131:8080/videos/stream_br200_sp0.mp4","immersiveMode":true,"deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5"}
+[Server] Status update from Vision Pro: stopped (time: 0)
+[Server] Received message: {"state":"loading","immersiveMode":true,"deviceName":"Vision Pro","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","currentVideo":"http://192.168.70.131:8080/videos/stream_br200_sp0.mp4","currentTime":0,"type":"status"}
+[Server] Status update from Vision Pro: loading (time: 0)
+[Server] Streaming video: stream_br200_sp0.mp4 (0-1/118745868)
+[Server] Streaming video: stream_br200_sp0.mp4 (0-118745867/118745868)
+[Server] Received message: {"currentTime":0,"deviceName":"Vision Pro","currentVideo":"http://192.168.70.131:8080/videos/stream_br200_sp0.mp4","type":"status","immersiveMode":true,"state":"error","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5"}
+[Server] Status update from Vision Pro: error (time: 0)
+[Server] Received message: {"type":"command","action":"play","targetDevices":["776ADE85-EDEA-4EE1-9D01-7ED54A7448F5"],"videoUrl":"http://192.168.70.131:8080/videos/stream8k_br200_sp0.mp4","videoFormat":"sphere360sbs"}
+[Server] Sent play command to Vision Pro
+[Server] Received message: {"currentTime":0,"deviceName":"Vision Pro","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","immersiveMode":true,"state":"stopped","type":"status","currentVideo":"http://192.168.70.131:8080/videos/stream8k_br200_sp0.mp4"}
+[Server] Status update from Vision Pro: stopped (time: 0)
+[Server] Received message: {"deviceName":"Vision Pro","type":"status","currentVideo":"http://192.168.70.131:8080/videos/stream8k_br200_sp0.mp4","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","state":"loading","currentTime":0,"immersiveMode":true}
+[Server] Status update from Vision Pro: loading (time: 0)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (0-1/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (0-114157184/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (540318-114157184/114157185)
+[Server] Received message: {"deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","immersiveMode":true,"deviceName":"Vision Pro","currentVideo":"http://192.168.70.131:8080/videos/stream8k_br200_sp0.mp4","state":"playing","type":"status","currentTime":0}
+[Server] Status update from Vision Pro: playing (time: 0)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (0-114157184/114157185)
+[Server] Received message: {"deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","type":"status","immersiveMode":true,"currentVideo":"http://192.168.70.131:8080/videos/stream8k_br200_sp0.mp4","deviceName":"Vision Pro","currentTime":0,"state":"playing"}
+[Server] Status update from Vision Pro: playing (time: 0)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (0-114157184/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (21495808-114157184/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (33619968-33685503/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (34144256-34209791/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (34209792-34275327/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (34275328-34340863/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (34340864-34603007/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (34930688-34996223/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (35192832-35389439/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (35586048-114157184/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (48234496-48300031/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (48300032-48365567/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (49283072-114157184/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (55443456-114157184/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (56557568-56623103/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (6881280-29425663/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (56623104-56688639/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (56688640-56754175/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (57016320-57081855/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (57147392-57212927/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (57212928-57278463/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (57278464-57343999/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (57344000-57409535/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (57409536-57475071/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (57475072-57540607/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (57540608-57606143/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (57606144-57671679/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (57671680-57737215/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (57737216-57802751/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (57802752-57868287/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (57868288-114157184/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (71041024-114157184/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (71761920-71827455/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (6815744-18284543/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (71827456-72155135/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (6815744-18284543/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (72155136-72679423/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (6815744-18284543/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (72679424-72941567/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (6815744-18284543/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (73203712-73334783/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (6815744-18284543/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (73400320-114157184/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (88670208-88801279/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (89194496-114157184/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (90832896-90898431/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (28049408-42074111/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (91291648-114157184/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (103940096-114157184/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (111345664-111869951/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (49283072-61407231/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (111869952-111935487/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (112394240-112459775/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (112459776-112525311/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (112525312-112590847/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (112590848-112656383/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (112656384-112721919/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (112721920-112787455/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (112787456-112852991/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (61472768-61931519/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (112852992-112918527/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (112918528-112984063/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (62324736-77201407/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (112984064-113049599/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (113049600-113115135/114157185)
+[Server] Streaming video: stream8k_br200_sp0.mp4 (113115136-114157184/114157185)
+[Server] Received message: {"type":"status","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","immersiveMode":true,"currentVideo":"http://192.168.70.131:8080/videos/stream8k_br200_sp0.mp4","currentTime":4.542,"deviceName":"Vision Pro","state":"stopped"}
+[Server] Status update from Vision Pro: stopped (time: 4.542)
+[Server] Received message: {"type":"command","action":"stop","targetDevices":["776ADE85-EDEA-4EE1-9D01-7ED54A7448F5"]}
+[Server] Sent stop command to Vision Pro
+[Server] Received message: {"type":"status","deviceName":"Vision Pro","currentVideo":"http://192.168.70.131:8080/videos/stream8k_br200_sp0.mp4","currentTime":0,"deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","state":"stopped","immersiveMode":true}
+[Server] Status update from Vision Pro: stopped (time: 0)
+[Server] Connection closed from 127.0.0.1
+[Server] Vision Pro disconnected: Vision Pro
+[Server] New connection from 127.0.0.1
+[Server] Received message: {"deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","deviceName":"Vision Pro","deviceType":"visionpro","type":"register"}
+[Server] ✅ Vision Pro registered: Vision Pro (776ADE85-EDEA-4EE1-9D01-7ED54A7448F5)
+[Server] Total Vision Pro devices: 1
+[Server] Broadcasting to 1 controllers: {"type":"deviceConnected","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","deviceName":"Vision Pro"}
+[Server] Received message: {"deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","type":"localVideos","videos":[{"url":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/BigBuckBunny.MP4","extension":"mp4","filename":"BigBuckBunny.MP4","id":"8A3D0385-0F64-4EE5-A1E9-F52E559B9564","size":158008374,"modified":284804946,"name":"BigBuckBunny"},{"url":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/output_fixed.mp4","extension":"mp4","filename":"output_fixed.mp4","id":"1A68881F-CBD0-4E9F-85DE-DFB6028F516B","size":101904873,"modified":791591931.2680626,"name":"output fixed"}]}
+[Server] Received 2 local videos from Vision Pro
+[Server]   1. BigBuckBunny (150.69 MB)
+[Server]   2. output fixed (97.18 MB)
+[Server] Received message: {"deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","videos":[{"id":"29894809-2DAD-45C8-B30D-130459026048","modified":284804946,"filename":"BigBuckBunny.MP4","name":"BigBuckBunny","url":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/BigBuckBunny.MP4","extension":"mp4","size":158008374},{"id":"37716A93-C3AF-4235-96BF-AC73B9B5497E","modified":791591931.2680626,"filename":"output_fixed.mp4","name":"output fixed","url":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/output_fixed.mp4","extension":"mp4","size":101904873},{"id":"A2EA339D-11C2-4527-A18D-67C322FECE9E","modified":791667804.148302,"filename":"stream8k_br200_sp0.mp4","name":"stream8k br200 sp0","url":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","extension":"mp4","size":114157185}],"type":"localVideos"}
+[Server] Received 3 local videos from Vision Pro
+[Server]   1. BigBuckBunny (150.69 MB)
+[Server]   2. output fixed (97.18 MB)
+[Server]   3. stream8k br200 sp0 (108.87 MB)
+[Server] Received message: {"type":"command","action":"play","targetDevices":["776ADE85-EDEA-4EE1-9D01-7ED54A7448F5"],"videoUrl":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","videoFormat":"sphere360sbs"}
+[Server] Sent play command to Vision Pro
+[Server] Received message: {"type":"localVideos","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","videos":[{"modified":284804946,"id":"C6129428-3F01-43C8-8D48-585471B3D69B","name":"BigBuckBunny","filename":"BigBuckBunny.MP4","extension":"mp4","size":158008374,"url":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/BigBuckBunny.MP4"},{"modified":791591931.2680626,"id":"C9DBC1D0-8271-422F-B87F-B66EB0634A33","name":"output fixed","filename":"output_fixed.mp4","extension":"mp4","size":101904873,"url":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/output_fixed.mp4"},{"modified":791667804.148302,"id":"FCCDF8B8-3605-4BD1-8C39-9D60A69F9477","name":"stream8k br200 sp0","filename":"stream8k_br200_sp0.mp4","extension":"mp4","size":114157185,"url":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4"}]}
+[Server] Received 3 local videos from Vision Pro
+[Server]   1. BigBuckBunny (150.69 MB)
+[Server]   2. output fixed (97.18 MB)
+[Server]   3. stream8k br200 sp0 (108.87 MB)
+[Server] Received message: {"state":"stopped","currentTime":0,"deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","immersiveMode":true,"type":"status","deviceName":"Vision Pro"}
+[Server] Status update from Vision Pro: stopped (time: 0)
+[Server] Received message: {"state":"loading","currentTime":0,"deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","immersiveMode":true,"type":"status","deviceName":"Vision Pro"}
+[Server] Status update from Vision Pro: loading (time: 0)
+[Server] Received message: {"currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","type":"status","currentTime":0,"immersiveMode":true,"state":"playing","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","deviceName":"Vision Pro"}
+[Server] Status update from Vision Pro: playing (time: 0)
+[Server] Received message: {"type":"status","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","deviceName":"Vision Pro","state":"playing","currentTime":0,"immersiveMode":true,"currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4"}
+[Server] Status update from Vision Pro: playing (time: 0)
+[Server] Received message: {"deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","state":"stopped","type":"status","currentTime":4.542,"immersiveMode":true,"currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","deviceName":"Vision Pro"}
+[Server] Status update from Vision Pro: stopped (time: 4.542)
+[Server] Received message: {"type":"command","action":"play","targetDevices":["776ADE85-EDEA-4EE1-9D01-7ED54A7448F5"],"videoUrl":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","videoFormat":"sphere360ou"}
+[Server] Sent play command to Vision Pro
+[Server] Received message: {"state":"stopped","deviceName":"Vision Pro","currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","immersiveMode":true,"type":"status","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","currentTime":0}
+[Server] Status update from Vision Pro: stopped (time: 0)
+[Server] Received message: {"deviceName":"Vision Pro","state":"loading","immersiveMode":true,"type":"status","currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","currentTime":0}
+[Server] Status update from Vision Pro: loading (time: 0)
+[Server] Received message: {"currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","type":"status","currentTime":0,"state":"playing","deviceName":"Vision Pro","immersiveMode":true,"deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5"}
+[Server] Status update from Vision Pro: playing (time: 0)
+[Server] Received message: {"type":"status","state":"playing","immersiveMode":true,"deviceName":"Vision Pro","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","currentTime":0,"currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4"}
+[Server] Status update from Vision Pro: playing (time: 0)
+[Server] Received message: {"state":"stopped","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","currentTime":4.542,"type":"status","deviceName":"Vision Pro","currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","immersiveMode":true}
+[Server] Status update from Vision Pro: stopped (time: 4.542)
+[Server] Received message: {"type":"command","action":"play","targetDevices":["776ADE85-EDEA-4EE1-9D01-7ED54A7448F5"],"videoUrl":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","videoFormat":"sphere360"}
+[Server] Sent play command to Vision Pro
+[Server] Received message: {"deviceName":"Vision Pro","state":"stopped","currentTime":0,"type":"status","immersiveMode":true,"deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4"}
+[Server] Status update from Vision Pro: stopped (time: 0)
+[Server] Received message: {"state":"loading","currentTime":0,"type":"status","currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","deviceName":"Vision Pro","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","immersiveMode":true}
+[Server] Status update from Vision Pro: loading (time: 0)
+[Server] Received message: {"deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","currentTime":0,"type":"status","immersiveMode":true,"deviceName":"Vision Pro","state":"playing","currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4"}
+[Server] Status update from Vision Pro: playing (time: 0)
+[Server] Received message: {"state":"playing","currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","type":"status","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","currentTime":0,"deviceName":"Vision Pro","immersiveMode":true}
+[Server] Status update from Vision Pro: playing (time: 0)
+[Server] Received message: {"type":"command","action":"stop","targetDevices":["776ADE85-EDEA-4EE1-9D01-7ED54A7448F5"]}
+[Server] Sent stop command to Vision Pro
+[Server] Received message: {"state":"stopped","deviceName":"Vision Pro","currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","type":"status","immersiveMode":true,"currentTime":0}
+[Server] Status update from Vision Pro: stopped (time: 0)
+[Server] Received message: {"type":"command","action":"play","targetDevices":["776ADE85-EDEA-4EE1-9D01-7ED54A7448F5"],"videoUrl":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","videoFormat":"hemisphere180sbs"}
+[Server] Sent play command to Vision Pro
+[Server] Received message: {"videos":[{"modified":284804946,"extension":"mp4","name":"BigBuckBunny","size":158008374,"url":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/BigBuckBunny.MP4","id":"51FF393A-0AAE-4D98-9266-B1A3C737630E","filename":"BigBuckBunny.MP4"},{"modified":791591931.2680626,"extension":"mp4","name":"output fixed","size":101904873,"url":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/output_fixed.mp4","id":"0A4D944B-AD11-48D6-AB92-47EBC40B597C","filename":"output_fixed.mp4"},{"modified":791667804.148302,"extension":"mp4","name":"stream8k br200 sp0","size":114157185,"url":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","id":"107C6C34-69CC-4186-840F-3306330D0107","filename":"stream8k_br200_sp0.mp4"}],"type":"localVideos","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5"}
+[Server] Received 3 local videos from Vision Pro
+[Server]   1. BigBuckBunny (150.69 MB)
+[Server]   2. output fixed (97.18 MB)
+[Server]   3. stream8k br200 sp0 (108.87 MB)
+[Server] Received message: {"currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","currentTime":0,"state":"stopped","deviceName":"Vision Pro","type":"status","immersiveMode":true}
+[Server] Status update from Vision Pro: stopped (time: 0)
+[Server] Received message: {"currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","currentTime":0,"state":"loading","deviceName":"Vision Pro","type":"status","immersiveMode":true}
+[Server] Status update from Vision Pro: loading (time: 0)
+[Server] Received message: {"immersiveMode":true,"deviceName":"Vision Pro","currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","state":"playing","type":"status","currentTime":0}
+[Server] Status update from Vision Pro: playing (time: 0)
+[Server] Received message: {"type":"status","currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","currentTime":0,"deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","state":"playing","deviceName":"Vision Pro","immersiveMode":true}
+[Server] Status update from Vision Pro: playing (time: 0)
+[Server] Received message: {"type":"command","action":"stop","targetDevices":["776ADE85-EDEA-4EE1-9D01-7ED54A7448F5"]}
+[Server] Sent stop command to Vision Pro
+[Server] Received message: {"deviceName":"Vision Pro","immersiveMode":true,"state":"stopped","type":"status","currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","currentTime":0}
+[Server] Status update from Vision Pro: stopped (time: 0)
+[Server] Received message: {"type":"command","action":"play","targetDevices":["776ADE85-EDEA-4EE1-9D01-7ED54A7448F5"],"videoUrl":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","videoFormat":"ou3d"}
+[Server] Sent play command to Vision Pro
+[Server] Received message: {"deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","videos":[{"modified":284804946,"name":"BigBuckBunny","id":"6865AB4C-4BAF-4CEE-8A6B-0BE3E55195FE","filename":"BigBuckBunny.MP4","extension":"mp4","size":158008374,"url":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/BigBuckBunny.MP4"},{"modified":791591931.2680626,"name":"output fixed","id":"277D044C-995E-4CAF-AA51-7F3F7EE4BF26","filename":"output_fixed.mp4","extension":"mp4","size":101904873,"url":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/output_fixed.mp4"},{"url":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","name":"stream8k br200 sp0","id":"3A5472E0-C8ED-487B-AA38-CAD612A13C44","filename":"stream8k_br200_sp0.mp4","extension":"mp4","size":114157185,"modified":791667804.148302}],"type":"localVideos"}
+[Server] Received 3 local videos from Vision Pro
+[Server]   1. BigBuckBunny (150.69 MB)
+[Server]   2. output fixed (97.18 MB)
+[Server]   3. stream8k br200 sp0 (108.87 MB)
+[Server] Received message: {"type":"status","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","immersiveMode":true,"state":"stopped","currentTime":0,"deviceName":"Vision Pro"}
+[Server] Status update from Vision Pro: stopped (time: 0)
+[Server] Received message: {"deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","type":"status","deviceName":"Vision Pro","immersiveMode":true,"currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","state":"loading","currentTime":0}
+[Server] Status update from Vision Pro: loading (time: 0)
+[Server] Received message: {"currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","state":"playing","currentTime":0,"type":"status","immersiveMode":true,"deviceName":"Vision Pro","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5"}
+[Server] Status update from Vision Pro: playing (time: 0)
+[Server] Received message: {"deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","currentTime":0,"type":"status","state":"playing","immersiveMode":true,"deviceName":"Vision Pro","currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4"}
+[Server] Status update from Vision Pro: playing (time: 0)
+[Server] Received message: {"currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","currentTime":4.542,"immersiveMode":true,"type":"status","deviceName":"Vision Pro","state":"stopped","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5"}
+[Server] Status update from Vision Pro: stopped (time: 4.542)
+[Server] Received message: {"type":"command","action":"stop","targetDevices":["776ADE85-EDEA-4EE1-9D01-7ED54A7448F5"]}
+[Server] Sent stop command to Vision Pro
+[Server] Received message: {"currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","currentTime":0,"immersiveMode":true,"type":"status","deviceName":"Vision Pro","state":"stopped","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5"}
+[Server] Status update from Vision Pro: stopped (time: 0)
+[Server] Received message: {"type":"command","action":"play","targetDevices":["776ADE85-EDEA-4EE1-9D01-7ED54A7448F5"],"videoUrl":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","videoFormat":"sbs3d"}
+[Server] Sent play command to Vision Pro
+[Server] Received message: {"type":"localVideos","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","videos":[{"url":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/BigBuckBunny.MP4","name":"BigBuckBunny","id":"0C775634-777B-4E07-AB87-9435E63F8C01","modified":284804946,"extension":"mp4","size":158008374,"filename":"BigBuckBunny.MP4"},{"url":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/output_fixed.mp4","name":"output fixed","id":"A20F8772-B548-4D86-BB6D-8C1CDE9100AE","modified":791591931.2680626,"extension":"mp4","size":101904873,"filename":"output_fixed.mp4"},{"url":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","name":"stream8k br200 sp0","id":"A677650A-4B33-4CF3-B0E0-66A66C0D8552","modified":791667804.148302,"extension":"mp4","size":114157185,"filename":"stream8k_br200_sp0.mp4"}]}
+[Server] Received 3 local videos from Vision Pro
+[Server]   1. BigBuckBunny (150.69 MB)
+[Server]   2. output fixed (97.18 MB)
+[Server]   3. stream8k br200 sp0 (108.87 MB)
+[Server] Received message: {"currentTime":0,"deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","immersiveMode":true,"state":"stopped","type":"status","deviceName":"Vision Pro","currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4"}
+[Server] Status update from Vision Pro: stopped (time: 0)
+[Server] Received message: {"deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","immersiveMode":true,"deviceName":"Vision Pro","state":"loading","type":"status","currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","currentTime":0}
+[Server] Status update from Vision Pro: loading (time: 0)
+[Server] Received message: {"currentTime":0,"deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","state":"playing","deviceName":"Vision Pro","currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","type":"status","immersiveMode":true}
+[Server] Status update from Vision Pro: playing (time: 0)
+[Server] Received message: {"state":"playing","currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","type":"status","deviceName":"Vision Pro","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","immersiveMode":true,"currentTime":0}
+[Server] Status update from Vision Pro: playing (time: 0)
+[Server] Received message: {"type":"command","action":"stop","targetDevices":["776ADE85-EDEA-4EE1-9D01-7ED54A7448F5"]}
+[Server] Sent stop command to Vision Pro
+[Server] Received message: {"deviceName":"Vision Pro","state":"stopped","type":"status","currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","immersiveMode":true,"deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","currentTime":0}
+[Server] Status update from Vision Pro: stopped (time: 0)
+[Server] Received message: {"type":"command","action":"play","targetDevices":["776ADE85-EDEA-4EE1-9D01-7ED54A7448F5"],"videoUrl":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","videoFormat":"sphere360sbs"}
+[Server] Sent play command to Vision Pro
+[Server] Received message: {"deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","type":"localVideos","videos":[{"url":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/BigBuckBunny.MP4","filename":"BigBuckBunny.MP4","name":"BigBuckBunny","id":"E27A2E73-EC44-4464-B871-09648DC63ACF","modified":284804946,"size":158008374,"extension":"mp4"},{"url":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/output_fixed.mp4","filename":"output_fixed.mp4","name":"output fixed","id":"BF594A06-02AA-44CB-AB00-BE14677664ED","modified":791591931.2680626,"size":101904873,"extension":"mp4"},{"url":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","filename":"stream8k_br200_sp0.mp4","name":"stream8k br200 sp0","id":"0411CAFA-DCE9-42E9-82BA-A9F814E9FF9E","modified":791667804.148302,"size":114157185,"extension":"mp4"}]}
+[Server] Received 3 local videos from Vision Pro
+[Server]   1. BigBuckBunny (150.69 MB)
+[Server]   2. output fixed (97.18 MB)
+[Server]   3. stream8k br200 sp0 (108.87 MB)
+[Server] Received message: {"state":"stopped","immersiveMode":true,"deviceName":"Vision Pro","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","type":"status","currentTime":0,"currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4"}
+[Server] Status update from Vision Pro: stopped (time: 0)
+[Server] Received message: {"currentTime":0,"type":"status","immersiveMode":true,"deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","state":"loading","deviceName":"Vision Pro","currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4"}
+[Server] Status update from Vision Pro: loading (time: 0)
+[Server] Received message: {"immersiveMode":true,"state":"playing","currentTime":0,"deviceName":"Vision Pro","type":"status","currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5"}
+[Server] Status update from Vision Pro: playing (time: 0)
+[Server] Received message: {"deviceName":"Vision Pro","currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","state":"playing","immersiveMode":true,"deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","type":"status","currentTime":0}
+[Server] Status update from Vision Pro: playing (time: 0)
+[Server] Received message: {"type":"command","action":"stop","targetDevices":["776ADE85-EDEA-4EE1-9D01-7ED54A7448F5"]}
+[Server] Sent stop command to Vision Pro
+[Server] Received message: {"deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","currentTime":0,"immersiveMode":true,"currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","type":"status","state":"stopped","deviceName":"Vision Pro"}
+[Server] Status update from Vision Pro: stopped (time: 0)
+[Server] Received message: {"type":"command","action":"play","targetDevices":["776ADE85-EDEA-4EE1-9D01-7ED54A7448F5"],"videoUrl":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","videoFormat":"sphere360ou"}
+[Server] Sent play command to Vision Pro
+[Server] Received message: {"deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","type":"localVideos","videos":[{"url":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/BigBuckBunny.MP4","size":158008374,"id":"23B86ED9-F032-43EA-A053-AAF6B92735F8","extension":"mp4","filename":"BigBuckBunny.MP4","modified":284804946,"name":"BigBuckBunny"},{"url":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/output_fixed.mp4","size":101904873,"id":"8C1748F5-576E-40D3-B769-673CF1344DDB","extension":"mp4","filename":"output_fixed.mp4","modified":791591931.2680626,"name":"output fixed"},{"url":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","size":114157185,"id":"2C6737C3-E09D-4A18-9FC1-A121BA8FEF1F","extension":"mp4","filename":"stream8k_br200_sp0.mp4","modified":791667804.148302,"name":"stream8k br200 sp0"}]}
+[Server] Received 3 local videos from Vision Pro
+[Server]   1. BigBuckBunny (150.69 MB)
+[Server]   2. output fixed (97.18 MB)
+[Server]   3. stream8k br200 sp0 (108.87 MB)
+[Server] Received message: {"state":"stopped","immersiveMode":true,"deviceName":"Vision Pro","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","type":"status","currentTime":0,"currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4"}
+[Server] Status update from Vision Pro: stopped (time: 0)
+[Server] Received message: {"state":"loading","immersiveMode":true,"deviceName":"Vision Pro","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","type":"status","currentTime":0,"currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4"}
+[Server] Status update from Vision Pro: loading (time: 0)
+[Server] Received message: {"currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","type":"status","currentTime":0,"deviceName":"Vision Pro","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","state":"playing","immersiveMode":true}
+[Server] Status update from Vision Pro: playing (time: 0)
+[Server] Received message: {"deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","currentTime":0,"deviceName":"Vision Pro","state":"playing","immersiveMode":true,"currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","type":"status"}
+[Server] Status update from Vision Pro: playing (time: 0)
+[Server] Received message: {"immersiveMode":true,"state":"stopped","currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","currentTime":4.542,"deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","type":"status","deviceName":"Vision Pro"}
+[Server] Status update from Vision Pro: stopped (time: 4.542)
+[Server] Received message: {"type":"command","action":"play","targetDevices":["776ADE85-EDEA-4EE1-9D01-7ED54A7448F5"],"videoUrl":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","videoFormat":"sphere360sbs"}
+[Server] Sent play command to Vision Pro
+[Server] Received message: {"currentTime":0,"currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","deviceName":"Vision Pro","type":"status","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","state":"stopped","immersiveMode":true}
+[Server] Status update from Vision Pro: stopped (time: 0)
+[Server] Received message: {"currentTime":0,"deviceName":"Vision Pro","currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","state":"loading","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","immersiveMode":true,"type":"status"}
+[Server] Status update from Vision Pro: loading (time: 0)
+[Server] Received message: {"type":"status","currentTime":0,"currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","immersiveMode":true,"deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","state":"playing","deviceName":"Vision Pro"}
+[Server] Status update from Vision Pro: playing (time: 0)
+[Server] Received message: {"currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","state":"playing","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","type":"status","immersiveMode":true,"currentTime":0,"deviceName":"Vision Pro"}
+[Server] Status update from Vision Pro: playing (time: 0)
+[Server] Received message: {"deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","currentTime":4.542,"deviceName":"Vision Pro","state":"stopped","immersiveMode":true,"currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","type":"status"}
+[Server] Status update from Vision Pro: stopped (time: 4.542)
+[Server] Received message: {"type":"command","action":"play","targetDevices":["776ADE85-EDEA-4EE1-9D01-7ED54A7448F5"],"videoUrl":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","videoFormat":"sphere360"}
+[Server] Sent play command to Vision Pro
+[Server] Received message: {"deviceName":"Vision Pro","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","type":"status","state":"stopped","immersiveMode":true,"currentTime":0}
+[Server] Status update from Vision Pro: stopped (time: 0)
+[Server] Received message: {"currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","immersiveMode":true,"deviceName":"Vision Pro","currentTime":0,"type":"status","state":"loading"}
+[Server] Status update from Vision Pro: loading (time: 0)
+[Server] Received message: {"state":"playing","currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","deviceName":"Vision Pro","currentTime":0,"immersiveMode":true,"type":"status","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5"}
+[Server] Status update from Vision Pro: playing (time: 0)
+[Server] Received message: {"currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","immersiveMode":true,"state":"playing","currentTime":0,"deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","deviceName":"Vision Pro","type":"status"}
+[Server] Status update from Vision Pro: playing (time: 0)
+[Server] Received message: {"deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","type":"status","state":"stopped","currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","deviceName":"Vision Pro","currentTime":4.542,"immersiveMode":true}
+[Server] Status update from Vision Pro: stopped (time: 4.542)
+[Server] Received message: {"type":"command","action":"play","targetDevices":["776ADE85-EDEA-4EE1-9D01-7ED54A7448F5"],"videoUrl":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","videoFormat":"sphere360sbs"}
+[Server] Sent play command to Vision Pro
+[Server] Received message: {"state":"stopped","type":"status","immersiveMode":true,"deviceName":"Vision Pro","currentTime":0,"currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5"}
+[Server] Status update from Vision Pro: stopped (time: 0)
+[Server] Received message: {"state":"loading","type":"status","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","currentTime":0,"immersiveMode":true,"currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","deviceName":"Vision Pro"}
+[Server] Status update from Vision Pro: loading (time: 0)
+[Server] Received message: {"currentTime":0,"deviceName":"Vision Pro","currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","state":"playing","type":"status","immersiveMode":true}
+[Server] Status update from Vision Pro: playing (time: 0)
+[Server] Received message: {"type":"status","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","currentTime":0,"state":"playing","deviceName":"Vision Pro","immersiveMode":true}
+[Server] Status update from Vision Pro: playing (time: 0)
+[Server] Received message: {"type":"status","deviceName":"Vision Pro","currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/AC378747-8095-462F-817B-4E1995A347E1/Documents/Videos/stream8k_br200_sp0.mp4","state":"stopped","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","immersiveMode":true,"currentTime":4.542}
+[Server] Status update from Vision Pro: stopped (time: 4.542)

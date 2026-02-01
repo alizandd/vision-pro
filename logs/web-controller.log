@@ -1,1 +1,9 @@
  INFO  Accepting connections at http://localhost:3000
+ HTTP  2/1/2026 9:59:49 PM 192.168.70.131 GET /
+ HTTP  2/1/2026 9:59:49 PM 192.168.70.131 Returned 304 in 75 ms
+ HTTP  2/1/2026 9:59:50 PM 192.168.70.131 GET /styles.css
+ HTTP  2/1/2026 9:59:50 PM 192.168.70.131 GET /controller.js
+ HTTP  2/1/2026 9:59:50 PM 192.168.70.131 Returned 304 in 27 ms
+ HTTP  2/1/2026 9:59:50 PM 192.168.70.131 Returned 304 in 14 ms
+ HTTP  2/1/2026 9:59:50 PM 192.168.70.131 GET /favicon.ico
+ HTTP  2/1/2026 9:59:50 PM 192.168.70.131 Returned 404 in 15 ms

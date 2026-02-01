@@ -69,11 +69,14 @@ struct VisionProPlayerApp: App {
         let localManager = localVideoManager
         
         // When connection state changes to connected, send local videos
-        // Using a simple polling approach since we can't easily observe @Published from here
+        // Also periodically rescan for new/removed files
         Task { @MainActor in
             var wasConnected = false
+            var scanCounter = 0
+            
             while true {
                 try? await Task.sleep(nanoseconds: 1_000_000_000) // Check every second
+                scanCounter += 1
                 
                 let isNowConnected = wsManager.isConnected
                 
@@ -82,6 +85,20 @@ struct VisionProPlayerApp: App {
                     // Small delay to ensure registration is complete
                     try? await Task.sleep(nanoseconds: 500_000_000)
                     wsManager.sendLocalVideos(localManager.localVideos)
+                }
+                
+                // Rescan every 10 seconds to detect file changes
+                if scanCounter >= 10 {
+                    scanCounter = 0
+                    let previousFilenames = Set(localManager.localVideos.map { $0.filename })
+                    localManager.scanVideos()
+                    let currentFilenames = Set(localManager.localVideos.map { $0.filename })
+                    
+                    // If files changed and we're connected, send update
+                    if previousFilenames != currentFilenames && isNowConnected {
+                        print("[App] Local videos changed: \(previousFilenames) -> \(currentFilenames)")
+                        wsManager.sendLocalVideos(localManager.localVideos)
+                    }
                 }
                 
                 wasConnected = isNowConnected
@@ -291,6 +308,18 @@ struct VisionProPlayerApp: App {
             if !webSocketManager.isConnected {
                 print("[App] WebSocket disconnected, reconnecting...")
                 webSocketManager.connect()
+            }
+            
+            // Rescan local videos when app becomes active
+            print("[App] Rescanning local videos...")
+            localVideoManager.scanVideos()
+            
+            // Send updated list to server if connected
+            if webSocketManager.isConnected {
+                Task {
+                    try? await Task.sleep(nanoseconds: 500_000_000) // Small delay
+                    webSocketManager.sendLocalVideos(localVideoManager.localVideos)
+                }
             }
             
         case .inactive:

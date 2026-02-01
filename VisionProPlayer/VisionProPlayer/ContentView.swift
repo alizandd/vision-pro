@@ -5,7 +5,7 @@ import SwiftUI
 struct ContentView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var webSocketManager: WebSocketManager
-    @EnvironmentObject var videoManager: VideoPlayerManager
+    @EnvironmentObject var nativeVideoManager: NativeVideoPlayerManager
 
     @Environment(\.openWindow) private var openWindow
 
@@ -21,7 +21,7 @@ struct ContentView: View {
 
             // Current state
             StatusInfoView(
-                playbackState: videoManager.playbackState,
+                playbackState: nativeVideoManager.playbackState,
                 currentVideo: appState.currentVideoURL,
                 isImmersive: appState.isImmersiveActive
             )
@@ -192,5 +192,5 @@ struct StatusInfoView: View {
     ContentView()
         .environmentObject(AppState())
         .environmentObject(WebSocketManager())
-        .environmentObject(VideoPlayerManager())
+        .environmentObject(NativeVideoPlayerManager())
 }

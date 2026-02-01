@@ -4,17 +4,23 @@ import SwiftUI
 /// This app acts as a remote-controlled video player that receives commands
 /// via WebSocket from the web controller.
 ///
-/// CRITICAL LIFECYCLE for Immersive Stereo Video:
-/// 1. Receive play command
-/// 2. Open immersive space FIRST
-/// 3. Wait for immersive space to be fully ready
-/// 4. THEN prepare video (this prevents memory pressure crashes)
-/// 5. Start playback only when both are ready
+/// VERSION: Native AVPlayer (16K Support)
+/// This version uses AVPlayerViewController instead of RealityKit's VideoMaterial:
+/// - No texture size limitations (supports 16K and beyond)
+/// - Automatic per-eye stereoscopic rendering
+/// - Memory-efficient hardware-accelerated decoding  
+/// - Better simulator compatibility
+///
+/// LIFECYCLE for Video Playback:
+/// 1. Receive play command via WebSocket
+/// 2. Open immersive space
+/// 3. Prepare video with native player
+/// 4. Start playback when ready
 @main
 struct VisionProPlayerApp: App {
     @StateObject private var appState = AppState()
     @StateObject private var webSocketManager = WebSocketManager()
-    @StateObject private var videoManager = VideoPlayerManager()
+    @StateObject private var nativeVideoManager = NativeVideoPlayerManager()
     @StateObject private var localVideoManager = LocalVideoManager()
 
     @Environment(\.scenePhase) private var scenePhase
@@ -27,7 +33,7 @@ struct VisionProPlayerApp: App {
             ContentView()
                 .environmentObject(appState)
                 .environmentObject(webSocketManager)
-                .environmentObject(videoManager)
+                .environmentObject(nativeVideoManager)
                 .environmentObject(localVideoManager)
                 .onAppear {
                     setupCommandHandling()
@@ -53,11 +59,11 @@ struct VisionProPlayerApp: App {
         .windowStyle(.plain)
         .defaultSize(width: 500, height: 400)
 
-        // Immersive space for video playback
+        // Immersive space for native video playback (16K support)
         ImmersiveSpace(id: "ImmersiveVideoSpace") {
-            ImmersiveView()
+            NativeImmersiveView()
                 .environmentObject(appState)
-                .environmentObject(videoManager)
+                .environmentObject(nativeVideoManager)
         }
         .immersionStyle(selection: .constant(.full), in: .full)
     }
@@ -106,11 +112,11 @@ struct VisionProPlayerApp: App {
         }
     }
     
-    /// Sets up the command handling pipeline between WebSocket and video player
+    /// Sets up the command handling pipeline between WebSocket and native video player
     private func setupCommandHandling() {
         // Capture references for closures
         let state = appState
-        let vidManager = videoManager
+        let vidManager = nativeVideoManager
         let wsManager = webSocketManager
         
         // Handle incoming commands from WebSocket
@@ -121,7 +127,7 @@ struct VisionProPlayerApp: App {
         }
 
         // Send status updates when video state changes
-        videoManager.onStateChange = { playbackState in
+        nativeVideoManager.onStateChange = { playbackState in
             wsManager.sendStatus(
                 state: playbackState.rawValue,
                 currentVideo: state.currentVideoURL,
@@ -131,8 +137,8 @@ struct VisionProPlayerApp: App {
         }
         
         // Handle player ready callback for proper lifecycle
-        videoManager.onPlayerReady = {
-            print("[App] Video player ready, starting playback")
+        nativeVideoManager.onPlayerReady = {
+            print("[App] Native video player ready, starting playback")
             vidManager.startPlayback()
             
             // Update status
@@ -146,12 +152,12 @@ struct VisionProPlayerApp: App {
     }
 
     /// Handles commands received from the WebSocket server.
-    /// Implements proper lifecycle for immersive stereo video playback.
+    /// Uses native AVPlayer for 16K video support.
     @MainActor
     private func handleCommand(
         _ command: ServerCommand,
         appState: AppState,
-        videoManager: VideoPlayerManager
+        videoManager: NativeVideoPlayerManager
     ) async {
         print("[App] Received command: \(command.action)")
 
@@ -181,18 +187,18 @@ struct VisionProPlayerApp: App {
         }
     }
     
-    /// Handles play and change commands with proper lifecycle for large immersive videos.
+    /// Handles play and change commands using native AVPlayer for 16K support.
     /// 
-    /// CRITICAL LIFECYCLE ORDER:
+    /// LIFECYCLE ORDER:
     /// 1. Open immersive space
-    /// 2. Wait for immersive space to be ready (minimum 1.5 seconds)
-    /// 3. Prepare video (loads metadata without decoding full video)
+    /// 2. Wait for immersive space to be ready
+    /// 3. Prepare video with native player (no texture size limits)
     /// 4. Playback starts when video is ready (via callback)
     @MainActor
     private func handlePlayCommand(
         command: ServerCommand,
         appState: AppState,
-        videoManager: VideoPlayerManager
+        videoManager: NativeVideoPlayerManager
     ) async {
         guard let videoUrl = command.videoUrl else {
             print("[App] Play/Change command missing video URL")

@@ -26,10 +26,12 @@ struct VisionProPlayerApp: App {
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.openImmersiveSpace) private var openImmersiveSpace
     @Environment(\.dismissImmersiveSpace) private var dismissImmersiveSpace
+    @Environment(\.dismissWindow) private var dismissWindow
+    @Environment(\.openWindow) private var openWindow
 
     var body: some Scene {
         // Main window - minimal UI, just shows connection status
-        WindowGroup {
+        WindowGroup(id: "main") {
             ContentView()
                 .environmentObject(appState)
                 .environmentObject(webSocketManager)
@@ -178,11 +180,15 @@ struct VisionProPlayerApp: App {
         case .stop:
             videoManager.stop()
 
-            // Close immersive space
+            // Close immersive space and restore main window
             if appState.isImmersiveActive {
                 await dismissImmersiveSpace()
                 appState.isImmersiveActive = false
                 print("[App] Immersive space closed")
+                
+                // Reopen the main window
+                openWindow(id: "main")
+                print("[App] Main window reopened")
             }
         }
     }
@@ -226,6 +232,11 @@ struct VisionProPlayerApp: App {
             case .opened:
                 appState.isImmersiveActive = true
                 print("[App] Immersive space opened successfully")
+                
+                // Hide the main window for full immersion (like native player)
+                dismissWindow(id: "main")
+                print("[App] Main window dismissed for full immersion")
+                
             case .error:
                 print("[App] ERROR: Failed to open immersive space")
                 appState.setError("Failed to open immersive space")

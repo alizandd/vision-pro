@@ -2,6 +2,7 @@ import SwiftUI
 import RealityKit
 import AVFoundation
 import Combine
+import ARKit
 
 /// Immersive view for full-screen video playback in visionOS.
 /// Supports stereoscopic 180° SBS content with proper per-eye rendering.
@@ -20,6 +21,10 @@ struct ImmersiveView: View {
     @State private var lastVideoURL: String?
     @State private var lastVideoFormat: VideoFormat?
     @State private var isImmersiveSpaceReady: Bool = false
+    
+    /// ARKit session for head tracking
+    @State private var arkitSession = ARKitSession()
+    @State private var worldTracking = WorldTrackingProvider()
 
     var body: some View {
         RealityView { content in
@@ -43,9 +48,12 @@ struct ImmersiveView: View {
                 self.isImmersiveSpaceReady = true
                 print("[ImmersiveView] Immersive space ready")
                 
+                // Start ARKit session for head tracking
+                await startARKitSession()
+                
                 // If video is already loading/playing, create the screen now
                 if videoManager.isPlayerReady {
-                    updateVideoScreen()
+                    await updateVideoScreenWithRecentering()
                 }
             }
 
@@ -60,13 +68,15 @@ struct ImmersiveView: View {
         .onChange(of: videoManager.isPlayerReady) { _, isReady in
             if isReady && isImmersiveSpaceReady {
                 Task { @MainActor in
-                    updateVideoScreen()
+                    // New video is ready - recenter to face the user
+                    await updateVideoScreenWithRecentering()
                 }
             }
         }
         .onChange(of: videoManager.playbackState) { _, newState in
             if newState == .playing && isImmersiveSpaceReady {
                 Task { @MainActor in
+                    // Only update without recentering during regular playback state changes
                     updateVideoScreen()
                 }
             } else if newState == .stopped || newState == .idle {
@@ -79,9 +89,20 @@ struct ImmersiveView: View {
         .onChange(of: videoManager.currentFormat) { _, _ in
             Task { @MainActor in
                 if isImmersiveSpaceReady {
-                    // Force recreation for format change
+                    // Force recreation for format change - recenter
                     lastVideoFormat = nil
-                    updateVideoScreen()
+                    await updateVideoScreenWithRecentering()
+                }
+            }
+        }
+        .onChange(of: videoManager.currentURL) { oldURL, newURL in
+            // When video URL changes, we need to recenter
+            if oldURL != newURL && newURL != nil && isImmersiveSpaceReady {
+                Task { @MainActor in
+                    print("[ImmersiveView] Video URL changed - will recenter when ready")
+                    // Force recreation
+                    lastVideoURL = nil
+                    lastVideoFormat = nil
                 }
             }
         }
@@ -91,6 +112,9 @@ struct ImmersiveView: View {
         .onDisappear {
             print("[ImmersiveView] Disappeared")
             isImmersiveSpaceReady = false
+            // Stop ARKit session
+            arkitSession.stop()
+            print("[ImmersiveView] ARKit session stopped")
         }
     }
     
@@ -102,6 +126,92 @@ struct ImmersiveView: View {
             existingScreen.removeFromParent()
             screenEntity = nil
         }
+    }
+    
+    // MARK: - ARKit Head Tracking
+    
+    /// Starts the ARKit session for head tracking
+    private func startARKitSession() async {
+        do {
+            // Check if world tracking is supported
+            guard WorldTrackingProvider.isSupported else {
+                print("[ImmersiveView] World tracking not supported on this device")
+                return
+            }
+            
+            try await arkitSession.run([worldTracking])
+            print("[ImmersiveView] ARKit session started successfully")
+        } catch {
+            print("[ImmersiveView] Failed to start ARKit session: \(error)")
+        }
+    }
+    
+    /// Gets the current head (device) transform from ARKit
+    /// Returns the user's head position and orientation in world space
+    private func getCurrentHeadTransform() async -> simd_float4x4? {
+        guard let deviceAnchor = worldTracking.queryDeviceAnchor(atTimestamp: CACurrentMediaTime()) else {
+            print("[ImmersiveView] Could not get device anchor")
+            return nil
+        }
+        
+        // The device anchor's transform represents the head position and orientation
+        return deviceAnchor.originFromAnchorTransform
+    }
+    
+    /// Extracts the position from a transform matrix
+    private func getPosition(from transform: simd_float4x4) -> SIMD3<Float> {
+        return SIMD3<Float>(transform.columns.3.x, transform.columns.3.y, transform.columns.3.z)
+    }
+    
+    /// Extracts the yaw rotation (horizontal rotation) from a transform
+    /// This is used to align the video hemisphere with the user's forward direction
+    private func getYawRotation(from transform: simd_float4x4) -> Float {
+        // Extract the forward vector from the transform (negative Z axis)
+        let forward = SIMD3<Float>(-transform.columns.2.x, 0, -transform.columns.2.z)
+        
+        // Calculate yaw angle from forward vector
+        let yaw = atan2(forward.x, forward.z)
+        return yaw
+    }
+    
+    /// Updates the video screen with recentering to face the user's current direction
+    /// This positions the video sphere at the user's head location and orients it to face their direction
+    private func updateVideoScreenWithRecentering() async {
+        guard let videoEntity = videoEntity else {
+            print("[ImmersiveView] No video entity yet, skipping update")
+            return
+        }
+        
+        // Get the user's current head transform
+        if let headTransform = await getCurrentHeadTransform() {
+            // Get the user's head position - this is where the center of the sphere should be
+            let headPosition = getPosition(from: headTransform)
+            
+            // Get the user's head yaw rotation - this is the direction they're facing
+            let yaw = getYawRotation(from: headTransform)
+            
+            // Position the video entity at the user's head position
+            // This ensures the user is at the CENTER of the video sphere
+            videoEntity.position = headPosition
+            
+            // Create rotation quaternion to align video with user's forward direction
+            // The hemisphere center should align with where user is looking
+            // Add π to flip from behind to front
+            let rotation = simd_quatf(angle: -yaw + .pi, axis: SIMD3<Float>(0, 1, 0))
+            videoEntity.orientation = rotation
+            
+            print("[ImmersiveView] Recentered video:")
+            print("  - Position: (\(headPosition.x), \(headPosition.y), \(headPosition.z))")
+            print("  - User Yaw: \(yaw * 180 / .pi)°")
+        } else {
+            // Fallback: reset to default position and orientation
+            print("[ImmersiveView] Could not get head transform, using default position/orientation")
+            videoEntity.position = SIMD3<Float>(0, 0, 0)
+            videoEntity.orientation = simd_quatf(angle: 0, axis: SIMD3<Float>(0, 1, 0))
+        }
+        
+        // Now update the screen
+        updateVideoScreen()
     }
 
     /// Updates the video screen with current video material.
@@ -380,8 +490,9 @@ struct ImmersiveView: View {
                 positions.append(SIMD3<Float>(px, py, pz))
                 normals.append(SIMD3<Float>(sinPhi * sinTheta, cosPhi, -sinPhi * cosTheta))
                 
-                // UV mapping - scale.x = -1 handles the flip
-                let (uvU, uvV) = calculateUV(u: u, v: v, mode: uvMode)
+                // UV mapping - flip U to compensate for scale.x = -1 transformation
+                // This ensures correct left-to-right mapping in equirectangular projection
+                let (uvU, uvV) = calculateUV(u: 1.0 - u, v: v, mode: uvMode)
                 uvs.append(SIMD2<Float>(uvU, uvV))
             }
         }
@@ -455,8 +566,8 @@ struct ImmersiveView: View {
                 positions.append(SIMD3<Float>(px, py, pz))
                 normals.append(SIMD3<Float>(sinPhi * sinTheta, cosPhi, sinPhi * cosTheta))
                 
-                // UV mapping - scale.x = -1 handles the flip
-                let (uvU, uvV) = calculateUV(u: u, v: v, mode: uvMode)
+                // UV mapping - flip U to compensate for scale.x = -1 transformation
+                let (uvU, uvV) = calculateUV(u: 1.0 - u, v: v, mode: uvMode)
                 uvs.append(SIMD2<Float>(uvU, uvV))
             }
         }
@@ -491,26 +602,31 @@ struct ImmersiveView: View {
     
     /// Calculates UV coordinates based on the mapping mode.
     /// For SBS stereo videos, maps the hemisphere to only the left half of the texture.
-    /// V is flipped (1-v) because equirectangular videos have V=0 at top, but mesh has V=0 at bottom.
+    /// 
+    /// UV Coordinate System:
+    /// - Mesh: v=0 at top (phi=0), v=1 at bottom (phi=π)
+    /// - Equirectangular video: v=0 at top (north pole), v=1 at bottom (south pole)
+    /// - VideoMaterial uses standard video coordinates where Y increases downward
+    /// - Therefore V should NOT be flipped for correct mapping
     private func calculateUV(u: Float, v: Float, mode: UVMappingMode) -> (Float, Float) {
-        // Flip V to correct vertical orientation
-        let flippedV = 1.0 - v
+        // No V flip needed - mesh v=0 (top) maps to video v=0 (top)
+        // Both use the same convention for equirectangular content
         
         switch mode {
         case .full:
-            return (u, flippedV)
+            return (u, v)
         case .leftHalf:
             // Map U: 0-1 to 0-0.5 (left half of SBS video)
-            return (u * 0.5, flippedV)
+            return (u * 0.5, v)
         case .rightHalf:
             // Map U: 0-1 to 0.5-1.0 (right half of SBS video)
-            return (0.5 + u * 0.5, flippedV)
+            return (0.5 + u * 0.5, v)
         case .topHalf:
             // Map V: 0-1 to 0-0.5 (top half of OU video)
-            return (u, flippedV * 0.5)
+            return (u, v * 0.5)
         case .bottomHalf:
             // Map V: 0-1 to 0.5-1.0 (bottom half of OU video)
-            return (u, 0.5 + flippedV * 0.5)
+            return (u, 0.5 + v * 0.5)
         }
     }
 }

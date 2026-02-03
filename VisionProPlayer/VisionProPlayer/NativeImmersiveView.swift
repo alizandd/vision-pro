@@ -2,6 +2,7 @@ import SwiftUI
 import RealityKit
 import AVKit
 import AVFoundation
+import ARKit
 
 /// Native immersive view for stereo 180° SBS video playback.
 /// 
@@ -12,6 +13,10 @@ import AVFoundation
 /// Note: True per-eye stereoscopic rendering requires either:
 /// - MV-HEVC encoded video with spatial metadata
 /// - Or custom Metal shaders (not implemented here)
+///
+/// HEAD TRACKING: Uses ARKit to recenter video in front of user when:
+/// - A new video starts playing
+/// - Video resumes after being stopped
 struct NativeImmersiveView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var videoManager: NativeVideoPlayerManager
@@ -22,6 +27,10 @@ struct NativeImmersiveView: View {
     @State private var lastVideoFormat: VideoFormat?
     @State private var isViewReady: Bool = false
     @State private var videoMaterial: VideoMaterial?
+    
+    /// ARKit session for head tracking
+    @State private var arkitSession = ARKitSession()
+    @State private var worldTracking = WorldTrackingProvider()
     
     var body: some View {
         RealityView { content in
@@ -37,15 +46,18 @@ struct NativeImmersiveView: View {
             
             content.add(rootEntity)
             
-            // Mark as ready
+            // Mark as ready and start head tracking
             Task { @MainActor in
                 self.videoEntity = screenHolder
                 self.isViewReady = true
                 print("[NativeImmersiveView] Immersive space ready")
                 
-                // If video is already ready, create the screen
+                // Start ARKit session for head tracking
+                await startARKitSession()
+                
+                // If video is already ready, create the screen with recentering
                 if videoManager.isPlayerReady {
-                    updateVideoScreen()
+                    await updateVideoScreenWithRecentering()
                 }
             }
         } update: { content in
@@ -58,13 +70,15 @@ struct NativeImmersiveView: View {
         .onChange(of: videoManager.isPlayerReady) { _, isReady in
             if isReady && isViewReady {
                 Task { @MainActor in
-                    updateVideoScreen()
+                    // New video ready - recenter to face user
+                    await updateVideoScreenWithRecentering()
                 }
             }
         }
         .onChange(of: videoManager.playbackState) { _, newState in
             if newState == .playing && isViewReady {
                 Task { @MainActor in
+                    // Only update without recentering during regular playback
                     updateVideoScreen()
                 }
             } else if newState == .stopped || newState == .idle {
@@ -77,7 +91,17 @@ struct NativeImmersiveView: View {
             Task { @MainActor in
                 if isViewReady {
                     lastVideoFormat = nil
-                    updateVideoScreen()
+                    await updateVideoScreenWithRecentering()
+                }
+            }
+        }
+        .onChange(of: videoManager.currentURL) { oldURL, newURL in
+            // When video URL changes, force recenter on next update
+            if oldURL != newURL && newURL != nil && isViewReady {
+                Task { @MainActor in
+                    print("[NativeImmersiveView] Video URL changed - will recenter when ready")
+                    lastVideoURL = nil
+                    lastVideoFormat = nil
                 }
             }
         }
@@ -89,6 +113,9 @@ struct NativeImmersiveView: View {
             print("[NativeImmersiveView] View disappeared")
             isViewReady = false
             cleanupVideoScreen()
+            // Stop ARKit session
+            arkitSession.stop()
+            print("[NativeImmersiveView] ARKit session stopped")
         }
     }
     
@@ -102,6 +129,81 @@ struct NativeImmersiveView: View {
             existingScreen.removeFromParent()
             screenEntity = nil
         }
+    }
+    
+    // MARK: - ARKit Head Tracking
+    
+    /// Starts the ARKit session for head tracking
+    private func startARKitSession() async {
+        do {
+            // Check if world tracking is supported
+            guard WorldTrackingProvider.isSupported else {
+                print("[NativeImmersiveView] World tracking not supported on this device")
+                return
+            }
+            
+            try await arkitSession.run([worldTracking])
+            print("[NativeImmersiveView] ARKit session started successfully")
+        } catch {
+            print("[NativeImmersiveView] Failed to start ARKit session: \(error)")
+        }
+    }
+    
+    /// Gets the current head (device) transform from ARKit
+    private func getCurrentHeadTransform() async -> simd_float4x4? {
+        guard let deviceAnchor = worldTracking.queryDeviceAnchor(atTimestamp: CACurrentMediaTime()) else {
+            print("[NativeImmersiveView] Could not get device anchor")
+            return nil
+        }
+        return deviceAnchor.originFromAnchorTransform
+    }
+    
+    /// Extracts the position from a transform matrix
+    private func getPosition(from transform: simd_float4x4) -> SIMD3<Float> {
+        return SIMD3<Float>(transform.columns.3.x, transform.columns.3.y, transform.columns.3.z)
+    }
+    
+    /// Extracts the yaw rotation (horizontal rotation) from a transform
+    private func getYawRotation(from transform: simd_float4x4) -> Float {
+        let forward = SIMD3<Float>(-transform.columns.2.x, 0, -transform.columns.2.z)
+        let yaw = atan2(forward.x, forward.z)
+        return yaw
+    }
+    
+    /// Updates the video screen with recentering to face the user's current direction
+    private func updateVideoScreenWithRecentering() async {
+        guard let videoEntity = videoEntity else {
+            print("[NativeImmersiveView] No video entity yet, skipping update")
+            return
+        }
+        
+        // Get the user's current head transform
+        if let headTransform = await getCurrentHeadTransform() {
+            // Get user's head position and yaw
+            let headPosition = getPosition(from: headTransform)
+            let yaw = getYawRotation(from: headTransform)
+            
+            // Position video entity at user's head (user is at center of sphere)
+            videoEntity.position = headPosition
+            
+            // Rotate to face user's direction
+            // The hemisphere center should align with where user is looking
+            // Add π to flip from behind to front
+            let rotation = simd_quatf(angle: -yaw + .pi, axis: SIMD3<Float>(0, 1, 0))
+            videoEntity.orientation = rotation
+            
+            print("[NativeImmersiveView] Recentered video:")
+            print("  - Position: (\(headPosition.x), \(headPosition.y), \(headPosition.z))")
+            print("  - User Yaw: \(yaw * 180 / .pi)°")
+        } else {
+            // Fallback: reset to default
+            print("[NativeImmersiveView] Could not get head transform, using default")
+            videoEntity.position = SIMD3<Float>(0, 0, 0)
+            videoEntity.orientation = simd_quatf(angle: 0, axis: SIMD3<Float>(0, 1, 0))
+        }
+        
+        // Now update the screen
+        updateVideoScreen()
     }
     
     private func updateVideoScreen() {

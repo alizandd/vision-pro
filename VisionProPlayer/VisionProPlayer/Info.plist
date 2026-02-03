@@ -20,6 +20,8 @@
 	</array>
 	<key>UILaunchScreen</key>
 	<dict/>
+	<key>NSWorldSensingUsageDescription</key>
+	<string>VisionProPlayer needs world tracking to properly position immersive video content in front of you.</string>
 	<key>UIFileSharingEnabled</key>
 	<true/>
 	<key>LSSupportsOpeningDocumentsInPlace</key>

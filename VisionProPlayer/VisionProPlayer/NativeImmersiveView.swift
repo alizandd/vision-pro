@@ -31,6 +31,16 @@ struct NativeImmersiveView: View {
     /// ARKit session for head tracking
     @State private var arkitSession = ARKitSession()
     @State private var worldTracking = WorldTrackingProvider()
+    @State private var isARKitReady = false
+    
+    // MARK: - Constants
+    
+    /// Rotation offset to align hemisphere front with user's gaze direction.
+    /// This is needed because:
+    /// 1. Hemisphere mesh is generated facing -Z
+    /// 2. Mesh is flipped with scale.x = -1 for inside-out viewing
+    /// Result: -yaw + π places video center directly in front of user
+    private let meshAlignmentOffset: Float = .pi
     
     var body: some View {
         RealityView { content in
@@ -112,6 +122,7 @@ struct NativeImmersiveView: View {
         .onDisappear {
             print("[NativeImmersiveView] View disappeared")
             isViewReady = false
+            isARKitReady = false
             cleanupVideoScreen()
             // Stop ARKit session
             arkitSession.stop()
@@ -143,7 +154,12 @@ struct NativeImmersiveView: View {
             }
             
             try await arkitSession.run([worldTracking])
-            print("[NativeImmersiveView] ARKit session started successfully")
+            
+            // Wait a moment for tracking to stabilize
+            try? await Task.sleep(nanoseconds: 500_000_000) // 500ms
+            
+            isARKitReady = true
+            print("[NativeImmersiveView] ARKit session started and ready")
         } catch {
             print("[NativeImmersiveView] Failed to start ARKit session: \(error)")
         }
@@ -170,31 +186,41 @@ struct NativeImmersiveView: View {
         return yaw
     }
     
-    /// Updates the video screen with recentering to face the user's current direction
+    /// Updates the video screen with recentering to face the user's current direction.
+    /// Waits for ARKit to be ready and provides the most accurate head position.
     private func updateVideoScreenWithRecentering() async {
         guard let videoEntity = videoEntity else {
             print("[NativeImmersiveView] No video entity yet, skipping update")
             return
         }
         
-        // Get the user's current head transform
+        // Wait for ARKit to be ready (max 2 seconds)
+        var waitCount = 0
+        while !isARKitReady && waitCount < 20 {
+            try? await Task.sleep(nanoseconds: 100_000_000) // 100ms
+            waitCount += 1
+            print("[NativeImmersiveView] Waiting for ARKit... (\(waitCount))")
+        }
+        
+        if !isARKitReady {
+            print("[NativeImmersiveView] WARNING: ARKit not ready after waiting, proceeding anyway")
+        }
+        
+        // Small additional delay to get the freshest head position
+        try? await Task.sleep(nanoseconds: 50_000_000) // 50ms
+        
+        // Get the user's CURRENT head transform (freshest data)
         if let headTransform = await getCurrentHeadTransform() {
-            // Get user's head position and yaw
             let headPosition = getPosition(from: headTransform)
             let yaw = getYawRotation(from: headTransform)
             
-            // Position video entity at user's head (user is at center of sphere)
+            // Position video sphere at user's head (user is at center)
             videoEntity.position = headPosition
             
-            // Rotate to face user's direction
-            // The hemisphere center should align with where user is looking
-            // Add π to flip from behind to front
-            let rotation = simd_quatf(angle: -yaw + .pi, axis: SIMD3<Float>(0, 1, 0))
-            videoEntity.orientation = rotation
+            // Orient video to face user's gaze direction
+            videoEntity.orientation = simd_quatf(angle: -yaw + meshAlignmentOffset, axis: .init(0, 1, 0))
             
-            print("[NativeImmersiveView] Recentered video:")
-            print("  - Position: (\(headPosition.x), \(headPosition.y), \(headPosition.z))")
-            print("  - User Yaw: \(yaw * 180 / .pi)°")
+            print("[NativeImmersiveView] Recentered: pos=(\(headPosition.x), \(headPosition.y), \(headPosition.z)), yaw=\(yaw * 180 / .pi)°")
         } else {
             // Fallback: reset to default
             print("[NativeImmersiveView] Could not get head transform, using default")

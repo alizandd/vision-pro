@@ -1,11 +1,9 @@
  INFO  Accepting connections at http://localhost:3000
- HTTP  2/3/2026 3:43:56 PM 172.16.10.51 GET /
- HTTP  2/3/2026 3:43:56 PM 172.16.10.51 Returned 200 in 36 ms
- HTTP  2/3/2026 3:43:56 PM 172.16.10.51 GET /styles.css
- HTTP  2/3/2026 3:43:56 PM 172.16.10.51 GET /controller.js
- HTTP  2/3/2026 3:43:56 PM 172.16.10.51 Returned 200 in 3 ms
- HTTP  2/3/2026 3:43:56 PM 172.16.10.51 Returned 200 in 5 ms
- HTTP  2/3/2026 3:43:56 PM 172.16.10.51 GET /controller.js
- HTTP  2/3/2026 3:43:56 PM 172.16.10.51 Returned 200 in 1 ms
- HTTP  2/3/2026 3:43:57 PM 172.16.10.51 GET /favicon.ico
- HTTP  2/3/2026 3:43:57 PM 172.16.10.51 Returned 404 in 1 ms
+ HTTP  2/3/2026 6:25:51 PM 192.168.70.131 GET /
+ HTTP  2/3/2026 6:25:51 PM 192.168.70.131 Returned 304 in 52 ms
+ HTTP  2/3/2026 6:25:51 PM 192.168.70.131 GET /styles.css
+ HTTP  2/3/2026 6:25:51 PM 192.168.70.131 GET /controller.js
+ HTTP  2/3/2026 6:25:51 PM 192.168.70.131 Returned 304 in 21 ms
+ HTTP  2/3/2026 6:25:51 PM 192.168.70.131 Returned 304 in 32 ms
+ HTTP  2/3/2026 6:25:52 PM 192.168.70.131 GET /favicon.ico
+ HTTP  2/3/2026 6:25:52 PM 192.168.70.131 Returned 404 in 6 ms

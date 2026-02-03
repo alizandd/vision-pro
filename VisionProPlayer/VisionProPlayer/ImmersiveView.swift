@@ -25,6 +25,16 @@ struct ImmersiveView: View {
     /// ARKit session for head tracking
     @State private var arkitSession = ARKitSession()
     @State private var worldTracking = WorldTrackingProvider()
+    @State private var isARKitReady = false
+    
+    // MARK: - Constants
+    
+    /// Rotation offset to align hemisphere front with user's gaze direction.
+    /// This is needed because:
+    /// 1. Hemisphere mesh is generated facing -Z
+    /// 2. Mesh is flipped with scale.x = -1 for inside-out viewing
+    /// Result: -yaw + π places video center directly in front of user
+    private let meshAlignmentOffset: Float = .pi
 
     var body: some View {
         RealityView { content in
@@ -112,6 +122,7 @@ struct ImmersiveView: View {
         .onDisappear {
             print("[ImmersiveView] Disappeared")
             isImmersiveSpaceReady = false
+            isARKitReady = false
             // Stop ARKit session
             arkitSession.stop()
             print("[ImmersiveView] ARKit session stopped")
@@ -140,7 +151,12 @@ struct ImmersiveView: View {
             }
             
             try await arkitSession.run([worldTracking])
-            print("[ImmersiveView] ARKit session started successfully")
+            
+            // Wait a moment for tracking to stabilize
+            try? await Task.sleep(nanoseconds: 500_000_000) // 500ms
+            
+            isARKitReady = true
+            print("[ImmersiveView] ARKit session started and ready")
         } catch {
             print("[ImmersiveView] Failed to start ARKit session: \(error)")
         }
@@ -174,35 +190,41 @@ struct ImmersiveView: View {
         return yaw
     }
     
-    /// Updates the video screen with recentering to face the user's current direction
-    /// This positions the video sphere at the user's head location and orients it to face their direction
+    /// Updates the video screen with recentering to face the user's current direction.
+    /// Waits for ARKit to be ready and provides the most accurate head position.
     private func updateVideoScreenWithRecentering() async {
         guard let videoEntity = videoEntity else {
             print("[ImmersiveView] No video entity yet, skipping update")
             return
         }
         
-        // Get the user's current head transform
+        // Wait for ARKit to be ready (max 2 seconds)
+        var waitCount = 0
+        while !isARKitReady && waitCount < 20 {
+            try? await Task.sleep(nanoseconds: 100_000_000) // 100ms
+            waitCount += 1
+            print("[ImmersiveView] Waiting for ARKit... (\(waitCount))")
+        }
+        
+        if !isARKitReady {
+            print("[ImmersiveView] WARNING: ARKit not ready after waiting, proceeding anyway")
+        }
+        
+        // Small additional delay to get the freshest head position
+        try? await Task.sleep(nanoseconds: 50_000_000) // 50ms
+        
+        // Get the user's CURRENT head transform (freshest data)
         if let headTransform = await getCurrentHeadTransform() {
-            // Get the user's head position - this is where the center of the sphere should be
             let headPosition = getPosition(from: headTransform)
-            
-            // Get the user's head yaw rotation - this is the direction they're facing
             let yaw = getYawRotation(from: headTransform)
             
-            // Position the video entity at the user's head position
-            // This ensures the user is at the CENTER of the video sphere
+            // Position video sphere at user's head (user is at center)
             videoEntity.position = headPosition
             
-            // Create rotation quaternion to align video with user's forward direction
-            // The hemisphere center should align with where user is looking
-            // Add π to flip from behind to front
-            let rotation = simd_quatf(angle: -yaw + .pi, axis: SIMD3<Float>(0, 1, 0))
-            videoEntity.orientation = rotation
+            // Orient video to face user's gaze direction
+            videoEntity.orientation = simd_quatf(angle: -yaw + meshAlignmentOffset, axis: .init(0, 1, 0))
             
-            print("[ImmersiveView] Recentered video:")
-            print("  - Position: (\(headPosition.x), \(headPosition.y), \(headPosition.z))")
-            print("  - User Yaw: \(yaw * 180 / .pi)°")
+            print("[ImmersiveView] Recentered: pos=(\(headPosition.x), \(headPosition.y), \(headPosition.z)), yaw=\(yaw * 180 / .pi)°")
         } else {
             // Fallback: reset to default position and orientation
             print("[ImmersiveView] Could not get head transform, using default position/orientation")

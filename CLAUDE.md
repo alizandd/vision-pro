@@ -378,6 +378,19 @@ curl http://localhost:8080/api/videos
 
 ## Changelog
 
+### 2026-02-05 (Update 2)
+- **[Bonjour Auto-Discovery]** iOS Controller now advertises itself on the network
+  - Vision Pro can automatically discover iOS Controller without manual IP entry
+  - Uses `_visionproctl._tcp` Bonjour service type
+  - Controller advertises using device name (e.g., "Ali's iPhone")
+  - Auto-search starts when Settings opens on Vision Pro
+- **[Vision Pro UI Improvements]**
+  - Added toolbar with Settings gear icon for easier access
+  - Server URL is now tappable to open Settings
+  - NavigationStack with proper title
+  - Larger window sizes for better usability
+  - Settings auto-searches for controllers on open
+
 ### 2026-02-05
 - **[iOS Controller App]** Complete native iOS/iPadOS app for Vision Pro control
   - **New Project**: `iOSController/` - Full SwiftUI app

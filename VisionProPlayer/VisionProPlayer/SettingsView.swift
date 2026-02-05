@@ -17,7 +17,7 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             Form {
-                // Discover Controllers (NEW)
+                // Discover Controllers - Auto-discovery section
                 Section {
                     if bonjourDiscovery.isSearching {
                         HStack {
@@ -33,7 +33,8 @@ struct SettingsView: View {
                         HStack {
                             Image(systemName: "antenna.radiowaves.left.and.right.slash")
                                 .foregroundColor(.secondary)
-                            Text("No controllers found")
+                            Text("No controllers found - tap Search or enter URL below")
+                                .font(.subheadline)
                                 .foregroundColor(.secondary)
                         }
                     }
@@ -43,6 +44,9 @@ struct SettingsView: View {
                             serverURL = controller.webSocketURL
                         } label: {
                             HStack {
+                                Image(systemName: "iphone")
+                                    .foregroundColor(.blue)
+                                    .font(.title2)
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(controller.name)
                                         .font(.headline)
@@ -55,8 +59,10 @@ struct SettingsView: View {
                                 if serverURL == controller.webSocketURL {
                                     Image(systemName: "checkmark.circle.fill")
                                         .foregroundColor(.green)
+                                        .font(.title2)
                                 }
                             }
+                            .padding(.vertical, 4)
                         }
                     }
                     
@@ -73,9 +79,18 @@ struct SettingsView: View {
                         }
                     }
                 } header: {
-                    Text("iOS Controllers")
+                    HStack {
+                        Image(systemName: "antenna.radiowaves.left.and.right")
+                        Text("iOS Controllers (Auto-Discovery)")
+                    }
                 } footer: {
-                    Text("Automatically discover iOS Controller apps on your network.")
+                    Text("Make sure iOS Controller app is running on the same WiFi network.")
+                }
+                .onAppear {
+                    // Auto-start searching when settings opens
+                    if !bonjourDiscovery.isSearching {
+                        bonjourDiscovery.startSearching()
+                    }
                 }
                 
                 // Server Configuration

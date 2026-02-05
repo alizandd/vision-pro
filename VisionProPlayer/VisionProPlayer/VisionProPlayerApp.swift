@@ -52,7 +52,7 @@ struct VisionProPlayerApp: App {
                 }
         }
         .windowStyle(.plain)
-        .defaultSize(width: 400, height: 300)
+        .defaultSize(width: 450, height: 400)
         .onChange(of: scenePhase) { oldPhase, newPhase in
             handleScenePhaseChange(from: oldPhase, to: newPhase)
         }
@@ -64,7 +64,7 @@ struct VisionProPlayerApp: App {
                 .environmentObject(webSocketManager)
         }
         .windowStyle(.plain)
-        .defaultSize(width: 500, height: 400)
+        .defaultSize(width: 550, height: 500)
 
         // Immersive space for native video playback (16K support)
         ImmersiveSpace(id: "ImmersiveVideoSpace") {

@@ -10,59 +10,74 @@ struct ContentView: View {
     @Environment(\.openWindow) private var openWindow
 
     var body: some View {
-        VStack(spacing: 24) {
-            // App title
-            Text("Vision Pro Player")
-                .font(.largeTitle)
-                .fontWeight(.bold)
+        NavigationStack {
+            VStack(spacing: 24) {
+                // Connection status
+                ConnectionStatusView(state: webSocketManager.connectionState)
+                
+                // Server URL display (tappable to open settings)
+                Button(action: { openWindow(id: "settings") }) {
+                    HStack {
+                        Image(systemName: "link")
+                            .foregroundColor(.secondary)
+                        Text(AppConfiguration.serverURL)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Image(systemName: "chevron.right")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(.ultraThinMaterial)
+                    )
+                }
+                .buttonStyle(.plain)
+                
+                // Connect/Disconnect button
+                HStack(spacing: 12) {
+                    if webSocketManager.connectionState == .connected {
+                        Button(action: { webSocketManager.disconnect() }) {
+                            Label("Disconnect", systemImage: "xmark.circle")
+                        }
+                        .buttonStyle(.bordered)
+                        .tint(.red)
+                    } else if webSocketManager.connectionState == .connecting || webSocketManager.connectionState == .reconnecting {
+                        Button(action: { webSocketManager.disconnect() }) {
+                            Label("Cancel", systemImage: "xmark.circle")
+                        }
+                        .buttonStyle(.bordered)
+                        .tint(.orange)
+                    } else {
+                        Button(action: { webSocketManager.connect() }) {
+                            Label("Connect", systemImage: "link")
+                        }
+                        .buttonStyle(.borderedProminent)
+                    }
+                }
 
-            // Connection status
-            ConnectionStatusView(state: webSocketManager.connectionState)
-            
-            // Server URL display
-            Text(AppConfiguration.serverURL)
-                .font(.caption)
-                .foregroundColor(.secondary)
-            
-            // Connect/Disconnect button
-            HStack(spacing: 12) {
-                if webSocketManager.connectionState == .connected {
-                    Button(action: { webSocketManager.disconnect() }) {
-                        Label("Disconnect", systemImage: "xmark.circle")
+                // Current state
+                StatusInfoView(
+                    playbackState: nativeVideoManager.playbackState,
+                    currentVideo: appState.currentVideoURL,
+                    isImmersive: appState.isImmersiveActive
+                )
+
+                Spacer()
+            }
+            .padding(32)
+            .navigationTitle("Vision Pro Player")
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button(action: { openWindow(id: "settings") }) {
+                        Image(systemName: "gear")
                     }
-                    .buttonStyle(.bordered)
-                    .tint(.red)
-                } else if webSocketManager.connectionState == .connecting || webSocketManager.connectionState == .reconnecting {
-                    Button(action: { webSocketManager.disconnect() }) {
-                        Label("Cancel", systemImage: "xmark.circle")
-                    }
-                    .buttonStyle(.bordered)
-                    .tint(.orange)
-                } else {
-                    Button(action: { webSocketManager.connect() }) {
-                        Label("Connect", systemImage: "link")
-                    }
-                    .buttonStyle(.borderedProminent)
                 }
             }
-
-            // Current state
-            StatusInfoView(
-                playbackState: nativeVideoManager.playbackState,
-                currentVideo: appState.currentVideoURL,
-                isImmersive: appState.isImmersiveActive
-            )
-
-            Spacer()
-
-            // Settings button
-            Button(action: { openWindow(id: "settings") }) {
-                Label("Settings", systemImage: "gear")
-            }
-            .buttonStyle(.bordered)
         }
-        .padding(32)
-        .frame(minWidth: 350, minHeight: 300)
+        .frame(minWidth: 400, minHeight: 350)
         // Window is now completely dismissed during immersive mode (like native player)
     }
 }

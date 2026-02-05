@@ -1,5 +1,6 @@
 import Foundation
 import Network
+import UIKit
 
 /// Represents a client connection
 class ClientConnection: Identifiable {
@@ -15,7 +16,7 @@ class ClientConnection: Identifiable {
     }
 }
 
-/// WebSocket Server using Network framework
+/// WebSocket Server using Network framework with Bonjour advertising
 @MainActor
 class WebSocketServer: ObservableObject {
     @Published var isRunning: Bool = false
@@ -24,6 +25,12 @@ class WebSocketServer: ObservableObject {
     
     private var listener: NWListener?
     private var connections: [String: ClientConnection] = [:]
+    
+    // Bonjour service advertising
+    private let bonjourServiceType = "_visionproctl._tcp"
+    private var serviceName: String {
+        UIDevice.current.name
+    }
     
     /// Callback when a new device registers
     var onDeviceRegistered: ((ClientConnection, RegistrationMessage) -> Void)?
@@ -45,7 +52,7 @@ class WebSocketServer: ObservableObject {
     
     init() {}
     
-    /// Start the WebSocket server
+    /// Start the WebSocket server with Bonjour advertising
     func start() {
         guard !isRunning else { return }
         
@@ -62,6 +69,26 @@ class WebSocketServer: ObservableObject {
             // Create listener
             listener = try NWListener(using: parameters, on: NWEndpoint.Port(rawValue: port)!)
             
+            // Enable Bonjour advertising so Vision Pro can auto-discover this controller
+            listener?.service = NWListener.Service(name: serviceName, type: bonjourServiceType)
+            
+            listener?.serviceRegistrationUpdateHandler = { [weak self] serviceChange in
+                Task { @MainActor in
+                    switch serviceChange {
+                    case .add(let endpoint):
+                        if case .service(let name, let type, _, _) = endpoint {
+                            print("[WebSocketServer] 📡 Bonjour service registered: \(name) (\(type))")
+                        }
+                    case .remove(let endpoint):
+                        if case .service(let name, _, _, _) = endpoint {
+                            print("[WebSocketServer] Bonjour service removed: \(name)")
+                        }
+                    @unknown default:
+                        break
+                    }
+                }
+            }
+            
             listener?.stateUpdateHandler = { [weak self] state in
                 Task { @MainActor in
                     self?.handleListenerState(state)
@@ -75,7 +102,7 @@ class WebSocketServer: ObservableObject {
             }
             
             listener?.start(queue: .main)
-            print("[WebSocketServer] Starting on port \(port)...")
+            print("[WebSocketServer] Starting on port \(port) with Bonjour advertising...")
             
         } catch {
             print("[WebSocketServer] Failed to start: \(error)")
@@ -157,6 +184,7 @@ class WebSocketServer: ObservableObject {
                 self.port = port.rawValue
             }
             print("[WebSocketServer] ✅ Server ready on port \(self.port)")
+            print("[WebSocketServer] 📡 Bonjour: advertising as '\(serviceName)' on \(bonjourServiceType)")
         case .failed(let error):
             isRunning = false
             print("[WebSocketServer] ❌ Server failed: \(error)")

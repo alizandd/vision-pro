@@ -5,6 +5,7 @@ import Darwin
 struct ContentView: View {
     @EnvironmentObject var deviceManager: DeviceManager
     @State private var showingLogs = false
+    @State private var showingVideoTransfer = false
     
     var body: some View {
         NavigationStack {
@@ -32,15 +33,29 @@ struct ContentView: View {
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        showingLogs.toggle()
-                    } label: {
-                        Image(systemName: "list.bullet.rectangle")
+                    HStack(spacing: 12) {
+                        // Send Videos Button
+                        Button {
+                            showingVideoTransfer.toggle()
+                        } label: {
+                            Image(systemName: "square.and.arrow.up")
+                        }
+                        .disabled(!deviceManager.isServerRunning || deviceManager.devices.isEmpty)
+                        
+                        // Logs Button
+                        Button {
+                            showingLogs.toggle()
+                        } label: {
+                            Image(systemName: "list.bullet.rectangle")
+                        }
                     }
                 }
             }
             .sheet(isPresented: $showingLogs) {
                 LogsView()
+            }
+            .sheet(isPresented: $showingVideoTransfer) {
+                VideoTransferView(transferServer: deviceManager.fileTransferServer)
             }
         }
     }

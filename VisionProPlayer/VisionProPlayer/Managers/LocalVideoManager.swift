@@ -152,4 +152,37 @@ class LocalVideoManager: ObservableObject {
     func formattedSize(for video: LocalVideo) -> String {
         return formatFileSize(video.size)
     }
+    
+    /// Deletes a video by filename
+    /// Returns (success, errorMessage)
+    func deleteVideo(filename: String) -> (Bool, String?) {
+        guard let video = getVideo(byFilename: filename) else {
+            return (false, "Video not found: \(filename)")
+        }
+        
+        guard let url = URL(string: video.url) else {
+            return (false, "Invalid video URL")
+        }
+        
+        do {
+            try FileManager.default.removeItem(at: url)
+            print("[LocalVideo] ✅ Deleted: \(filename)")
+            
+            // Rescan to update the list
+            scanVideos()
+            
+            return (true, nil)
+        } catch {
+            print("[LocalVideo] ❌ Failed to delete \(filename): \(error)")
+            return (false, error.localizedDescription)
+        }
+    }
+    
+    /// Deletes a video by its ID
+    func deleteVideo(byId id: String) -> (Bool, String?) {
+        guard let video = getVideo(byId: id) else {
+            return (false, "Video not found")
+        }
+        return deleteVideo(filename: video.filename)
+    }
 }

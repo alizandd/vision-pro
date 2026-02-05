@@ -153,6 +153,7 @@ enum CommandAction: String, Codable {
     case resume
     case change
     case stop
+    case deleteVideo  // Delete a video from Vision Pro
 }
 
 /// Welcome message sent to new connections
@@ -179,4 +180,78 @@ struct ErrorMessage: Codable {
         self.message = message
         self.timestamp = Int(Date().timeIntervalSince1970 * 1000)
     }
+}
+
+// MARK: - Video Transfer Messages
+
+/// Command to tell Vision Pro to download a video from the controller
+struct TransferCommand: Codable {
+    let type: String = "command"
+    let action: String = "download"
+    let downloadUrl: String        // HTTP URL to download from
+    let filename: String           // Target filename on Vision Pro
+    let fileSize: Int64            // File size in bytes
+    let timestamp: Int
+    
+    init(downloadUrl: String, filename: String, fileSize: Int64) {
+        self.downloadUrl = downloadUrl
+        self.filename = filename
+        self.fileSize = fileSize
+        self.timestamp = Int(Date().timeIntervalSince1970 * 1000)
+    }
+}
+
+/// Progress update from Vision Pro during download
+struct TransferProgressMessage: Codable {
+    let type: String
+    let deviceId: String
+    let filename: String
+    let progress: Double       // 0.0 to 1.0
+    let bytesDownloaded: Int64
+    let totalBytes: Int64
+    let status: TransferStatus
+}
+
+/// Transfer status enum
+enum TransferStatus: String, Codable {
+    case started
+    case downloading
+    case completed
+    case failed
+}
+
+/// Video file info for transfer
+struct TransferableVideo: Identifiable {
+    let id: String
+    let url: URL
+    let filename: String
+    let fileSize: Int64
+    
+    var formattedSize: String {
+        ByteCountFormatter.string(fromByteCount: fileSize, countStyle: .file)
+    }
+}
+
+// MARK: - Delete Video Command
+
+/// Command to delete a video from Vision Pro
+struct DeleteVideoCommand: Codable {
+    let type: String = "command"
+    let action: String = "deleteVideo"
+    let filename: String
+    let timestamp: Int
+    
+    init(filename: String) {
+        self.filename = filename
+        self.timestamp = Int(Date().timeIntervalSince1970 * 1000)
+    }
+}
+
+/// Response after video deletion
+struct DeleteVideoResponse: Codable {
+    let type: String
+    let deviceId: String
+    let filename: String
+    let success: Bool
+    let message: String?
 }

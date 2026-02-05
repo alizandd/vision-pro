@@ -139,8 +139,11 @@ struct StatusBadge: View {
 
 struct VideoSelectionView: View {
     @ObservedObject var device: ConnectedDevice
+    @EnvironmentObject var deviceManager: DeviceManager
     @Binding var selectedVideoUrl: String
     @Binding var selectedFormat: VideoFormat
+    @State private var showDeleteConfirmation = false
+    @State private var videoToDelete: LocalVideo?
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -168,7 +171,7 @@ struct VideoSelectionView: View {
                         Text("No videos found on device")
                             .font(.caption)
                             .foregroundColor(.secondary)
-                        Text("Add videos to Documents/Videos folder")
+                        Text("Send videos using the upload button")
                             .font(.caption2)
                             .foregroundColor(.secondary)
                     }
@@ -182,12 +185,19 @@ struct VideoSelectionView: View {
                         ForEach(device.localVideos) { video in
                             VideoThumbnailButton(
                                 video: video,
-                                isSelected: selectedVideoUrl == video.url
-                            ) {
-                                selectedVideoUrl = video.url
-                            }
+                                isSelected: selectedVideoUrl == video.url,
+                                onSelect: {
+                                    selectedVideoUrl = video.url
+                                },
+                                onDelete: {
+                                    videoToDelete = video
+                                    showDeleteConfirmation = true
+                                }
+                            )
                         }
                     }
+                    .padding(.top, 4)  // Space for selection border
+                    .padding(.horizontal, 2)
                 }
             }
             
@@ -222,6 +232,24 @@ struct VideoSelectionView: View {
             }
         }
         .padding()
+        .alert("Delete Video", isPresented: $showDeleteConfirmation) {
+            Button("Cancel", role: .cancel) {
+                videoToDelete = nil
+            }
+            Button("Delete", role: .destructive) {
+                if let video = videoToDelete {
+                    deviceManager.deleteVideo(deviceId: device.deviceId, filename: video.filename)
+                    if selectedVideoUrl == video.url {
+                        selectedVideoUrl = ""
+                    }
+                }
+                videoToDelete = nil
+            }
+        } message: {
+            if let video = videoToDelete {
+                Text("Are you sure you want to delete \"\(video.name)\" from \(device.deviceName)?")
+            }
+        }
     }
     
     func videoName(from url: String) -> String {
@@ -237,42 +265,68 @@ struct VideoSelectionView: View {
 struct VideoThumbnailButton: View {
     let video: LocalVideo
     let isSelected: Bool
-    let action: () -> Void
+    let onSelect: () -> Void
+    let onDelete: () -> Void
+    
+    @State private var showDeleteConfirm = false
     
     var body: some View {
-        Button(action: action) {
-            VStack(alignment: .leading, spacing: 6) {
-                // Thumbnail Placeholder
+        VStack(alignment: .leading, spacing: 6) {
+            // Thumbnail
+            Button(action: onSelect) {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 8)
+                    RoundedRectangle(cornerRadius: 10)
                         .fill(Color(.systemGray5))
                     
                     Image(systemName: "film")
                         .font(.title2)
                         .foregroundColor(.secondary)
                 }
-                .frame(width: 120, height: 70)
+                .frame(width: 100, height: 60)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 8)
+                    RoundedRectangle(cornerRadius: 10)
                         .stroke(isSelected ? Color.accentColor : Color.clear, lineWidth: 3)
                 )
+            }
+            .buttonStyle(.plain)
+            
+            // Video Info - fixed height for alignment
+            VStack(alignment: .leading, spacing: 2) {
+                Text(video.name)
+                    .font(.caption2)
+                    .fontWeight(.medium)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                    .foregroundColor(.primary)
                 
-                // Video Info
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(video.name)
-                        .font(.caption)
-                        .fontWeight(.medium)
-                        .lineLimit(1)
-                        .foregroundColor(.primary)
-                    
+                HStack(spacing: 4) {
                     Text(video.formattedSize)
                         .font(.caption2)
                         .foregroundColor(.secondary)
+                    
+                    Spacer()
+                    
+                    // Delete button
+                    Button {
+                        showDeleteConfirm = true
+                    } label: {
+                        Image(systemName: "trash")
+                            .font(.system(size: 12))
+                            .foregroundColor(.red.opacity(0.7))
+                    }
+                    .buttonStyle(.plain)
                 }
-                .frame(width: 120, alignment: .leading)
             }
+            .frame(width: 100, height: 32, alignment: .topLeading)
         }
-        .buttonStyle(.plain)
+        .confirmationDialog("Delete \(video.name)?", isPresented: $showDeleteConfirm, titleVisibility: .visible) {
+            Button("Delete", role: .destructive) {
+                onDelete()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This will permanently remove the video from Vision Pro.")
+        }
     }
 }
 

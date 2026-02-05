@@ -43,6 +43,50 @@ enum CommandAction: String, Codable {
     case resume
     case change
     case stop
+    case download      // Download video from controller
+    case deleteVideo   // Delete a local video
+}
+
+// MARK: - Download Command
+
+/// Command to download a video from the iOS controller
+struct DownloadCommand: Codable {
+    let type: String
+    let action: String
+    let downloadUrl: String
+    let filename: String
+    let fileSize: Int64
+    let timestamp: Int?
+}
+
+/// Transfer progress message sent back to controller
+struct TransferProgressMessage: Codable {
+    let type: String = "transferProgress"
+    let deviceId: String
+    let filename: String
+    let progress: Double
+    let bytesDownloaded: Int64
+    let totalBytes: Int64
+    let status: String  // started, downloading, completed, failed
+}
+
+// MARK: - Delete Video
+
+/// Command to delete a video
+struct DeleteVideoCommand: Codable {
+    let type: String
+    let action: String
+    let filename: String
+    let timestamp: Int?
+}
+
+/// Response after video deletion
+struct DeleteVideoResponse: Codable {
+    let type: String = "deleteVideoResponse"
+    let deviceId: String
+    let filename: String
+    let success: Bool
+    let message: String?
 }
 
 /// Message sent to register with the server

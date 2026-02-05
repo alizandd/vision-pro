@@ -52,5 +52,7 @@
     <array>
         <string>_visionproctl._tcp</string>
     </array>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>This app needs access to your photo library to select videos for transfer to Vision Pro.</string>
 </dict>
 </plist>

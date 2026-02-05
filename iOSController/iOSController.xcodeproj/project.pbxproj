@@ -15,6 +15,10 @@
 		AA000006 /* BonjourService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100006 /* BonjourService.swift */; };
 		AA000007 /* DeviceManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100007 /* DeviceManager.swift */; };
 		AA000008 /* DeviceCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100008 /* DeviceCardView.swift */; };
+		AA000009 /* FileTransferServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100010 /* FileTransferServer.swift */; };
+		AA000010 /* VideoTransferView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100011 /* VideoTransferView.swift */; };
+		AA000011 /* SampleVideoHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100012 /* SampleVideoHelper.swift */; };
+		AA000012 /* SampleVideosView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100013 /* SampleVideosView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,6 +31,10 @@
 		AA100007 /* DeviceManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceManager.swift; sourceTree = "<group>"; };
 		AA100008 /* DeviceCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceCardView.swift; sourceTree = "<group>"; };
 		AA100009 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		AA100010 /* FileTransferServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileTransferServer.swift; sourceTree = "<group>"; };
+		AA100011 /* VideoTransferView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoTransferView.swift; sourceTree = "<group>"; };
+		AA100012 /* SampleVideoHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleVideoHelper.swift; sourceTree = "<group>"; };
+		AA100013 /* SampleVideosView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleVideosView.swift; sourceTree = "<group>"; };
 		AA200001 /* iOSController.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iOSController.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -55,8 +63,12 @@
 				AA100001 /* iOSControllerApp.swift */,
 				AA100002 /* ContentView.swift */,
 				AA100008 /* DeviceCardView.swift */,
+				AA100011 /* VideoTransferView.swift */,
+				AA100013 /* SampleVideosView.swift */,
+				AA100012 /* SampleVideoHelper.swift */,
 				AA100004 /* Models.swift */,
 				AA100005 /* WebSocketServer.swift */,
+				AA100010 /* FileTransferServer.swift */,
 				AA100006 /* BonjourService.swift */,
 				AA100007 /* DeviceManager.swift */,
 				AA100003 /* Assets.xcassets */,
@@ -146,9 +158,13 @@
 				AA000001 /* iOSControllerApp.swift in Sources */,
 				AA000004 /* Models.swift in Sources */,
 				AA000005 /* WebSocketServer.swift in Sources */,
+				AA000009 /* FileTransferServer.swift in Sources */,
 				AA000006 /* BonjourService.swift in Sources */,
 				AA000007 /* DeviceManager.swift in Sources */,
 				AA000008 /* DeviceCardView.swift in Sources */,
+				AA000010 /* VideoTransferView.swift in Sources */,
+				AA000011 /* SampleVideoHelper.swift in Sources */,
+				AA000012 /* SampleVideosView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -281,7 +297,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 29N2XT4U33;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = iOSController/Info.plist;
@@ -296,8 +312,8 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.visionpro.controller;
+				MARKETING_VERSION = 1.2;
+				PRODUCT_BUNDLE_IDENTIFIER = com.qoostudio.vpc;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -312,7 +328,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 29N2XT4U33;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = iOSController/Info.plist;
@@ -327,8 +343,8 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.visionpro.controller;
+				MARKETING_VERSION = 1.2;
+				PRODUCT_BUNDLE_IDENTIFIER = com.qoostudio.vpc;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;

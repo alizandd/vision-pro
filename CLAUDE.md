@@ -1,6 +1,6 @@
 # CLAUDE.md - AI Assistant Guide for vision-pro
 
-**Last Updated**: 2026-01-06
+**Last Updated**: 2026-02-05
 **Repository**: vision-pro
 **Status**: Active Development
 
@@ -8,12 +8,12 @@
 
 ## Overview
 
-Vision Pro Remote Controller - A complete system for controlling immersive video playback on Apple Vision Pro devices via a web interface. The system consists of three components that communicate over WebSocket.
+Vision Pro Remote Controller - A complete system for controlling immersive video playback on Apple Vision Pro devices. Supports both **iOS native controller** and **web-based controller** interfaces. The system communicates over WebSocket with HTTP file transfer support.
 
 ### Repository Information
 - **Repository Name**: vision-pro
 - **Remote URL**: http://local_proxy@127.0.0.1:30432/git/alizandd/vision-pro
-- **Current Branch**: claude/vision-pro-web-controller-scFsv
+- **Current Branch**: feature/ios-controller-app
 
 ---
 
@@ -30,17 +30,30 @@ vision-pro/
 │       ├── Managers/
 │       │   ├── AppState.swift          # Central state management
 │       │   ├── WebSocketManager.swift  # WebSocket connection handling
-│       │   └── VideoPlayerManager.swift # Video playback control
+│       │   ├── VideoPlayerManager.swift # Video playback control
+│       │   ├── LocalVideoManager.swift  # Local video file management
+│       │   └── DownloadManager.swift    # Video download from iOS Controller
 │       ├── Models/
 │       │   └── Models.swift            # Data models and protocols
 │       └── Assets.xcassets/            # App assets
 │
-├── server/                             # WebSocket relay server (Node.js)
+├── iOSController/                      # iOS Controller app (Swift/SwiftUI) ⭐ NEW
+│   └── iOSController/
+│       ├── iOSControllerApp.swift      # App entry point
+│       ├── ContentView.swift           # Main UI view
+│       ├── DeviceCardView.swift        # Device display card
+│       ├── VideoTransferView.swift     # Video transfer UI
+│       ├── WebSocketServer.swift       # WebSocket server implementation
+│       ├── FileTransferServer.swift    # HTTP file server for transfers
+│       ├── DeviceManager.swift         # Device & connection management
+│       └── Models.swift                # Data models
+│
+├── server/                             # WebSocket relay server (Node.js) - Optional
 │   ├── server.js                       # Main server implementation
 │   ├── config.js                       # Server configuration
 │   └── package.json                    # Node.js dependencies
 │
-├── web-controller/                     # Web-based controller UI
+├── web-controller/                     # Web-based controller UI - Optional
 │   ├── index.html                      # Main HTML page
 │   ├── styles.css                      # Styling
 │   └── controller.js                   # Controller logic
@@ -58,13 +71,33 @@ vision-pro/
 - **Frameworks**: SwiftUI, RealityKit, AVFoundation
 - **Platform**: visionOS 1.0+
 - **IDE**: Xcode 15+
+- **Features**:
+  - WebSocket client for receiving commands
+  - Video download manager for file transfers
+  - Local video library management
+  - Multiple video format support (2D, 3D, VR)
 
-### WebSocket Server
+### iOS Controller App ⭐ NEW
+- **Language**: Swift 5
+- **Frameworks**: SwiftUI, Network (NWListener), PhotosUI
+- **Platform**: iOS 17.0+ / iPadOS 17.0+
+- **IDE**: Xcode 15+
+- **Ports**: WebSocket 8080, HTTP 8081
+- **Features**:
+  - WebSocket server (NWListener-based)
+  - HTTP file server for video transfers
+  - Photos library integration (PhotosPicker)
+  - Multi-device management
+  - Real-time status monitoring
+  - Video transfer with progress tracking
+  - Remote video deletion
+
+### WebSocket Server (Optional)
 - **Runtime**: Node.js 18+
 - **Dependencies**: ws (WebSocket library)
 - **Port**: 8080 (configurable)
 
-### Web Controller (Orchestrator UI)
+### Web Controller (Optional)
 - **Technologies**: HTML5, CSS3, JavaScript (ES6+)
 - **Fonts**: Outfit (UI), JetBrains Mono (code)
 - **No build step required** - runs directly in browser
@@ -201,6 +234,47 @@ cd web-controller && npx serve .
 - Renders video on a plane in 3D space
 - Positioned 3 meters in front of user
 
+### LocalVideoManager.swift
+- Scans Documents/Videos folder for local videos
+- Provides video metadata (name, size, modified date)
+- Supports video deletion
+
+### DownloadManager.swift
+- URLSession-based download manager
+- Progress tracking with delegate callbacks
+- Handles large file downloads with temp file management
+- Moves completed downloads to Videos folder
+
+---
+
+## iOS Controller Key Components
+
+### WebSocketServer.swift
+- NWListener-based WebSocket server
+- Handles client connections and message routing
+- Device registration and status management
+- Heartbeat mechanism for connection health
+
+### FileTransferServer.swift
+- NWListener-based HTTP server on port 8081
+- Serves video files for transfer
+- Range request support for resumable downloads
+- Chunked streaming for efficient memory usage
+
+### DeviceManager.swift
+- Central coordinator for iOS Controller
+- Manages WebSocket and HTTP servers
+- Tracks connected Vision Pro devices
+- Handles video transfer commands
+- Activity logging
+
+### DeviceCardView.swift
+- SwiftUI view for device display
+- Video thumbnail grid
+- Playback controls
+- Video format selector
+- Delete confirmation dialog
+
 ---
 
 ## Configuration
@@ -239,6 +313,9 @@ cd web-controller && npx serve .
 
 ### Important Files to Know
 - `VisionProPlayer/VisionProPlayer/Managers/` - Core logic
+- `VisionProPlayer/VisionProPlayer/Managers/DownloadManager.swift` - Video download from iOS Controller
+- `iOSController/iOSController/FileTransferServer.swift` - HTTP server for video files
+- `iOSController/iOSController/VideoTransferView.swift` - Video transfer UI
 - `server/server.js` - WebSocket relay implementation
 - `web-controller/controller.js` - Controller logic
 
@@ -300,6 +377,61 @@ curl http://localhost:8080/api/videos
 ---
 
 ## Changelog
+
+### 2026-02-05
+- **[iOS Controller App]** Complete native iOS/iPadOS app for Vision Pro control
+  - **New Project**: `iOSController/` - Full SwiftUI app
+  - **WebSocket Server** (`WebSocketServer.swift`):
+    - NWListener-based WebSocket server on port 8080
+    - Device registration and status tracking
+    - Command routing to Vision Pro devices
+    - Heartbeat/ping-pong for connection health
+  - **HTTP File Server** (`FileTransferServer.swift`):
+    - NWListener-based HTTP server on port 8081
+    - Serves videos for transfer with range request support
+    - Chunked streaming for large files
+    - MIME type detection
+  - **Device Management** (`DeviceManager.swift`):
+    - Central manager for all connected devices
+    - Real-time status updates
+    - Video transfer coordination
+    - Activity logging
+  - **UI Components**:
+    - `ContentView.swift` - Main view with server status and device list
+    - `DeviceCardView.swift` - Per-device card with video library and controls
+    - `VideoTransferView.swift` - PhotosPicker UI for video selection
+    - Connection URL display with copy button
+  - **Features**:
+    - Start/stop server with one tap
+    - View all connected Vision Pro devices
+    - See local videos on each device
+    - Play/pause/stop controls per device
+    - Video format selection (2D, 3D, VR)
+- **[Video Transfer from iOS to Vision Pro]** Wireless video transfer
+  - Select videos from iOS Photos library (PhotosPicker)
+  - Choose target Vision Pro device
+  - HTTP streaming transfer over WiFi
+  - Progress tracking with real-time updates
+  - Videos save to Vision Pro's Documents/Videos folder
+  - Automatic video list refresh after download
+  - `DownloadManager.swift` on Vision Pro handles downloads
+- **[Delete Videos Remotely]** Remove videos from Vision Pro via iOS Controller
+  - Trash icon on each video thumbnail
+  - Confirmation dialog before deletion
+  - `deleteVideo` command sent to Vision Pro
+  - Automatic video list refresh after deletion
+- **[UI Improvements]**
+  - Video thumbnail grid with aligned layout
+  - Fixed-height video info for consistent alignment
+  - Truncated filenames with middle ellipsis
+  - Selection border properly visible (padding fix)
+  - Removed sample videos feature (no longer needed)
+- **[Protocol Update]** New WebSocket message types
+  - `download` - Transfer video from controller to Vision Pro
+  - `deleteVideo` - Remove video from Vision Pro
+  - `localVideos` - Vision Pro sends its video library to controller
+  - `transferProgress` - Real-time transfer progress updates
+  - `deleteVideoResponse` - Confirmation of video deletion
 
 ### 2026-01-31
 - **[Critical Stereo 180° SBS Fixes]** Major rewrite to fix stereoscopic video playback

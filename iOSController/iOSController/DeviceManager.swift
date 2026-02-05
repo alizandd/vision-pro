@@ -12,6 +12,7 @@ class DeviceManager: ObservableObject {
     
     private let webSocketServer = WebSocketServer()
     private let bonjourService = BonjourService()
+    let fileTransferServer = FileTransferServer()
     private var cancellables = Set<AnyCancellable>()
     
     init() {
@@ -25,6 +26,7 @@ class DeviceManager: ObservableObject {
     func startServer() {
         log("Starting server...", type: .info)
         webSocketServer.start()
+        fileTransferServer.start()
         
         // Start Bonjour advertising after a small delay to ensure server is ready
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
@@ -38,6 +40,7 @@ class DeviceManager: ObservableObject {
         log("Stopping server...", type: .info)
         bonjourService.stopAdvertising()
         webSocketServer.stop()
+        fileTransferServer.stop()
         devices.removeAll()
     }
     
@@ -76,6 +79,19 @@ class DeviceManager: ObservableObject {
         let command = CommandMessage(action: .stop)
         webSocketServer.sendCommandToAll(command: command)
         log("Stop command sent to all devices", type: .info)
+    }
+    
+    /// Send transfer command to device (for video download)
+    func sendTransferCommand(to deviceId: String, command: TransferCommand) {
+        webSocketServer.sendTransferCommand(to: deviceId, command: command)
+        log("📤 Transfer command sent: \(command.filename)", type: .info)
+    }
+    
+    /// Send delete video command to device
+    func deleteVideo(deviceId: String, filename: String) {
+        let command = DeleteVideoCommand(filename: filename)
+        webSocketServer.sendDeleteVideoCommand(to: deviceId, command: command)
+        log("🗑️ Delete command sent: \(filename)", type: .info)
     }
     
     // MARK: - Helpers
@@ -166,6 +182,49 @@ class DeviceManager: ObservableObject {
                     let deviceName = self.devices[index].deviceName
                     self.devices.remove(at: index)
                     self.log("Device disconnected: \(deviceName)", type: .warning)
+                }
+            }
+        }
+        
+        // Handle transfer progress
+        webSocketServer.onTransferProgress = { [weak self] deviceId, message in
+            Task { @MainActor in
+                guard let self = self else { return }
+                
+                let statusEmoji: String
+                switch message.status {
+                case .started:
+                    statusEmoji = "📥"
+                case .downloading:
+                    statusEmoji = "⏳"
+                case .completed:
+                    statusEmoji = "✅"
+                case .failed:
+                    statusEmoji = "❌"
+                }
+                
+                let progress = Int(message.progress * 100)
+                
+                if message.status == .completed {
+                    self.log("\(statusEmoji) Transfer complete: \(message.filename)", type: .success)
+                } else if message.status == .failed {
+                    self.log("\(statusEmoji) Transfer failed: \(message.filename)", type: .error)
+                } else if progress % 25 == 0 && progress > 0 {
+                    // Only log at 25%, 50%, 75%
+                    self.log("\(statusEmoji) Downloading \(message.filename): \(progress)%", type: .info)
+                }
+            }
+        }
+        
+        // Handle delete video response
+        webSocketServer.onDeleteVideoResponse = { [weak self] deviceId, response in
+            Task { @MainActor in
+                guard let self = self else { return }
+                
+                if response.success {
+                    self.log("✅ Deleted: \(response.filename)", type: .success)
+                } else {
+                    self.log("❌ Delete failed: \(response.filename) - \(response.message ?? "Unknown error")", type: .error)
                 }
             }
         }

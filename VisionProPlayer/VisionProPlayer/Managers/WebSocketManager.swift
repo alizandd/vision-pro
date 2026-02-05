@@ -12,6 +12,12 @@ class WebSocketManager: ObservableObject {
 
     /// Callback for handling commands
     var onCommand: ((ServerCommand) -> Void)?
+    
+    /// Callback for handling download commands
+    var onDownloadCommand: ((DownloadCommand) -> Void)?
+    
+    /// Callback for handling delete video commands
+    var onDeleteVideoCommand: ((DeleteVideoCommand) -> Void)?
 
     /// WebSocket task
     nonisolated(unsafe) private var webSocketTask: URLSessionWebSocketTask?
@@ -227,9 +233,21 @@ class WebSocketManager: ObservableObject {
                 if let jsonString = String(data: data, encoding: .utf8) {
                     print("[WebSocket] Raw command JSON: \(jsonString)")
                 }
-                let command = try JSONDecoder().decode(ServerCommand.self, from: data)
-                print("[WebSocket] Command: \(command.action), Format: \(command.videoFormat?.displayName ?? "nil")")
-                onCommand?(command)
+                
+                // Check if it's a download command
+                if let actionStr = json?["action"] as? String, actionStr == "download" {
+                    let downloadCommand = try JSONDecoder().decode(DownloadCommand.self, from: data)
+                    print("[WebSocket] Download command: \(downloadCommand.filename)")
+                    onDownloadCommand?(downloadCommand)
+                } else if let actionStr = json?["action"] as? String, actionStr == "deleteVideo" {
+                    let deleteCommand = try JSONDecoder().decode(DeleteVideoCommand.self, from: data)
+                    print("[WebSocket] Delete command: \(deleteCommand.filename)")
+                    onDeleteVideoCommand?(deleteCommand)
+                } else {
+                    let command = try JSONDecoder().decode(ServerCommand.self, from: data)
+                    print("[WebSocket] Command: \(command.action), Format: \(command.videoFormat?.displayName ?? "nil")")
+                    onCommand?(command)
+                }
 
             case "error":
                 let error = try JSONDecoder().decode(ErrorMessage.self, from: data)
@@ -308,6 +326,30 @@ class WebSocketManager: ObservableObject {
         )
         print("[WebSocket] Sending \(videos.count) local videos to server")
         send(message)
+    }
+    
+    /// Sends transfer progress to the server
+    func sendTransferProgress(filename: String, progress: Double, bytesDownloaded: Int64, totalBytes: Int64, status: String) {
+        let message = TransferProgressMessage(
+            deviceId: deviceId,
+            filename: filename,
+            progress: progress,
+            bytesDownloaded: bytesDownloaded,
+            totalBytes: totalBytes,
+            status: status
+        )
+        send(message)
+    }
+    
+    /// Sends delete video response to the server
+    func sendDeleteVideoResponse(filename: String, success: Bool, message: String?) {
+        let response = DeleteVideoResponse(
+            deviceId: deviceId,
+            filename: filename,
+            success: success,
+            message: message
+        )
+        send(response)
     }
 
     /// Starts periodic heartbeat to keep connection alive

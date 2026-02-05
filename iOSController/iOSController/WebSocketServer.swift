@@ -34,6 +34,12 @@ class WebSocketServer: ObservableObject {
     /// Callback when a device sends local videos
     var onLocalVideos: ((String, [LocalVideo]) -> Void)?
     
+    /// Callback when a device sends transfer progress
+    var onTransferProgress: ((String, TransferProgressMessage) -> Void)?
+    
+    /// Callback when a device sends delete response
+    var onDeleteVideoResponse: ((String, DeleteVideoResponse) -> Void)?
+    
     /// Callback when a device disconnects
     var onDeviceDisconnected: ((String) -> Void)?
     
@@ -119,6 +125,26 @@ class WebSocketServer: ObservableObject {
         for client in connections.values where client.deviceType == "visionpro" {
             sendMessage(command, to: client)
         }
+    }
+    
+    /// Send transfer command to a specific device
+    func sendTransferCommand(to deviceId: String, command: TransferCommand) {
+        guard let client = connections.values.first(where: { $0.deviceId == deviceId }) else {
+            print("[WebSocketServer] Device not found: \(deviceId)")
+            return
+        }
+        
+        sendMessage(command, to: client)
+    }
+    
+    /// Send delete video command to a specific device
+    func sendDeleteVideoCommand(to deviceId: String, command: DeleteVideoCommand) {
+        guard let client = connections.values.first(where: { $0.deviceId == deviceId }) else {
+            print("[WebSocketServer] Device not found: \(deviceId)")
+            return
+        }
+        
+        sendMessage(command, to: client)
     }
     
     // MARK: - Private Methods
@@ -240,6 +266,18 @@ class WebSocketServer: ObservableObject {
                 let message = try JSONDecoder().decode(LocalVideosMessage.self, from: data)
                 if let deviceId = client.deviceId {
                     onLocalVideos?(deviceId, message.videos)
+                }
+                
+            case "transferProgress":
+                let message = try JSONDecoder().decode(TransferProgressMessage.self, from: data)
+                if let deviceId = client.deviceId {
+                    onTransferProgress?(deviceId, message)
+                }
+                
+            case "deleteVideoResponse":
+                let response = try JSONDecoder().decode(DeleteVideoResponse.self, from: data)
+                if let deviceId = client.deviceId {
+                    onDeleteVideoResponse?(deviceId, response)
                 }
                 
             case "ping":

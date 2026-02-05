@@ -22,6 +22,7 @@ struct VisionProPlayerApp: App {
     @StateObject private var webSocketManager = WebSocketManager()
     @StateObject private var nativeVideoManager = NativeVideoPlayerManager()
     @StateObject private var localVideoManager = LocalVideoManager()
+    @StateObject private var downloadManager = DownloadManager()
 
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.openImmersiveSpace) private var openImmersiveSpace
@@ -124,11 +125,108 @@ struct VisionProPlayerApp: App {
         let state = appState
         let vidManager = nativeVideoManager
         let wsManager = webSocketManager
+        let dlManager = downloadManager
+        let localManager = localVideoManager
         
         // Handle incoming commands from WebSocket
         webSocketManager.onCommand = { command in
             Task { @MainActor in
                 await self.handleCommand(command, appState: state, videoManager: vidManager)
+            }
+        }
+        
+        // Handle download commands from iOS controller
+        webSocketManager.onDownloadCommand = { downloadCommand in
+            Task { @MainActor in
+                print("[App] ========== DOWNLOAD COMMAND ==========")
+                print("[App] Filename: \(downloadCommand.filename)")
+                print("[App] URL: \(downloadCommand.downloadUrl)")
+                print("[App] Size: \(downloadCommand.fileSize) bytes")
+                print("[App] =========================================")
+                
+                // Send "started" status
+                wsManager.sendTransferProgress(
+                    filename: downloadCommand.filename,
+                    progress: 0,
+                    bytesDownloaded: 0,
+                    totalBytes: downloadCommand.fileSize,
+                    status: "started"
+                )
+                
+                // Send progress updates to controller
+                dlManager.onProgress = { filename, progress, downloaded, total in
+                    print("[App] Download progress: \(Int(progress * 100))%")
+                    wsManager.sendTransferProgress(
+                        filename: filename,
+                        progress: progress,
+                        bytesDownloaded: downloaded,
+                        totalBytes: total,
+                        status: "downloading"
+                    )
+                }
+                
+                // Handle download completion
+                dlManager.onComplete = { filename, savedURL in
+                    print("[App] ✅ Download complete: \(filename)")
+                    print("[App] Saved to: \(savedURL.path)")
+                    
+                    // Send completion status
+                    wsManager.sendTransferProgress(
+                        filename: filename,
+                        progress: 1.0,
+                        bytesDownloaded: downloadCommand.fileSize,
+                        totalBytes: downloadCommand.fileSize,
+                        status: "completed"
+                    )
+                    
+                    // Rescan local videos and update server
+                    print("[App] Rescanning local videos...")
+                    localManager.scanVideos()
+                    print("[App] Found \(localManager.localVideos.count) videos, sending to server")
+                    wsManager.sendLocalVideos(localManager.localVideos)
+                }
+                
+                // Handle download errors
+                dlManager.onError = { filename, error in
+                    print("[App] ❌ Download failed: \(filename)")
+                    print("[App] Error: \(error)")
+                    wsManager.sendTransferProgress(
+                        filename: filename,
+                        progress: 0,
+                        bytesDownloaded: 0,
+                        totalBytes: downloadCommand.fileSize,
+                        status: "failed"
+                    )
+                }
+                
+                // Start the download
+                print("[App] Starting download...")
+                dlManager.downloadVideo(
+                    from: downloadCommand.downloadUrl,
+                    filename: downloadCommand.filename,
+                    expectedSize: downloadCommand.fileSize
+                )
+            }
+        }
+        
+        // Handle delete video commands from iOS controller
+        webSocketManager.onDeleteVideoCommand = { deleteCommand in
+            Task { @MainActor in
+                print("[App] Received delete command: \(deleteCommand.filename)")
+                
+                let (success, errorMessage) = localManager.deleteVideo(filename: deleteCommand.filename)
+                
+                // Send response back to controller
+                wsManager.sendDeleteVideoResponse(
+                    filename: deleteCommand.filename,
+                    success: success,
+                    message: errorMessage
+                )
+                
+                // If successful, send updated video list
+                if success {
+                    wsManager.sendLocalVideos(localManager.localVideos)
+                }
             }
         }
 
@@ -180,6 +278,15 @@ struct VisionProPlayerApp: App {
         case .change:
             // Change is similar to play but may already have immersive space open
             await handlePlayCommand(command: command, appState: appState, videoManager: videoManager)
+        
+        case .download:
+            // Download commands are handled separately via onDownloadCommand callback
+            // This case should not be reached as download uses a different message format
+            print("[App] Download command received via regular handler - ignoring (handled separately)")
+
+        case .deleteVideo:
+            // Delete commands are handled separately via onDeleteVideoCommand callback
+            print("[App] Delete command received via regular handler - ignoring (handled separately)")
 
         case .stop:
             videoManager.stop()

@@ -5,6 +5,7 @@ import SwiftUI
 struct SettingsView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var webSocketManager: WebSocketManager
+    @StateObject private var bonjourDiscovery = BonjourDiscovery()
 
     @State private var serverURL: String = AppConfiguration.serverURL
     @State private var deviceName: String = AppConfiguration.deviceName
@@ -16,6 +17,67 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             Form {
+                // Discover Controllers (NEW)
+                Section {
+                    if bonjourDiscovery.isSearching {
+                        HStack {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                            Text("Searching for controllers...")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    
+                    if bonjourDiscovery.discoveredControllers.isEmpty && !bonjourDiscovery.isSearching {
+                        HStack {
+                            Image(systemName: "antenna.radiowaves.left.and.right.slash")
+                                .foregroundColor(.secondary)
+                            Text("No controllers found")
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    
+                    ForEach(bonjourDiscovery.discoveredControllers) { controller in
+                        Button {
+                            serverURL = controller.webSocketURL
+                        } label: {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(controller.name)
+                                        .font(.headline)
+                                        .foregroundColor(.primary)
+                                    Text(controller.webSocketURL)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                                Spacer()
+                                if serverURL == controller.webSocketURL {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundColor(.green)
+                                }
+                            }
+                        }
+                    }
+                    
+                    Button {
+                        if bonjourDiscovery.isSearching {
+                            bonjourDiscovery.stopSearching()
+                        } else {
+                            bonjourDiscovery.startSearching()
+                        }
+                    } label: {
+                        HStack {
+                            Image(systemName: bonjourDiscovery.isSearching ? "stop.fill" : "magnifyingglass")
+                            Text(bonjourDiscovery.isSearching ? "Stop Searching" : "Search for Controllers")
+                        }
+                    }
+                } header: {
+                    Text("iOS Controllers")
+                } footer: {
+                    Text("Automatically discover iOS Controller apps on your network.")
+                }
+                
                 // Server Configuration
                 Section {
                     TextField("WebSocket Server URL", text: $serverURL)
@@ -27,9 +89,9 @@ struct SettingsView: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
                 } header: {
-                    Text("Server Connection")
+                    Text("Manual Server Connection")
                 } footer: {
-                    Text("Enter the WebSocket server URL running on your local network.")
+                    Text("Or manually enter the WebSocket server URL.")
                 }
 
                 // Device Settings

@@ -18,6 +18,33 @@ struct ContentView: View {
 
             // Connection status
             ConnectionStatusView(state: webSocketManager.connectionState)
+            
+            // Server URL display
+            Text(AppConfiguration.serverURL)
+                .font(.caption)
+                .foregroundColor(.secondary)
+            
+            // Connect/Disconnect button
+            HStack(spacing: 12) {
+                if webSocketManager.connectionState == .connected {
+                    Button(action: { webSocketManager.disconnect() }) {
+                        Label("Disconnect", systemImage: "xmark.circle")
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(.red)
+                } else if webSocketManager.connectionState == .connecting || webSocketManager.connectionState == .reconnecting {
+                    Button(action: { webSocketManager.disconnect() }) {
+                        Label("Cancel", systemImage: "xmark.circle")
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(.orange)
+                } else {
+                    Button(action: { webSocketManager.connect() }) {
+                        Label("Connect", systemImage: "link")
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+            }
 
             // Current state
             StatusInfoView(
@@ -35,7 +62,7 @@ struct ContentView: View {
             .buttonStyle(.bordered)
         }
         .padding(32)
-        .frame(minWidth: 350, minHeight: 250)
+        .frame(minWidth: 350, minHeight: 300)
         // Window is now completely dismissed during immersive mode (like native player)
     }
 }

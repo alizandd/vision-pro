@@ -84,12 +84,16 @@ class WebSocketManager: ObservableObject {
         // Start receiving messages
         startReceiving()
 
-        // The connection is considered established when we receive the welcome message
-        // For now, mark as connected after a brief delay
+        // Connection is considered established when we receive the welcome message
+        // Timeout after 10 seconds if no welcome message received
         Task {
-            try? await Task.sleep(nanoseconds: 500_000_000)
+            try? await Task.sleep(nanoseconds: 10_000_000_000)
             if connectionState == .connecting {
-                await handleConnected()
+                print("[WebSocket] Connection timeout - no welcome message received")
+                connectionState = .disconnected
+                isConnected = false
+                webSocketTask?.cancel(with: .normalClosure, reason: nil)
+                webSocketTask = nil
             }
         }
     }

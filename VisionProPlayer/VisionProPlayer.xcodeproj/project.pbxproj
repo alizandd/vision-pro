@@ -20,6 +20,7 @@
 		A1111111111111111111111B /* LocalVideoManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2222222222222222222222D /* LocalVideoManager.swift */; };
 		A1111111111111111111111C /* NativeVideoPlayerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2222222222222222222222E /* NativeVideoPlayerManager.swift */; };
 		A1111111111111111111111D /* NativeImmersiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2222222222222222222222F /* NativeImmersiveView.swift */; };
+		A1111111111111111111111E /* BonjourDiscovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = A22222222222222222222230 /* BonjourDiscovery.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -38,6 +39,7 @@
 		A2222222222222222222222D /* LocalVideoManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalVideoManager.swift; sourceTree = "<group>"; };
 		A2222222222222222222222E /* NativeVideoPlayerManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeVideoPlayerManager.swift; sourceTree = "<group>"; };
 		A2222222222222222222222F /* NativeImmersiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeImmersiveView.swift; sourceTree = "<group>"; };
+		A22222222222222222222230 /* BonjourDiscovery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BonjourDiscovery.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -92,6 +94,7 @@
 				A22222222222222222222227 /* AppState.swift */,
 				A2222222222222222222222D /* LocalVideoManager.swift */,
 				A2222222222222222222222E /* NativeVideoPlayerManager.swift */,
+				A22222222222222222222230 /* BonjourDiscovery.swift */,
 			);
 			path = Managers;
 			sourceTree = "<group>";
@@ -193,6 +196,7 @@
 				A1111111111111111111111B /* LocalVideoManager.swift in Sources */,
 				A1111111111111111111111C /* NativeVideoPlayerManager.swift in Sources */,
 				A1111111111111111111111D /* NativeImmersiveView.swift in Sources */,
+				A1111111111111111111111E /* BonjourDiscovery.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

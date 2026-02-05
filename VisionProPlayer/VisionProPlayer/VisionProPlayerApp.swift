@@ -40,7 +40,11 @@ struct VisionProPlayerApp: App {
                 .onAppear {
                     setupCommandHandling()
                     setupLocalVideoSync()
-                    webSocketManager.connect()
+                    
+                    // Only auto-connect if enabled in settings
+                    if AppConfiguration.autoConnect {
+                        webSocketManager.connect()
+                    }
                     
                     // Scan local videos on startup
                     localVideoManager.scanVideos()
@@ -321,9 +325,9 @@ struct VisionProPlayerApp: App {
             // App became active (user put on headset or returned to app)
             print("[App] App became active - checking WebSocket connection")
             
-            // If not connected, reconnect
-            if !webSocketManager.isConnected {
-                print("[App] WebSocket disconnected, reconnecting...")
+            // Only auto-reconnect if auto-connect is enabled
+            if AppConfiguration.autoConnect && !webSocketManager.isConnected {
+                print("[App] WebSocket disconnected, auto-reconnecting...")
                 webSocketManager.connect()
             }
             

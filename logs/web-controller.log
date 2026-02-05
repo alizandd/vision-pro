@@ -7,3 +7,5 @@
  HTTP  2/3/2026 6:25:51 PM 192.168.70.131 Returned 304 in 32 ms
  HTTP  2/3/2026 6:25:52 PM 192.168.70.131 GET /favicon.ico
  HTTP  2/3/2026 6:25:52 PM 192.168.70.131 Returned 404 in 6 ms
+
+ INFO  Gracefully shutting down. Please wait...

@@ -26,5 +26,11 @@
 	<true/>
 	<key>LSSupportsOpeningDocumentsInPlace</key>
 	<true/>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>VisionProPlayer uses local network to connect to iOS Controller apps and receive playback commands.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_visionproctl._tcp</string>
+	</array>
 </dict>
 </plist>

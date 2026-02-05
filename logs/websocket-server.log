@@ -62,3 +62,25 @@
 [Server]   3. output fixed (97.18 MB)
 [Server]   4. stream8k br200 sp0 (108.87 MB)
 [Server]   5. VR Output (4.28 GB)
+[Server] Received message: {"type":"command","action":"play","targetDevices":["776ADE85-EDEA-4EE1-9D01-7ED54A7448F5"],"videoUrl":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/7E913320-3AD5-45F2-9983-70AF6500F930/Documents/Videos/VR%20Output.mp4","videoFormat":"sphere360sbs"}
+[Server] Sent play command to Vision Pro
+[Server] Received message: {"deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","type":"status","immersiveMode":true,"currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/7E913320-3AD5-45F2-9983-70AF6500F930/Documents/Videos/VR%20Output.mp4","deviceName":"Vision Pro","currentTime":0,"state":"stopped"}
+[Server] Status update from Vision Pro: stopped (time: 0)
+[Server] Received message: {"immersiveMode":true,"type":"status","state":"loading","deviceName":"Vision Pro","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","currentTime":0,"currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/7E913320-3AD5-45F2-9983-70AF6500F930/Documents/Videos/VR%20Output.mp4"}
+[Server] Status update from Vision Pro: loading (time: 0)
+[Server] Received message: {"currentTime":0,"deviceName":"Vision Pro","state":"playing","type":"status","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/7E913320-3AD5-45F2-9983-70AF6500F930/Documents/Videos/VR%20Output.mp4","immersiveMode":true}
+[Server] Status update from Vision Pro: playing (time: 0)
+[Server] Received message: {"type":"status","deviceName":"Vision Pro","immersiveMode":true,"currentVideo":"file:///Users/alizand/Library/Developer/CoreSimulator/Devices/258F4903-3335-4BD3-AB9A-6F0666D98E10/data/Containers/Data/Application/7E913320-3AD5-45F2-9983-70AF6500F930/Documents/Videos/VR%20Output.mp4","state":"playing","deviceId":"776ADE85-EDEA-4EE1-9D01-7ED54A7448F5","currentTime":0}
+[Server] Status update from Vision Pro: playing (time: 0)
+[Server] Connection closed from 127.0.0.1
+[Server] Vision Pro disconnected: Vision Pro
+[Server] Connection closed from 192.168.70.131
+[Server] Controller disconnected: Web Orchestrator
+[Server] New connection from 192.168.70.131
+[Server] Received message: {"type":"register","deviceId":"controller-7js1sikln","deviceName":"Web Orchestrator","deviceType":"controller"}
+[Server] Controller registered: Web Orchestrator
+[Server] Video list requested: 8 videos found
+[Server] Connection closed from 192.168.70.131
+[Server] Controller disconnected: Web Orchestrator
+[Server] Received SIGTERM, shutting down...
+[Server] Server closed

@@ -166,8 +166,9 @@ class NativeVideoPlayerManager: ObservableObject {
             if let videoTrack = videoTracks.first {
                 let naturalSize = try await videoTrack.load(.naturalSize)
                 print("[NativeVideoPlayer] Video resolution: \(Int(naturalSize.width))x\(Int(naturalSize.height))")
-                
+
                 // Get codec info
+                var codecString = "—"
                 let formatDescriptions = try await videoTrack.load(.formatDescriptions)
                 for formatDesc in formatDescriptions {
                     let mediaType = CMFormatDescriptionGetMediaType(formatDesc)
@@ -177,8 +178,19 @@ class NativeVideoPlayerManager: ObservableObject {
                                                (mediaSubType >> 16) & 0xFF,
                                                (mediaSubType >> 8) & 0xFF,
                                                mediaSubType & 0xFF)
+                    codecString = subTypeString
                     print("[NativeVideoPlayer] Codec: \(subTypeString) (type: \(mediaType))")
                 }
+
+                // Publish diagnostics for the test mode / on-screen panel.
+                var diag = VideoDiagnostics()
+                diag.width = Int(naturalSize.width)
+                diag.height = Int(naturalSize.height)
+                diag.codec = codecString
+                diag.hasNativeStereoMetadata = hasNativeStereoMetadata
+                diag.selectedFormat = format.displayName
+                StereoDebugSettings.shared.diagnostics = diag
+                print("[NativeVideoPlayer] Diagnostics: aspect=\(String(format: "%.3f", diag.aspectRatio)), suggested=\(diag.suggestedLayout.displayName)")
             }
             
             // Check if asset is playable (but don't fail if not - try anyway)

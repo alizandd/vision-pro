@@ -22,6 +22,8 @@
 		A1111111111111111111111D /* NativeImmersiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2222222222222222222222F /* NativeImmersiveView.swift */; };
 		A1111111111111111111111E /* BonjourDiscovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = A22222222222222222222230 /* BonjourDiscovery.swift */; };
 		A1111111111111111111111F /* DownloadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A22222222222222222222231 /* DownloadManager.swift */; };
+		A11111111111111111111120 /* StereoDebug.swift in Sources */ = {isa = PBXBuildFile; fileRef = A22222222222222222222232 /* StereoDebug.swift */; };
+		A11111111111111111111121 /* StereoVideoRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A22222222222222222222233 /* StereoVideoRenderer.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -42,6 +44,8 @@
 		A2222222222222222222222F /* NativeImmersiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeImmersiveView.swift; sourceTree = "<group>"; };
 		A22222222222222222222230 /* BonjourDiscovery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BonjourDiscovery.swift; sourceTree = "<group>"; };
 		A22222222222222222222231 /* DownloadManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadManager.swift; sourceTree = "<group>"; };
+		A22222222222222222222232 /* StereoDebug.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StereoDebug.swift; sourceTree = "<group>"; };
+		A22222222222222222222233 /* StereoVideoRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StereoVideoRenderer.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -98,6 +102,8 @@
 				A2222222222222222222222E /* NativeVideoPlayerManager.swift */,
 				A22222222222222222222230 /* BonjourDiscovery.swift */,
 				A22222222222222222222231 /* DownloadManager.swift */,
+				A22222222222222222222232 /* StereoDebug.swift */,
+				A22222222222222222222233 /* StereoVideoRenderer.swift */,
 			);
 			path = Managers;
 			sourceTree = "<group>";
@@ -201,6 +207,8 @@
 				A1111111111111111111111D /* NativeImmersiveView.swift in Sources */,
 				A1111111111111111111111E /* BonjourDiscovery.swift in Sources */,
 				A1111111111111111111111F /* DownloadManager.swift in Sources */,
+				A11111111111111111111120 /* StereoDebug.swift in Sources */,
+				A11111111111111111111121 /* StereoVideoRenderer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

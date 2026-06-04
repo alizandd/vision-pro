@@ -20,13 +20,22 @@ import ARKit
 struct NativeImmersiveView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var videoManager: NativeVideoPlayerManager
-    
+
+    /// Debug/test settings (live UV override + diagnostics panel).
+    @ObservedObject private var debug = StereoDebugSettings.shared
+
     @State private var videoEntity: Entity?
     @State private var screenEntity: ModelEntity?
+    @State private var diagnosticsEntity: Entity?
     @State private var lastVideoURL: String?
     @State private var lastVideoFormat: VideoFormat?
+    @State private var lastUVOverride: UVOverride = .auto
     @State private var isViewReady: Bool = false
     @State private var videoMaterial: VideoMaterial?
+
+    /// Active APMP stereo renderer (visionOS 26+), stored type-erased so the
+    /// property itself needs no availability annotation.
+    @State private var stereoRenderer: AnyObject?
     
     /// ARKit session for head tracking
     @State private var arkitSession = ARKitSession()
@@ -43,7 +52,7 @@ struct NativeImmersiveView: View {
     private let meshAlignmentOffset: Float = .pi
     
     var body: some View {
-        RealityView { content in
+        RealityView { content, attachments in
             // Create the immersive environment
             let rootEntity = Entity()
             rootEntity.name = "VideoRoot"
@@ -53,7 +62,16 @@ struct NativeImmersiveView: View {
             screenHolder.name = "ScreenHolder"
             screenHolder.position = SIMD3<Float>(0, 0, 0)
             rootEntity.addChild(screenHolder)
-            
+
+            // Attach the debug diagnostics panel (fixed in front of the user).
+            if let diagEntity = attachments.entity(for: "diagnostics") {
+                diagEntity.name = "DiagnosticsPanel"
+                diagEntity.position = SIMD3<Float>(0, 1.2, -1.5)
+                diagEntity.isEnabled = debug.testModeEnabled && debug.showDiagnostics
+                rootEntity.addChild(diagEntity)
+                self.diagnosticsEntity = diagEntity
+            }
+
             content.add(rootEntity)
             
             // Mark as ready and start head tracking
@@ -70,9 +88,53 @@ struct NativeImmersiveView: View {
                     await updateVideoScreenWithRecentering()
                 }
             }
-        } update: { content in
+        } update: { content, attachments in
             Task { @MainActor in
                 if isViewReady {
+                    diagnosticsEntity?.isEnabled = debug.testModeEnabled && debug.showDiagnostics
+                    updateVideoScreen()
+                }
+            }
+        } attachments: {
+            Attachment(id: "diagnostics") {
+                StereoDiagnosticsPanel(debug: debug,
+                                       currentFormat: videoManager.currentFormat)
+            }
+        }
+        .onChange(of: debug.uvOverride) { _, _ in
+            // Live re-map of the screen when the QA override changes.
+            Task { @MainActor in
+                if isViewReady {
+                    lastUVOverride = .auto  // force recreation
+                    lastVideoFormat = nil
+                    updateVideoScreen()
+                }
+            }
+        }
+        .onChange(of: debug.eyeCompareEnabled) { _, _ in
+            // Rebuild the screen to enter/leave the debug comparison view.
+            Task { @MainActor in
+                if isViewReady {
+                    teardownStereoRenderer()
+                    if let existing = screenEntity {
+                        existing.removeFromParent()
+                        screenEntity = nil
+                    }
+                    lastVideoFormat = nil
+                    updateVideoScreen()
+                }
+            }
+        }
+        .onChange(of: debug.trueStereoEnabled) { _, _ in
+            // Switch between the APMP stereo path and the legacy path live.
+            Task { @MainActor in
+                if isViewReady {
+                    teardownStereoRenderer()
+                    if let existing = screenEntity {
+                        existing.removeFromParent()
+                        screenEntity = nil
+                    }
+                    lastVideoFormat = nil
                     updateVideoScreen()
                 }
             }
@@ -123,6 +185,7 @@ struct NativeImmersiveView: View {
             print("[NativeImmersiveView] View disappeared")
             isViewReady = false
             isARKitReady = false
+            teardownStereoRenderer()
             cleanupVideoScreen()
             // Stop ARKit session
             arkitSession.stop()
@@ -136,10 +199,137 @@ struct NativeImmersiveView: View {
         lastVideoURL = nil
         lastVideoFormat = nil
         videoMaterial = nil
+        teardownStereoRenderer()
         if let existingScreen = screenEntity {
             existingScreen.removeFromParent()
             screenEntity = nil
         }
+    }
+
+    /// Stops and releases any active APMP stereo renderer.
+    private func teardownStereoRenderer() {
+        if #available(visionOS 26.0, *) {
+            (stereoRenderer as? APMPStereoRenderer)?.stop()
+        }
+        stereoRenderer = nil
+    }
+
+    /// Builds a `VideoPlayerComponent`-backed entity driven by an APMP stereo
+    /// renderer, when the opt-in true-stereo mode is on and the format is a
+    /// frame-packed stereo type. Returns nil to fall back to the legacy path.
+    private func makeStereoScreenIfEnabled(format: VideoFormat, player: AVPlayer) -> ModelEntity? {
+        guard debug.trueStereoEnabled else { return nil }
+        guard #available(visionOS 26.0, *) else {
+            print("[NativeImmersiveView] True stereo requires visionOS 26 — using legacy path")
+            return nil
+        }
+        guard let config = APMPStereoRenderer.configuration(for: format) else {
+            // Not a frame-packed stereo format (e.g. mono) — nothing to inject.
+            return nil
+        }
+
+        // Replace any previous renderer.
+        teardownStereoRenderer()
+
+        let renderer = APMPStereoRenderer(packing: config.packing, projection: config.projection)
+        let entity = ModelEntity()
+        // The APMP projection metadata (rectilinear / 180° / 360°) drives the
+        // geometry and per-eye stereo automatically.
+        let component = VideoPlayerComponent(videoRenderer: renderer.videoRenderer)
+        entity.components.set(component)
+
+        renderer.start(player: player)
+        stereoRenderer = renderer
+        return entity
+    }
+
+    // MARK: - Debug: Eye Comparison (simulator)
+
+    /// Builds two flat panels showing the left-eye and right-eye source crops
+    /// side-by-side (or top/bottom for OU), with labels. Both are visible to
+    /// the single simulator eye, so you can confirm the two eyes get different,
+    /// correctly-cropped images. Debug only.
+    private func createEyeCompareScreen(format: VideoFormat, player: AVPlayer) -> ModelEntity? {
+        let container = ModelEntity()
+
+        let isOverUnder = (format == .overUnder3D || format == .sphere360OU)
+        let leftMode: UVMode = isOverUnder ? .topHalf : .leftHalf
+        let rightMode: UVMode = isOverUnder ? .bottomHalf : .rightHalf
+
+        let panelW: Float = 1.6
+        let panelH: Float = 1.6
+        let centerY: Float = 1.5
+        let z: Float = -2.6
+        let offsetX: Float = panelW / 2 + 0.12  // small gap between panels
+
+        let leftPanel = ModelEntity(mesh: createFlatMesh(width: panelW, height: panelH, uvMode: leftMode),
+                                    materials: [VideoMaterial(avPlayer: player)])
+        leftPanel.position = SIMD3<Float>(-offsetX, centerY, z)
+
+        let rightPanel = ModelEntity(mesh: createFlatMesh(width: panelW, height: panelH, uvMode: rightMode),
+                                     materials: [VideoMaterial(avPlayer: player)])
+        rightPanel.position = SIMD3<Float>(offsetX, centerY, z)
+
+        container.addChild(leftPanel)
+        container.addChild(rightPanel)
+
+        let labelY = centerY + panelH / 2 + 0.12
+        container.addChild(makeLabel(isOverUnder ? "LEFT EYE (top, layer 0)" : "LEFT EYE (layer 0)",
+                                     x: -offsetX, y: labelY, z: z))
+        container.addChild(makeLabel(isOverUnder ? "RIGHT EYE (bottom, layer 1)" : "RIGHT EYE (layer 1)",
+                                     x: offsetX, y: labelY, z: z))
+        return container
+    }
+
+    /// A flat quad facing the user, with UV cropped per `uvMode`.
+    private func createFlatMesh(width: Float, height: Float, uvMode: UVMode) -> MeshResource {
+        let hw = width / 2
+        let hh = height / 2
+        let positions: [SIMD3<Float>] = [
+            SIMD3<Float>(-hw, -hh, 0), // bottom-left
+            SIMD3<Float>( hw, -hh, 0), // bottom-right
+            SIMD3<Float>( hw,  hh, 0), // top-right
+            SIMD3<Float>(-hw,  hh, 0)  // top-left
+        ]
+        let normals = [SIMD3<Float>](repeating: SIMD3<Float>(0, 0, 1), count: 4)
+
+        // Video texture origin (0,0) is top-left, so top vertices map to v=0.
+        func uv(_ u: Float, _ v: Float) -> SIMD2<Float> {
+            switch uvMode {
+            case .full:       return SIMD2<Float>(u, v)
+            case .leftHalf:   return SIMD2<Float>(u * 0.5, v)
+            case .rightHalf:  return SIMD2<Float>(0.5 + u * 0.5, v)
+            case .topHalf:    return SIMD2<Float>(u, v * 0.5)
+            case .bottomHalf: return SIMD2<Float>(u, 0.5 + v * 0.5)
+            }
+        }
+        let uvs = [uv(0, 1), uv(1, 1), uv(1, 0), uv(0, 0)]
+        let indices: [UInt32] = [0, 1, 2, 0, 2, 3]
+
+        var descriptor = MeshDescriptor()
+        descriptor.positions = MeshBuffers.Positions(positions)
+        descriptor.normals = MeshBuffers.Normals(normals)
+        descriptor.textureCoordinates = MeshBuffers.TextureCoordinates(uvs)
+        descriptor.primitives = .triangles(indices)
+
+        return (try? MeshResource.generate(from: [descriptor]))
+            ?? MeshResource.generatePlane(width: width, height: height)
+    }
+
+    /// A small white 3D text label centered roughly at the given position.
+    private func makeLabel(_ text: String, x: Float, y: Float, z: Float) -> ModelEntity {
+        let mesh = MeshResource.generateText(
+            text,
+            extrusionDepth: 0.005,
+            font: .systemFont(ofSize: 0.1),
+            containerFrame: CGRect(x: -0.8, y: -0.1, width: 1.6, height: 0.2),
+            alignment: .center,
+            lineBreakMode: .byTruncatingTail
+        )
+        let material = SimpleMaterial(color: .white, isMetallic: false)
+        let entity = ModelEntity(mesh: mesh, materials: [material])
+        entity.position = SIMD3<Float>(x, y, z)
+        return entity
     }
     
     // MARK: - ARKit Head Tracking
@@ -256,8 +446,9 @@ struct NativeImmersiveView: View {
         let currentURL = videoManager.currentURL
         let format = videoManager.currentFormat
         
-        // Check if we already have a screen for this video/format
-        if screenEntity != nil && lastVideoURL == currentURL && lastVideoFormat == format {
+        // Check if we already have a screen for this video/format/override
+        if screenEntity != nil && lastVideoURL == currentURL && lastVideoFormat == format
+            && lastUVOverride == debug.uvOverride {
             return
         }
         
@@ -269,7 +460,46 @@ struct NativeImmersiveView: View {
         
         print("[NativeImmersiveView] Creating screen for format: \(format.displayName)")
         print("[NativeImmersiveView] Is Immersive: \(format.isImmersive), Is Stereo: \(format.isStereoscopic)")
-        
+
+        // --- Debug: side-by-side eye comparison (simulator-friendly) ---------
+        // Shows the LEFT-eye and RIGHT-eye source crops on two flat panels at
+        // once, so per-eye extraction can be verified even though the simulator
+        // renders only a single eye. Debug only — disable to remove.
+        if debug.testModeEnabled, debug.eyeCompareEnabled,
+           let compare = createEyeCompareScreen(format: format, player: player) {
+            compare.name = "VideoScreen"
+            videoEntity.addChild(compare)
+            screenEntity = compare
+            lastVideoURL = currentURL
+            lastVideoFormat = format
+            lastUVOverride = debug.uvOverride
+            print("[NativeImmersiveView] Eye-compare debug screen created")
+            if videoManager.playbackState != .playing {
+                videoManager.startPlayback()
+            }
+            return
+        }
+        // ---------------------------------------------------------------------
+
+        // --- True per-eye stereo path (opt-in, visionOS 26+) -----------------
+        // Injects APMP metadata so the system renders each eye from the
+        // correct half of the frame. Falls through to the legacy path below
+        // if unavailable or not applicable.
+        if let stereoScreen = makeStereoScreenIfEnabled(format: format, player: player) {
+            stereoScreen.name = "VideoScreen"
+            videoEntity.addChild(stereoScreen)
+            screenEntity = stereoScreen
+            lastVideoURL = currentURL
+            lastVideoFormat = format
+            lastUVOverride = debug.uvOverride
+            print("[NativeImmersiveView] True-stereo (APMP) screen created")
+            if videoManager.playbackState != .playing {
+                videoManager.startPlayback()
+            }
+            return
+        }
+        // ---------------------------------------------------------------------
+
         // Create video material from the player
         let material = VideoMaterial(avPlayer: player)
         videoMaterial = material
@@ -286,6 +516,7 @@ struct NativeImmersiveView: View {
         screenEntity = newScreen
         lastVideoURL = currentURL
         lastVideoFormat = format
+        lastUVOverride = debug.uvOverride
         
         print("[NativeImmersiveView] Video screen created successfully")
         
@@ -315,30 +546,30 @@ struct NativeImmersiveView: View {
             
         case .hemisphere180:
             // 180° mono hemisphere
-            mesh = createHemisphereMesh(radius: 10.0, segments: 128, uvMode: .full)
+            mesh = createHemisphereMesh(radius: 10.0, segments: 128, uvMode: effectiveUVMode(base: .full))
             scale = SIMD3<Float>(-1, 1, 1) // Flip for inside-out view
             
         case .hemisphere180SBS:
             // 180° Stereo SBS - map LEFT half only for mono view from left eye
             print("[NativeImmersiveView] Creating 180° Stereo SBS hemisphere (left eye view)")
-            mesh = createHemisphereMesh(radius: 10.0, segments: 128, uvMode: .leftHalf)
+            mesh = createHemisphereMesh(radius: 10.0, segments: 128, uvMode: effectiveUVMode(base: .leftHalf))
             scale = SIMD3<Float>(-1, 1, 1) // Flip for inside-out view
             
         case .sphere360:
             // 360° mono sphere
-            mesh = createSphereMesh(radius: 10.0, segments: 128, uvMode: .full)
+            mesh = createSphereMesh(radius: 10.0, segments: 128, uvMode: effectiveUVMode(base: .full))
             scale = SIMD3<Float>(-1, 1, 1)
             
         case .sphere360OU:
             // 360° Stereo Over-Under - map TOP half for left eye
             print("[NativeImmersiveView] Creating 360° Stereo OU sphere (left eye view)")
-            mesh = createSphereMesh(radius: 10.0, segments: 128, uvMode: .topHalf)
+            mesh = createSphereMesh(radius: 10.0, segments: 128, uvMode: effectiveUVMode(base: .topHalf))
             scale = SIMD3<Float>(-1, 1, 1)
             
         case .sphere360SBS:
             // 360° Stereo SBS - map LEFT half for left eye
             print("[NativeImmersiveView] Creating 360° Stereo SBS sphere (left eye view)")
-            mesh = createSphereMesh(radius: 10.0, segments: 128, uvMode: .leftHalf)
+            mesh = createSphereMesh(radius: 10.0, segments: 128, uvMode: effectiveUVMode(base: .leftHalf))
             scale = SIMD3<Float>(-1, 1, 1)
         }
         
@@ -357,6 +588,21 @@ struct NativeImmersiveView: View {
         case rightHalf  // Right half (for SBS right eye)
         case topHalf    // Top half (for OU left eye)
         case bottomHalf // Bottom half (for OU right eye)
+    }
+
+    /// Returns the UV mapping to use, honoring the debug test-mode override.
+    /// When the test mode is off (or set to `.auto`), the format-derived
+    /// `base` mapping is used unchanged.
+    private func effectiveUVMode(base: UVMode) -> UVMode {
+        guard debug.testModeEnabled, debug.uvOverride != .auto else { return base }
+        switch debug.uvOverride {
+        case .auto: return base
+        case .full: return .full
+        case .leftHalf: return .leftHalf
+        case .rightHalf: return .rightHalf
+        case .topHalf: return .topHalf
+        case .bottomHalf: return .bottomHalf
+        }
     }
     
     // MARK: - Hemisphere Mesh Generation
@@ -518,6 +764,69 @@ struct NativeImmersiveView: View {
             // Map V: 0-1 to 0.5-1.0 (bottom half of OU video)
             return (u, 0.5 + flippedV * 0.5)
         }
+    }
+}
+
+// MARK: - Diagnostics Panel
+
+/// Floating panel rendered inside the immersive space when test mode is on.
+/// Shows the measurable facts about the current video plus the live UV override,
+/// so the bug ("both eyes show the same half") can be reasoned about and proven.
+struct StereoDiagnosticsPanel: View {
+    @ObservedObject var debug: StereoDebugSettings
+    let currentFormat: VideoFormat
+
+    private var d: VideoDiagnostics { debug.diagnostics }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label("Stereo Test Mode", systemImage: "eye.trianglebadge.exclamationmark")
+                .font(.title2.bold())
+
+            Divider()
+
+            row("Resolution", d.width > 0 ? "\(d.width) × \(d.height)" : "—")
+            row("Aspect ratio", d.aspectRatio > 0 ? String(format: "%.3f : 1", d.aspectRatio) : "—")
+            row("Codec", d.codec)
+            row("Native stereo metadata", d.hasNativeStereoMetadata ? "YES (MV-HEVC/spatial)" : "no")
+            row("Selected format", currentFormat.displayName)
+            row("Suggested packing", d.suggestedLayout.displayName)
+
+            Text(d.suggestedNote)
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Divider()
+
+            Text("Eye mapping (live): \(debug.uvOverride.displayName)")
+                .font(.headline)
+            Text("Cycle this in Settings. With a real SBS video, Left half ≠ Right half. If they look identical, it isn't truly SBS. On device, the current build feeds the SAME half to BOTH eyes → no depth.")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Label("Simulator shows ONE eye only — depth is only verifiable on a real Vision Pro.",
+                  systemImage: "exclamationmark.triangle.fill")
+                .font(.footnote)
+                .foregroundStyle(.orange)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(24)
+        .frame(width: 460, alignment: .leading)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
+    }
+
+    private func row(_ label: String, _ value: String) -> some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text(label)
+                .foregroundStyle(.secondary)
+            Spacer(minLength: 16)
+            Text(value)
+                .fontWeight(.medium)
+                .multilineTextAlignment(.trailing)
+        }
+        .font(.callout)
     }
 }
 

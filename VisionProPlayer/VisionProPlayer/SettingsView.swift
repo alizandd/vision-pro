@@ -6,6 +6,7 @@ struct SettingsView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var webSocketManager: WebSocketManager
     @StateObject private var bonjourDiscovery = BonjourDiscovery()
+    @ObservedObject private var debug = StereoDebugSettings.shared
 
     @State private var serverURL: String = AppConfiguration.serverURL
     @State private var deviceName: String = AppConfiguration.deviceName
@@ -158,6 +159,57 @@ struct SettingsView: View {
                     .disabled(!webSocketManager.isConnected)
                 }
 
+                // True per-eye stereo (the actual fix)
+                Section {
+                    Toggle("True 3D (per-eye stereo)", isOn: $debug.trueStereoEnabled)
+                } header: {
+                    HStack {
+                        Image(systemName: "cube.transparent")
+                        Text("Stereoscopic Depth")
+                    }
+                } footer: {
+                    Text("Renders each eye from its own half of Side-by-Side / Over-Under video using APMP metadata (visionOS 26+). Turn OFF to use the legacy single-view rendering. Depth is only visible on a real Vision Pro.")
+                }
+
+                // Stereo / 3D Debug & Test Mode
+                Section {
+                    Toggle("Enable Test Mode", isOn: $debug.testModeEnabled)
+
+                    if debug.testModeEnabled {
+                        Toggle("Show diagnostics panel", isOn: $debug.showDiagnostics)
+
+                        Toggle("Eye Compare (L|R side-by-side)", isOn: $debug.eyeCompareEnabled)
+
+                        Picker("Eye mapping (live)", selection: $debug.uvOverride) {
+                            ForEach(UVOverride.allCases, id: \.self) { mode in
+                                Text(mode.displayName).tag(mode)
+                            }
+                        }
+
+                        VStack(alignment: .leading, spacing: 6) {
+                            diagRow("Resolution",
+                                    debug.diagnostics.width > 0
+                                        ? "\(debug.diagnostics.width) × \(debug.diagnostics.height)"
+                                        : "—")
+                            diagRow("Aspect",
+                                    debug.diagnostics.aspectRatio > 0
+                                        ? String(format: "%.3f : 1", debug.diagnostics.aspectRatio)
+                                        : "—")
+                            diagRow("Codec", debug.diagnostics.codec)
+                            diagRow("Native stereo", debug.diagnostics.hasNativeStereoMetadata ? "YES" : "no")
+                            diagRow("Suggested", debug.diagnostics.suggestedLayout.displayName)
+                        }
+                        .font(.caption)
+                    }
+                } header: {
+                    HStack {
+                        Image(systemName: "view.3d")
+                        Text("3D / Stereo Test Mode")
+                    }
+                } footer: {
+                    Text("'Eye Compare' shows the Left and Right eye crops side-by-side on flat panels — this works in the SIMULATOR to verify each eye gets a different, correctly-cropped image. Final depth fusion is only visible on a real Vision Pro.")
+                }
+
                 // About
                 Section {
                     HStack {
@@ -199,6 +251,15 @@ struct SettingsView: View {
             } message: {
                 Text("Your settings have been saved. The app will reconnect with the new settings.")
             }
+        }
+    }
+
+    /// A compact label/value row for the inline diagnostics readout.
+    private func diagRow(_ label: String, _ value: String) -> some View {
+        HStack {
+            Text(label).foregroundColor(.secondary)
+            Spacer()
+            Text(value).fontWeight(.medium)
         }
     }
 

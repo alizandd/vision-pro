@@ -53,6 +53,45 @@ class DeviceManager: ObservableObject {
         log("Play command sent to \(deviceName(for: deviceId))", type: .success)
     }
     
+    /// Smart play that guarantees a clean start.
+    ///
+    /// The Vision Pro cannot reliably switch directly from one playing video to
+    /// another — it must be fully stopped first (which also tears down and
+    /// reopens the immersive space). This helper automates the "stop, then play"
+    /// sequence the user previously had to do by hand:
+    /// - If the device is currently busy (playing/paused/loading), it sends a
+    ///   `stop`, waits briefly for the immersive space to close, then sends `play`.
+    /// - Otherwise it plays immediately.
+    func playSelected(deviceId: String, videoUrl: String, format: VideoFormat) {
+        guard !videoUrl.isEmpty else { return }
+        guard let device = devices.first(where: { $0.deviceId == deviceId }) else { return }
+        
+        let currentState = device.state.playbackState
+        let isBusy = currentState == .playing || currentState == .paused || currentState == .loading
+        
+        guard isBusy else {
+            // Nothing playing — start right away.
+            play(deviceId: deviceId, videoUrl: videoUrl, format: format)
+            return
+        }
+        
+        // Stop the current video for a clean switch.
+        log("Switching video — stopping current playback first", type: .info)
+        stop(deviceId: deviceId)
+        
+        // Optimistically reflect the stopped state so the UI updates immediately
+        // instead of waiting for the device's status broadcast.
+        device.state.playbackState = .stopped
+        objectWillChange.send()
+        
+        // Give the Vision Pro time to dismiss the immersive space before the new
+        // play command arrives, so it opens a fresh space for the next video.
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: 1_200_000_000) // 1.2s
+            self?.play(deviceId: deviceId, videoUrl: videoUrl, format: format)
+        }
+    }
+    
     /// Send pause command to device
     func pause(deviceId: String) {
         let command = CommandMessage(action: .pause)

@@ -58,6 +58,11 @@ class NativeVideoPlayerManager: ObservableObject {
     /// Callback when player is ready for playback
     var onPlayerReady: (() -> Void)?
     
+    /// Callback fired when the video plays to its natural end.
+    /// The app uses this to perform a full stop (closing the immersive space)
+    /// so the user can immediately start another video without manually stopping.
+    var onPlaybackEnded: (() -> Void)?
+    
     /// The AVPlayer instance - exposed for AVPlayerViewController
     @Published private(set) var player: AVPlayer?
     
@@ -191,6 +196,7 @@ class NativeVideoPlayerManager: ObservableObject {
                 diag.selectedFormat = format.displayName
                 StereoDebugSettings.shared.diagnostics = diag
                 print("[NativeVideoPlayer] Diagnostics: aspect=\(String(format: "%.3f", diag.aspectRatio)), suggested=\(diag.suggestedLayout.displayName)")
+                RemoteLog("Video", "Loaded \(Int(naturalSize.width))x\(Int(naturalSize.height)) codec=\(codecString) aspect=\(String(format: "%.3f", diag.aspectRatio)) nativeStereo=\(hasNativeStereoMetadata) selectedFormat=\(format.displayName) suggestedPacking=\(diag.suggestedLayout.displayName)")
             }
             
             // Check if asset is playable (but don't fail if not - try anyway)
@@ -439,21 +445,30 @@ class NativeVideoPlayerManager: ObservableObject {
     private func checkStereoMetadata(asset: AVURLAsset) async -> Bool {
         do {
             let videoTracks = try await asset.loadTracks(withMediaType: .video)
+            RemoteLog("Meta", "videoTrackCount=\(videoTracks.count) (MV-HEVC stereo often reports extra layers/tracks)")
             guard let track = videoTracks.first else { return false }
             
             let formatDescriptions = try await track.load(.formatDescriptions)
             
             for formatDesc in formatDescriptions {
                 let extensions = CMFormatDescriptionGetExtensions(formatDesc) as? [String: Any] ?? [:]
-                
+
+                // Log the raw extension keys — this is the ground truth for deciding
+                // whether the file is truly frame-packed SBS/OU vs native MV-HEVC.
+                let keys = extensions.keys.sorted().joined(separator: ", ")
+                RemoteLog("Meta", "formatDesc extension keys: [\(keys)]")
+
                 if extensions["StereoInfo"] != nil ||
                    extensions["MVHEVCConfiguration"] != nil ||
                    extensions["CMStereoVideoMode"] != nil {
+                    RemoteLog("Meta", "NATIVE stereo metadata DETECTED → file already carries per-eye info (treat as spatial, do NOT frame-pack split).")
                     return true
                 }
             }
+            RemoteLog("Meta", "No native stereo metadata → if the video is 3D it must be FRAME-PACKED (SBS/OU), needing APMP injection for depth.")
         } catch {
             print("[NativeVideoPlayer] Error checking stereo metadata: \(error)")
+            RemoteLog("Meta", "Error checking stereo metadata: \(error.localizedDescription)")
         }
         
         return false
@@ -558,7 +573,14 @@ class NativeVideoPlayerManager: ObservableObject {
     
     @objc private func playerDidFinishPlaying() {
         print("[NativeVideoPlayer] Finished playing")
-        updateState(.stopped)
+        // Notify the app so it can perform a full stop (close immersive space,
+        // reopen the main window). The app's handler calls `stop()` which resets
+        // state and broadcasts the .stopped status to the controller.
+        if let onPlaybackEnded = onPlaybackEnded {
+            onPlaybackEnded()
+        } else {
+            updateState(.stopped)
+        }
     }
     
     @objc private func playerDidStall() {

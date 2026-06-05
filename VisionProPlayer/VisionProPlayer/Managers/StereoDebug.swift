@@ -157,7 +157,10 @@ final class StereoDebugSettings: ObservableObject {
         self.showDiagnostics = defaults.object(forKey: Keys.showDiagnostics) as? Bool ?? true
         let stored = defaults.string(forKey: Keys.uvOverride) ?? UVOverride.auto.rawValue
         self.uvOverride = UVOverride(rawValue: stored) ?? .auto
-        self.trueStereoEnabled = defaults.bool(forKey: Keys.trueStereo)
+        // Default ON: true per-eye stereo (APMP) is the actual fix for "no depth".
+        // The legacy single-texture path can never produce stereo depth, so we
+        // opt in by default and let it fall back automatically when unsupported.
+        self.trueStereoEnabled = defaults.object(forKey: Keys.trueStereo) as? Bool ?? true
         self.eyeCompareEnabled = defaults.bool(forKey: Keys.eyeCompare)
     }
 }

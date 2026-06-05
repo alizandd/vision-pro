@@ -36,6 +36,13 @@ struct NativeImmersiveView: View {
     /// Active APMP stereo renderer (visionOS 26+), stored type-erased so the
     /// property itself needs no availability annotation.
     @State private var stereoRenderer: AnyObject?
+
+    /// Identity of the video+format the live stereo renderer is currently
+    /// rendering. Used to keep `updateVideoScreen()` idempotent independently of
+    /// the `lastVideo*` fields (which several `onChange` handlers reset mid-play),
+    /// so a working per-eye pipeline is never torn down and rebuilt while the same
+    /// video keeps playing.
+    @State private var activeStereoKey: String?
     
     /// ARKit session for head tracking
     @State private var arkitSession = ARKitSession()
@@ -212,20 +219,43 @@ struct NativeImmersiveView: View {
             (stereoRenderer as? APMPStereoRenderer)?.stop()
         }
         stereoRenderer = nil
+        activeStereoKey = nil
+    }
+
+    /// Stable identity for a video+format pairing, used to detect when an already
+    /// running stereo renderer is still correct for the current content.
+    private func stereoKey(url: String?, format: VideoFormat) -> String {
+        "\(url ?? "nil")|\(format.displayName)"
     }
 
     /// Builds a `VideoPlayerComponent`-backed entity driven by an APMP stereo
     /// renderer, when the opt-in true-stereo mode is on and the format is a
     /// frame-packed stereo type. Returns nil to fall back to the legacy path.
     private func makeStereoScreenIfEnabled(format: VideoFormat, player: AVPlayer) -> ModelEntity? {
-        guard debug.trueStereoEnabled else { return nil }
-        guard #available(visionOS 26.0, *) else {
-            print("[NativeImmersiveView] True stereo requires visionOS 26 — using legacy path")
+        guard debug.trueStereoEnabled else {
+            RemoteLog("APMP", "Skipped: True 3D toggle is OFF → using legacy single-view (NO depth). Format=\(format.displayName)")
             return nil
         }
+        guard #available(visionOS 26.0, *) else {
+            RemoteLog("APMP", "FALLBACK: device is below visionOS 26 → per-eye APMP unavailable → legacy single-view (NO depth). Format=\(format.displayName)")
+            return nil
+        }
+        #if targetEnvironment(simulator)
+        // The simulator's VideoPlayerComponent + AVSampleBufferVideoRenderer pipeline
+        // emits IQ-CA(-19230)/VRP(-12852) errors and shows NO image (audio only).
+        // It also renders a single eye, so stereo can't be verified here anyway.
+        // Use the legacy path on simulator so the picture is visible for local dev.
+        RemoteLog("APMP", "FALLBACK: SIMULATOR detected → APMP renders no image here. Using legacy path (picture visible, mono). Stereo is only testable on a real device.")
+        return nil
+        #else
         guard let config = APMPStereoRenderer.configuration(for: format) else {
             // Not a frame-packed stereo format (e.g. mono) — nothing to inject.
+            RemoteLog("APMP", "Skipped: format \(format.displayName) is not frame-packed stereo (no SBS/OU half to split). Legacy path used.")
             return nil
+        }
+        RemoteLog("APMP", "Engaging true per-eye stereo. packing=\(config.packing), projection=\(config.projection), format=\(format.displayName)")
+        if videoManager.hasNativeStereoMetadata {
+            RemoteLog("APMP", "WARNING: video already has NATIVE stereo metadata (likely MV-HEVC). Injecting SBS/OU packing on top is probably WRONG — the system may already split eyes. If depth looks bad, set format to mono2D so the native pipeline handles per-eye.")
         }
 
         // Replace any previous renderer.
@@ -241,6 +271,7 @@ struct NativeImmersiveView: View {
         renderer.start(player: player)
         stereoRenderer = renderer
         return entity
+        #endif
     }
 
     // MARK: - Debug: Eye Comparison (simulator)
@@ -445,7 +476,21 @@ struct NativeImmersiveView: View {
         
         let currentURL = videoManager.currentURL
         let format = videoManager.currentFormat
-        
+
+        // If a true-stereo (APMP) renderer is already live for this exact
+        // video+format, leave it running. Rebuilding it mid-playback tears down a
+        // working per-eye pipeline, and while the (often huge) file is still
+        // buffering the fresh renderer receives no frames — which looks like the
+        // immersive player "closing" a second or two after it starts. This check
+        // is intentionally independent of the `lastVideo*` fields below, because
+        // several `onChange` handlers reset those while the same video keeps
+        // playing, which previously triggered the destructive rebuild.
+        if stereoRenderer != nil,
+           activeStereoKey == stereoKey(url: currentURL, format: format),
+           debug.uvOverride == lastUVOverride {
+            return
+        }
+
         // Check if we already have a screen for this video/format/override
         if screenEntity != nil && lastVideoURL == currentURL && lastVideoFormat == format
             && lastUVOverride == debug.uvOverride {
@@ -460,6 +505,7 @@ struct NativeImmersiveView: View {
         
         print("[NativeImmersiveView] Creating screen for format: \(format.displayName)")
         print("[NativeImmersiveView] Is Immersive: \(format.isImmersive), Is Stereo: \(format.isStereoscopic)")
+        RemoteLog("Settings", "Render decision for \(format.displayName): trueStereo=\(debug.trueStereoEnabled) eyeCompare=\(debug.eyeCompareEnabled) uvOverride=\(debug.uvOverride.rawValue) testMode=\(debug.testModeEnabled) nativeStereoMeta=\(videoManager.hasNativeStereoMetadata)")
 
         // --- Debug: side-by-side eye comparison (simulator-friendly) ---------
         // Shows the LEFT-eye and RIGHT-eye source crops on two flat panels at
@@ -474,6 +520,7 @@ struct NativeImmersiveView: View {
             lastVideoFormat = format
             lastUVOverride = debug.uvOverride
             print("[NativeImmersiveView] Eye-compare debug screen created")
+            RemoteLog("RenderPath", "EYE-COMPARE debug screen active (two flat L/R panels). This is a diagnostic view, not stereo depth.")
             if videoManager.playbackState != .playing {
                 videoManager.startPlayback()
             }
@@ -492,7 +539,9 @@ struct NativeImmersiveView: View {
             lastVideoURL = currentURL
             lastVideoFormat = format
             lastUVOverride = debug.uvOverride
+            activeStereoKey = stereoKey(url: currentURL, format: format)
             print("[NativeImmersiveView] True-stereo (APMP) screen created")
+            RemoteLog("RenderPath", "TRUE STEREO (APMP per-eye) active for \(format.displayName) — depth expected on device.")
             if videoManager.playbackState != .playing {
                 videoManager.startPlayback()
             }
@@ -501,6 +550,7 @@ struct NativeImmersiveView: View {
         // ---------------------------------------------------------------------
 
         // Create video material from the player
+        RemoteLog("RenderPath", "LEGACY single-texture VideoMaterial for \(format.displayName) — same image to BOTH eyes, NO stereo depth.")
         let material = VideoMaterial(avPlayer: player)
         videoMaterial = material
         
@@ -552,7 +602,9 @@ struct NativeImmersiveView: View {
         case .hemisphere180SBS:
             // 180° Stereo SBS - map LEFT half only for mono view from left eye
             print("[NativeImmersiveView] Creating 180° Stereo SBS hemisphere (left eye view)")
-            mesh = createHemisphereMesh(radius: 10.0, segments: 128, uvMode: effectiveUVMode(base: .leftHalf))
+            let uv = effectiveUVMode(base: .leftHalf)
+            RemoteLog("Mesh", "LEGACY 180°SBS hemisphere, uvMode=\(uv) (single texture → both eyes identical → NO depth). This branch should NOT run on visionOS 26 with True 3D on.")
+            mesh = createHemisphereMesh(radius: 10.0, segments: 128, uvMode: uv)
             scale = SIMD3<Float>(-1, 1, 1) // Flip for inside-out view
             
         case .sphere360:

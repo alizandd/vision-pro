@@ -25,6 +25,15 @@ if (!fs.existsSync(VIDEOS_DIR)) {
     console.log(`[Server] Created videos directory: ${VIDEOS_DIR}`);
 }
 
+// Remote log storage (logs streamed from Vision Pro / iOS devices)
+const LOGS_DIR = path.join(__dirname, 'logs');
+const LOG_FILE = path.join(LOGS_DIR, 'visionpro.log');
+
+if (!fs.existsSync(LOGS_DIR)) {
+    fs.mkdirSync(LOGS_DIR, { recursive: true });
+    console.log(`[Server] Created logs directory: ${LOGS_DIR}`);
+}
+
 // Create HTTP server for API, video serving, and health checks
 const httpServer = http.createServer((req, res) => {
     const parsedUrl = url.parse(req.url, true);
@@ -32,7 +41,7 @@ const httpServer = http.createServer((req, res) => {
 
     // Enable CORS for web controller access
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
     if (req.method === 'OPTIONS') {
@@ -59,6 +68,12 @@ const httpServer = http.createServer((req, res) => {
             state: data.state
         }));
         res.end(JSON.stringify(deviceList));
+    } else if (pathname === '/api/log' && req.method === 'POST') {
+        // Receive remote logs streamed from devices
+        handleLogPost(req, res);
+    } else if (pathname === '/logs') {
+        // View collected device logs in the browser
+        handleLogView(req, res, parsedUrl.query);
     } else if (pathname === '/api/videos') {
         // List available videos
         handleVideoListRequest(req, res);
@@ -70,6 +85,92 @@ const httpServer = http.createServer((req, res) => {
         res.end('Not Found');
     }
 });
+
+/**
+ * Handle remote log ingestion from devices.
+ * Accepts a JSON body of either { logs: [ {ts, tag, message, device, deviceId} ] }
+ * or a single log object. Each line is printed to the console and appended to
+ * server/logs/visionpro.log so device-side behaviour can be inspected centrally.
+ */
+function handleLogPost(req, res) {
+    let body = '';
+    let tooLarge = false;
+
+    req.on('data', chunk => {
+        body += chunk;
+        // Guard against runaway payloads (~2MB cap)
+        if (body.length > 2 * 1024 * 1024) {
+            tooLarge = true;
+            req.destroy();
+        }
+    });
+
+    req.on('end', () => {
+        if (tooLarge) {
+            res.writeHead(413, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Log payload too large' }));
+            return;
+        }
+
+        try {
+            const data = JSON.parse(body || '{}');
+            const entries = Array.isArray(data.logs) ? data.logs : [data];
+
+            const lines = entries.map(entry => {
+                const ts = entry.ts || new Date().toISOString();
+                const device = entry.device || 'device';
+                const tag = entry.tag || '-';
+                const message = entry.message != null ? entry.message : '';
+                const line = `${ts} [${device}] [${tag}] ${message}`;
+                console.log(`[Device] ${line}`);
+                return line;
+            });
+
+            if (lines.length > 0) {
+                fs.appendFile(LOG_FILE, lines.join('\n') + '\n', err => {
+                    if (err) console.error('[Server] Failed to write log file:', err);
+                });
+            }
+
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ ok: true, received: lines.length }));
+        } catch (error) {
+            console.error('[Server] Error parsing log payload:', error);
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Invalid log payload' }));
+        }
+    });
+}
+
+/**
+ * Serve the collected device logs as plain text.
+ * Optional query: ?tail=N to return only the last N lines, ?clear=1 to reset.
+ */
+function handleLogView(req, res, query) {
+    try {
+        if (query && query.clear === '1') {
+            fs.writeFileSync(LOG_FILE, '');
+            res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+            res.end('Logs cleared.\n');
+            return;
+        }
+
+        let content = fs.existsSync(LOG_FILE) ? fs.readFileSync(LOG_FILE, 'utf8') : '';
+
+        const tail = query && query.tail ? parseInt(query.tail, 10) : 0;
+        if (tail > 0) {
+            const allLines = content.split('\n');
+            content = allLines.slice(-tail).join('\n');
+        }
+
+        res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end(content || '(no logs yet)\n');
+    } catch (error) {
+        console.error('[Server] Error reading logs:', error);
+        res.writeHead(500, { 'Content-Type': 'text/plain' });
+        res.end('Internal Server Error');
+    }
+}
 
 /**
  * Handle video list API request
@@ -548,6 +649,7 @@ httpServer.listen(config.port, config.host, () => {
     console.log(`[Server] Videos Folder: ${VIDEOS_DIR}`);
     console.log(`[Server] Health Check: http://${config.host}:${config.port}/health`);
     console.log(`[Server] Device List: http://${config.host}:${config.port}/devices`);
+    console.log(`[Server] Device Logs: http://${config.host}:${config.port}/logs`);
     console.log(`[Server] ========================================`);
 
     // List available videos on startup

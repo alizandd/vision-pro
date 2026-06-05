@@ -24,6 +24,7 @@
 		A1111111111111111111111F /* DownloadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A22222222222222222222231 /* DownloadManager.swift */; };
 		A11111111111111111111120 /* StereoDebug.swift in Sources */ = {isa = PBXBuildFile; fileRef = A22222222222222222222232 /* StereoDebug.swift */; };
 		A11111111111111111111121 /* StereoVideoRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A22222222222222222222233 /* StereoVideoRenderer.swift */; };
+		A11111111111111111111122 /* RemoteLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = A22222222222222222222234 /* RemoteLogger.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -46,6 +47,7 @@
 		A22222222222222222222231 /* DownloadManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadManager.swift; sourceTree = "<group>"; };
 		A22222222222222222222232 /* StereoDebug.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StereoDebug.swift; sourceTree = "<group>"; };
 		A22222222222222222222233 /* StereoVideoRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StereoVideoRenderer.swift; sourceTree = "<group>"; };
+		A22222222222222222222234 /* RemoteLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteLogger.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -104,6 +106,7 @@
 				A22222222222222222222231 /* DownloadManager.swift */,
 				A22222222222222222222232 /* StereoDebug.swift */,
 				A22222222222222222222233 /* StereoVideoRenderer.swift */,
+				A22222222222222222222234 /* RemoteLogger.swift */,
 			);
 			path = Managers;
 			sourceTree = "<group>";
@@ -209,6 +212,7 @@
 				A1111111111111111111111F /* DownloadManager.swift in Sources */,
 				A11111111111111111111120 /* StereoDebug.swift in Sources */,
 				A11111111111111111111121 /* StereoVideoRenderer.swift in Sources */,
+				A11111111111111111111122 /* RemoteLogger.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -350,7 +354,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.0;
+				MARKETING_VERSION = 3.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.qoostudio.player;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "xros xrsimulator";
@@ -376,7 +380,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.0;
+				MARKETING_VERSION = 3.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.qoostudio.player;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "xros xrsimulator";

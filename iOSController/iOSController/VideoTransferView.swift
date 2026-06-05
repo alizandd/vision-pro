@@ -2,6 +2,7 @@ import SwiftUI
 import PhotosUI
 import AVFoundation
 import Network
+import UniformTypeIdentifiers
 
 struct VideoTransferView: View {
     @EnvironmentObject var deviceManager: DeviceManager
@@ -219,26 +220,55 @@ struct VideoSelectionSection: View {
     @Binding var selectedVideos: [TransferableVideo]
     @Binding var isLoading: Bool
     
+    @State private var showFileImporter = false
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Label("Select Videos", systemImage: "1.circle.fill")
                 .font(.headline)
             
-            PhotosPicker(
-                selection: $selectedPhotosItems,
-                maxSelectionCount: 10,
-                matching: .videos,
-                photoLibrary: .shared()
-            ) {
-                HStack {
-                    Image(systemName: "photo.on.rectangle.angled")
-                    Text(selectedVideos.isEmpty ? "Choose from Library" : "Change Selection")
+            // Two sources: the Photos library and the Files app.
+            // Spatial / MV-HEVC and other large videos that aren't in the Photos
+            // gallery can only be reached through the Files picker.
+            HStack(spacing: 12) {
+                PhotosPicker(
+                    selection: $selectedPhotosItems,
+                    maxSelectionCount: 10,
+                    matching: .videos,
+                    photoLibrary: .shared()
+                ) {
+                    VStack(spacing: 6) {
+                        Image(systemName: "photo.on.rectangle.angled")
+                            .font(.title3)
+                        Text("Photos")
+                            .font(.subheadline)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color(.systemGray6))
+                    .cornerRadius(12)
                 }
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color(.systemGray6))
-                .cornerRadius(12)
+                
+                Button {
+                    showFileImporter = true
+                } label: {
+                    VStack(spacing: 6) {
+                        Image(systemName: "folder.fill")
+                            .font(.title3)
+                        Text("Files")
+                            .font(.subheadline)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color(.systemGray6))
+                    .cornerRadius(12)
+                }
+                .buttonStyle(.plain)
             }
+            
+            Text("Use Files to send Vision Pro / spatial videos that don't appear in Photos.")
+                .font(.caption2)
+                .foregroundColor(.secondary)
             
             // Selected videos list
             if !selectedVideos.isEmpty {
@@ -248,8 +278,8 @@ struct VideoSelectionSection: View {
                             // Remove video
                             if let index = selectedVideos.firstIndex(where: { $0.id == video.id }) {
                                 selectedVideos.remove(at: index)
-                                if let pickerIndex = selectedPhotosItems.indices.first(where: { $0 == index }) {
-                                    selectedPhotosItems.remove(at: pickerIndex)
+                                if selectedPhotosItems.indices.contains(index) {
+                                    selectedPhotosItems.remove(at: index)
                                 }
                             }
                         }
@@ -261,6 +291,64 @@ struct VideoSelectionSection: View {
         .background(Color(.systemBackground))
         .cornerRadius(16)
         .shadow(color: .black.opacity(0.05), radius: 8)
+        .fileImporter(
+            isPresented: $showFileImporter,
+            allowedContentTypes: [.movie, .video, .mpeg4Movie, .quickTimeMovie],
+            allowsMultipleSelection: true
+        ) { result in
+            switch result {
+            case .success(let urls):
+                importFiles(urls)
+            case .failure(let error):
+                print("[VideoTransfer] File import failed: \(error)")
+            }
+        }
+    }
+    
+    /// Copies user-picked files from the Files app into a temp directory so the
+    /// HTTP transfer server can serve them. Document-picker URLs are security
+    /// scoped, so access must be explicitly started and stopped.
+    private func importFiles(_ urls: [URL]) {
+        isLoading = true
+        var videos = selectedVideos
+        
+        for url in urls {
+            let didStartAccess = url.startAccessingSecurityScopedResource()
+            defer {
+                if didStartAccess {
+                    url.stopAccessingSecurityScopedResource()
+                }
+            }
+            
+            do {
+                let tempDir = FileManager.default.temporaryDirectory
+                let targetURL = tempDir.appendingPathComponent(url.lastPathComponent)
+                
+                // Replace any stale copy with the same name.
+                try? FileManager.default.removeItem(at: targetURL)
+                try FileManager.default.copyItem(at: url, to: targetURL)
+                
+                let attributes = try FileManager.default.attributesOfItem(atPath: targetURL.path)
+                let fileSize = (attributes[.size] as? Int64) ?? 0
+                
+                // Avoid duplicates by filename.
+                if !videos.contains(where: { $0.filename == url.lastPathComponent }) {
+                    videos.append(
+                        TransferableVideo(
+                            id: UUID().uuidString,
+                            url: targetURL,
+                            filename: url.lastPathComponent,
+                            fileSize: fileSize
+                        )
+                    )
+                }
+            } catch {
+                print("[VideoTransfer] Failed to import file \(url.lastPathComponent): \(error)")
+            }
+        }
+        
+        selectedVideos = videos
+        isLoading = false
     }
 }
 

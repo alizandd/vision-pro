@@ -61,6 +61,13 @@ final class APMPStereoRenderer {
 
     private var isRunning = false
 
+    /// Whether we've already reported a frame-processing error (avoids spamming
+    /// the remote log once per display refresh).
+    private var didReportFrameError = false
+
+    /// Whether we've confirmed the first frame was enqueued to the renderer.
+    private var didReportFirstFrame = false
+
     init(packing: Packing, projection: Projection) {
         self.packing = packing
         self.projection = projection
@@ -95,6 +102,7 @@ final class APMPStereoRenderer {
     func start(player: AVPlayer) {
         guard let item = player.currentItem else {
             print("[APMPStereo] No current item to attach to")
+            RemoteLog("APMP", "start() failed: player has no current item")
             return
         }
         self.player = player
@@ -112,7 +120,18 @@ final class APMPStereoRenderer {
         // Present frames as they arrive (we tag each with the synchronizer's clock).
         synchronizer.setRate(1.0, time: .zero)
         isRunning = true
+        didReportFrameError = false
+        didReportFirstFrame = false
         print("[APMPStereo] Started — packing=\(packing), projection=\(projection)")
+        RemoteLog("APMP", "Renderer started — packing=\(packing), projection=\(projection). Pumping frames into VideoPlayerComponent.")
+
+        // Watchdog: if no frame is enqueued shortly after start, the per-eye split
+        // isn't happening and the user will still see a single eye / no depth.
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: 3_000_000_000) // 3s
+            guard let self, self.isRunning, !self.didReportFirstFrame else { return }
+            RemoteLog("APMP", "WATCHDOG: no stereo frame after 3s. isRunning=\(self.isRunning) readyForMore=\(self.videoRenderer.isReadyForMoreMediaData) playerRate=\(self.player?.rate ?? -1) hasOutput=\(self.videoOutput != nil). Frames NOT flowing → still single-eye.")
+        }
     }
 
     /// Stops pumping and tears down resources.
@@ -129,6 +148,7 @@ final class APMPStereoRenderer {
         cachedFormatDescription = nil
         cachedDimensions = nil
         print("[APMPStereo] Stopped")
+        RemoteLog("APMP", "Renderer stopped (firstFrameSeen=\(didReportFirstFrame)).")
     }
 
     // MARK: - Frame pump
@@ -158,8 +178,17 @@ final class APMPStereoRenderer {
                                                     formatDescription: formatDescription,
                                                     time: presentationTime)
             videoRenderer.enqueue(sampleBuffer)
+            if !didReportFirstFrame {
+                didReportFirstFrame = true
+                let dims = cachedDimensions
+                RemoteLog("APMP", "First stereo frame enqueued OK (\(dims?.width ?? 0)x\(dims?.height ?? 0)) — per-eye split is live.")
+            }
         } catch {
             print("[APMPStereo] Frame processing failed: \(error)")
+            if !didReportFrameError {
+                didReportFrameError = true
+                RemoteLog("APMP", "Frame processing FAILED: \(error). Stereo will not render.")
+            }
         }
     }
 

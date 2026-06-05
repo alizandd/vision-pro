@@ -39,6 +39,7 @@ struct VisionProPlayerApp: App {
                 .environmentObject(nativeVideoManager)
                 .environmentObject(localVideoManager)
                 .onAppear {
+                    RemoteLogger.shared.logEnvironment()
                     setupCommandHandling()
                     setupLocalVideoSync()
                     
@@ -240,6 +241,29 @@ struct VisionProPlayerApp: App {
             )
         }
         
+        // Handle natural end-of-video by performing a full stop.
+        // This closes the immersive space and reopens the main window so the
+        // user can immediately play another video without first pressing Stop.
+        nativeVideoManager.onPlaybackEnded = {
+            Task { @MainActor in
+                print("[App] Playback reached end — performing auto-stop")
+
+                // Clean up the player and broadcast the .stopped status.
+                vidManager.stop()
+
+                // Close the immersive space and restore the main window,
+                // matching the behavior of an explicit stop command.
+                if state.isImmersiveActive {
+                    await self.dismissImmersiveSpace()
+                    state.isImmersiveActive = false
+                    print("[App] Immersive space closed after playback end")
+
+                    self.openWindow(id: "main")
+                    print("[App] Main window reopened after playback end")
+                }
+            }
+        }
+
         // Handle player ready callback for proper lifecycle
         nativeVideoManager.onPlayerReady = {
             print("[App] Native video player ready, starting playback")
@@ -330,6 +354,7 @@ struct VisionProPlayerApp: App {
         print("[App] Format: \(format.displayName)")
         print("[App] Is Immersive: \(format.isImmersive)")
         print("[App] Is Stereoscopic: \(format.isStereoscopic)")
+        RemoteLog("Play", "url=\(videoUrl) format=\(format.displayName) immersive=\(format.isImmersive) stereo=\(format.isStereoscopic)")
         
         // Update app state
         appState.currentVideoURL = videoUrl

@@ -5,7 +5,7 @@ struct DeviceCardView: View {
     @ObservedObject var device: ConnectedDevice
     @EnvironmentObject var deviceManager: DeviceManager
     @State private var selectedVideoUrl: String = ""
-    @State private var selectedFormat: VideoFormat = .hemisphere180SBS
+    @State private var selectedFormat: VideoFormat = .sphere360SBS
     @State private var isExpanded = false
     
     var body: some View {
@@ -338,59 +338,132 @@ struct PlaybackControlsView: View {
     let selectedVideoUrl: String
     let selectedFormat: VideoFormat
     
+    /// Current playback state reported by the Vision Pro device.
+    private var state: PlaybackState {
+        device.state.playbackState
+    }
+    
+    /// True when the currently selected video is the one actively loaded on the device.
+    /// Used to decide whether the primary button should pause/resume the active video
+    /// or start the (different) selected one.
+    private var isSelectedVideoActive: Bool {
+        !selectedVideoUrl.isEmpty && device.state.currentVideo == selectedVideoUrl
+    }
+    
+    /// True when the device is busy with a video (playing, paused, or loading).
+    private var isActive: Bool {
+        state == .playing || state == .paused || state == .loading
+    }
+    
     var body: some View {
-        VStack(spacing: 12) {
-            // Top row: Play button (full width)
+        VStack(spacing: 8) {
+            HStack(spacing: 12) {
+                primaryButton
+                stopButton
+            }
+            
+            // Helper hint so the user understands what the primary button will do.
+            Text(hintText)
+                .font(.caption2)
+                .foregroundColor(.secondary)
+                .frame(maxWidth: .infinity, alignment: .center)
+        }
+        .padding()
+    }
+    
+    // MARK: - Primary Button (context-aware)
+    
+    @ViewBuilder
+    private var primaryButton: some View {
+        switch (state, isSelectedVideoActive) {
+        case (.loading, _):
+            Button { } label: {
+                HStack(spacing: 8) {
+                    ProgressView()
+                        .controlSize(.small)
+                        .tint(.white)
+                    Text("Loading")
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 6)
+            }
+            .buttonStyle(.borderedProminent)
+            .disabled(true)
+            
+        case (.playing, true):
             Button {
-                deviceManager.play(
+                deviceManager.pause(deviceId: device.deviceId)
+            } label: {
+                Label("Pause", systemImage: "pause.fill")
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 6)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(.orange)
+            
+        case (.paused, true):
+            Button {
+                deviceManager.resume(deviceId: device.deviceId)
+            } label: {
+                Label("Resume", systemImage: "play.fill")
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 6)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(.green)
+            
+        default:
+            // Idle / stopped / error, OR a different video is selected while one is active.
+            Button {
+                deviceManager.playSelected(
                     deviceId: device.deviceId,
                     videoUrl: selectedVideoUrl,
                     format: selectedFormat
                 )
             } label: {
-                Label("Play", systemImage: "play.fill")
+                Label(isActive ? "Play This" : "Play", systemImage: "play.fill")
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 4)
+                    .padding(.vertical, 6)
             }
             .buttonStyle(.borderedProminent)
             .disabled(selectedVideoUrl.isEmpty)
-            
-            // Bottom row: Pause, Resume, Stop
-            HStack(spacing: 12) {
-                // Pause Button
-                Button {
-                    deviceManager.pause(deviceId: device.deviceId)
-                } label: {
-                    Image(systemName: "pause.fill")
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.bordered)
-                .disabled(device.state.playbackState != .playing)
-                
-                // Resume Button
-                Button {
-                    deviceManager.resume(deviceId: device.deviceId)
-                } label: {
-                    Image(systemName: "play.fill")
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.bordered)
-                .tint(.green)
-                .disabled(device.state.playbackState != .paused)
-                
-                // Stop Button
-                Button {
-                    deviceManager.stop(deviceId: device.deviceId)
-                } label: {
-                    Image(systemName: "stop.fill")
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.bordered)
-                .tint(.red)
-                .disabled(device.state.playbackState == .idle || device.state.playbackState == .stopped)
+        }
+    }
+    
+    // MARK: - Stop Button
+    
+    private var stopButton: some View {
+        Button {
+            deviceManager.stop(deviceId: device.deviceId)
+        } label: {
+            Label("Stop", systemImage: "stop.fill")
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 6)
+        }
+        .buttonStyle(.bordered)
+        .tint(.red)
+        .disabled(!isActive)
+    }
+    
+    // MARK: - Hint
+    
+    private var hintText: String {
+        switch (state, isSelectedVideoActive) {
+        case (.loading, _):
+            return "Preparing video on Vision Pro…"
+        case (.playing, true):
+            return "Tap to pause playback"
+        case (.paused, true):
+            return "Tap to resume playback"
+        default:
+            if selectedVideoUrl.isEmpty {
+                return "Select a video to play"
+            } else if isActive {
+                return "Stops the current video, then plays the selected one"
+            } else {
+                return "Plays the selected video"
             }
         }
-        .padding()
     }
 }
 

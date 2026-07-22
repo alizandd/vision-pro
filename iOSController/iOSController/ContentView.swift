@@ -22,6 +22,7 @@ struct ContentView: View {
                 if deviceManager.devices.isEmpty {
                     EmptyDevicesView()
                 } else {
+                    SyncControlPanel(syncManager: deviceManager.syncManager)
                     DeviceListView()
                 }
             }

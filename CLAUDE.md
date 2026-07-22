@@ -188,6 +188,23 @@ cd web-controller && npx serve .
 
 ---
 
+### Synchronized Playback Messages (2026-07-22)
+
+Group playback across multiple Vision Pros (see `docs/adr/2026-07-22-synchronized-multi-device-playback.md`):
+
+```json
+{ "type": "clockSync", "t0": 1753200000000 }
+{ "type": "clockSyncResponse", "deviceId": "uuid", "t0": 1753200000000, "t1": 1753200000480 }
+{ "type": "command", "action": "syncPrepare", "filename": "movie.mp4", "videoFormat": "sphere360sbs" }
+{ "type": "syncReady", "deviceId": "uuid", "filename": "movie.mp4", "success": true, "message": null }
+{ "type": "command", "action": "syncStart", "startAt": 1753200002000 }
+{ "type": "command", "action": "syncPause" }
+{ "type": "command", "action": "syncResume", "mediaTime": 42.5, "startAt": 1753200002000 }
+{ "type": "command", "action": "syncStop" }
+```
+
+`startAt` is epoch ms already converted to the target device's clock (controller applies the measured offset: deviceClock = controllerClock + offset, offset = t1 − (t0 + t2)/2).
+
 ## Code Conventions
 
 ### Swift (Vision Pro App)
@@ -377,6 +394,17 @@ curl http://localhost:8080/api/videos
 ---
 
 ## Changelog
+
+### 2026-07-22
+- **[Synchronized Multi-Device Playback]** Play the same video on all connected Vision Pros at the same moment
+  - **ADR**: `docs/adr/2026-07-22-synchronized-multi-device-playback.md`
+  - Two-phase prepare/commit: `syncPrepare` (open immersive space + preroll, no autoplay) → `syncReady` barrier (15 s timeout, failing devices excluded) → `syncStart` at a shared wall-clock moment
+  - NTP-style clock offset per device over WebSocket (`clockSync`/`clockSyncResponse`, 5 samples, min-RTT)
+  - Frame-accurate start via `AVPlayer.setRate(_:time:atHostTime:)` after preroll
+  - Group Pause All (immediate) / Resume All (scheduled, stays in sync) / Stop All
+  - **iOS Controller**: new `SyncSessionManager.swift` (orchestration) + `SyncControlPanel.swift` (Play on All UI with common-video picker and per-device status chips)
+  - **Vision Pro**: `autoPlayOnReady` gate in `NativeVideoPlayerManager`, `prerollForSync`, scheduled start/resume, `handleSyncPrepare` in the app
+  - Backwards compatible — single-device commands unchanged
 
 ### 2026-02-05 (Update 2)
 - **[Bonjour Auto-Discovery]** iOS Controller now advertises itself on the network

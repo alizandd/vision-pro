@@ -10,19 +10,26 @@ struct ContentView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                // Server Status Bar
+                // Server Status Bar (pinned)
                 ServerStatusBar()
-                
-                // Connection Info Card (when server is running)
-                if deviceManager.isServerRunning {
-                    ConnectionInfoCard()
-                }
-                
-                // Main Content
+
+                // Everything else scrolls as one page so expanded device
+                // cards get as much room as they need.
                 if deviceManager.devices.isEmpty {
+                    if deviceManager.isServerRunning {
+                        ConnectionInfoCard()
+                    }
                     EmptyDevicesView()
                 } else {
-                    DeviceListView()
+                    ScrollView {
+                        VStack(spacing: 0) {
+                            if deviceManager.isServerRunning {
+                                ConnectionInfoCard()
+                            }
+                            SyncControlPanel(syncManager: deviceManager.syncManager)
+                            DeviceListView()
+                        }
+                    }
                 }
             }
             .navigationTitle("Vision Pro Controller")
@@ -269,16 +276,16 @@ struct EmptyDevicesView: View {
 
 struct DeviceListView: View {
     @EnvironmentObject var deviceManager: DeviceManager
-    
+
     var body: some View {
-        ScrollView {
-            LazyVStack(spacing: 16) {
-                ForEach(deviceManager.devices) { device in
-                    DeviceCardView(device: device)
-                }
+        // No ScrollView of its own — the page-level scroll in ContentView
+        // gives expanded cards unlimited room.
+        LazyVStack(spacing: 16) {
+            ForEach(deviceManager.devices) { device in
+                DeviceCardView(device: device)
             }
-            .padding()
         }
+        .padding()
     }
 }
 

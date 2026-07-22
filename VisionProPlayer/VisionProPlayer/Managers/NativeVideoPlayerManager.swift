@@ -45,6 +45,11 @@ class NativeVideoPlayerManager: ObservableObject {
     
     /// Whether the player is ready for playback
     @Published var isPlayerReady: Bool = false
+
+    /// When false, the app's onPlayerReady handler must NOT auto-start playback.
+    /// Set to false for synchronized sessions where playback is started later
+    /// by a scheduled syncStart command.
+    var autoPlayOnReady: Bool = true
     
     /// Whether the video has native stereoscopic metadata
     @Published var hasNativeStereoMetadata: Bool = false
@@ -105,12 +110,16 @@ class NativeVideoPlayerManager: ObservableObject {
     
     /// Prepares a video for playback without starting it.
     /// This is optimized for large files and doesn't have resolution limits.
-    func prepareVideo(url: String, format: VideoFormat = .mono2D) async -> Bool {
+    /// `autoPlay: false` (sync sessions) suppresses the auto-start in the
+    /// app's onPlayerReady handler — set AFTER the internal stop(), which
+    /// would otherwise reset the flag back to true.
+    func prepareVideo(url: String, format: VideoFormat = .mono2D, autoPlay: Bool = true) async -> Bool {
         print("[NativeVideoPlayer] Preparing video: \(url)")
-        print("[NativeVideoPlayer] Format: \(format.displayName)")
-        
+        print("[NativeVideoPlayer] Format: \(format.displayName), autoPlay: \(autoPlay)")
+
         // Stop any existing playback
         stop()
+        autoPlayOnReady = autoPlay
         
         // Convert URL if needed (for simulator compatibility)
         let processedURL = convertURLForSimulator(url)
@@ -269,6 +278,72 @@ class NativeVideoPlayerManager: ObservableObject {
         updateState(.playing)
     }
     
+    // MARK: - Synchronized Playback
+
+    /// Prerolls the prepared player so a scheduled start is glitch-free.
+    /// Must be called after prepareVideo succeeds and before startPlayback(atDeviceEpochMs:).
+    func prerollForSync() async -> Bool {
+        guard let player = player, isPlayerReady else {
+            print("[NativeVideoPlayer] Cannot preroll - player not ready")
+            return false
+        }
+
+        // setRate(_:time:atHostTime:) requires automatic stall-waiting to be off.
+        player.automaticallyWaitsToMinimizeStalling = false
+
+        let succeeded = await withCheckedContinuation { continuation in
+            player.preroll(atRate: 1.0) { finished in
+                continuation.resume(returning: finished)
+            }
+        }
+        print("[NativeVideoPlayer] Preroll \(succeeded ? "succeeded" : "failed")")
+        return succeeded
+    }
+
+    /// Starts prepared, prerolled playback at the given wall-clock moment
+    /// (epoch ms in this device's clock — the controller already applied
+    /// the measured clock offset).
+    func startPlayback(atDeviceEpochMs startAt: Int64) {
+        guard let player = player, isPlayerReady else {
+            print("[NativeVideoPlayer] Cannot sync-start - player not ready")
+            return
+        }
+
+        let delaySeconds = Double(startAt) / 1000.0 - Date().timeIntervalSince1970
+        let hostClock = CMClockGetHostTimeClock()
+        let hostNow = CMClockGetTime(hostClock)
+        let hostTarget = CMTimeAdd(hostNow, CMTime(seconds: max(delaySeconds, 0), preferredTimescale: CMTimeScale(NSEC_PER_SEC)))
+
+        print("[NativeVideoPlayer] Sync start in \(String(format: "%.3f", delaySeconds))s")
+        if delaySeconds < 0 {
+            print("[NativeVideoPlayer] WARNING: sync start time already passed by \(String(format: "%.3f", -delaySeconds))s — starting immediately")
+        }
+
+        player.setRate(1.0, time: .invalid, atHostTime: hostTarget)
+        updateState(.playing)
+    }
+
+    /// Resumes paused synchronized playback: seeks precisely to `mediaTime`
+    /// seconds, prerolls, then starts at the scheduled wall-clock moment.
+    func scheduledResume(mediaTime: Double, atDeviceEpochMs startAt: Int64) async {
+        guard let player = player else {
+            print("[NativeVideoPlayer] Cannot sync-resume - no player")
+            return
+        }
+
+        let target = CMTime(seconds: mediaTime, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
+        await player.seek(to: target, toleranceBefore: .zero, toleranceAfter: .zero)
+        _ = await prerollForSync()
+        startPlayback(atDeviceEpochMs: startAt)
+    }
+
+    /// Pauses playback (sync variant — pauses regardless of current state)
+    func syncPause() {
+        print("[NativeVideoPlayer] Sync pause")
+        player?.pause()
+        updateState(.paused)
+    }
+
     /// Pauses playback
     func pause() {
         guard playbackState == .playing else { return }
@@ -316,7 +391,8 @@ class NativeVideoPlayerManager: ObservableObject {
         duration = 0.0
         isPlayerReady = false
         hasNativeStereoMetadata = false
-        
+        autoPlayOnReady = true
+
         updateState(.stopped)
     }
     

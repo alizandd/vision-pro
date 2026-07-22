@@ -13,11 +13,38 @@ class DeviceManager: ObservableObject {
     private let webSocketServer = WebSocketServer()
     private let bonjourService = BonjourService()
     let fileTransferServer = FileTransferServer()
+    let syncManager = SyncSessionManager()
     private var cancellables = Set<AnyCancellable>()
-    
+
     init() {
         setupBindings()
         setupCallbacks()
+        setupSyncManager()
+    }
+
+    /// Wires the sync session manager to the WebSocket server and device state
+    private func setupSyncManager() {
+        syncManager.sendToDevice = { [weak self] deviceId, message in
+            self?.webSocketServer.send(to: deviceId, message: message)
+        }
+        syncManager.deviceCurrentTime = { [weak self] deviceId in
+            self?.devices.first(where: { $0.deviceId == deviceId })?.state.currentTime
+        }
+        syncManager.log = { [weak self] message, type in
+            self?.log(message, type: type)
+        }
+
+        webSocketServer.onClockSyncResponse = { [weak self] deviceId, response in
+            Task { @MainActor in
+                self?.syncManager.handleClockSyncResponse(deviceId: deviceId, response: response)
+            }
+        }
+
+        webSocketServer.onSyncReady = { [weak self] deviceId, message in
+            Task { @MainActor in
+                self?.syncManager.handleSyncReady(deviceId: deviceId, message: message)
+            }
+        }
     }
     
     // MARK: - Server Control
@@ -192,7 +219,10 @@ class DeviceManager: ObservableObject {
                 device.state.currentVideo = message.currentVideo
                 device.state.immersiveMode = message.immersiveMode
                 device.state.currentTime = message.currentTime ?? 0
-                
+
+                // Let an active sync session react (e.g. end when all devices finish)
+                self.syncManager.handleDeviceStatus(deviceId: deviceId, state: device.state.playbackState)
+
                 // Trigger UI update
                 self.objectWillChange.send()
             }
@@ -222,6 +252,9 @@ class DeviceManager: ObservableObject {
                     self.devices.remove(at: index)
                     self.log("Device disconnected: \(deviceName)", type: .warning)
                 }
+
+                // Keep any active sync session consistent
+                self.syncManager.handleDeviceDisconnected(deviceId: deviceId)
             }
         }
         

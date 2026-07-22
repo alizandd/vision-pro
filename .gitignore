@@ -34,3 +34,5 @@ Archive.zip
 
 
 
+.claude/settings.local.json
+.claude/*.local.json

@@ -19,6 +19,11 @@ class WebSocketManager: ObservableObject {
     /// Callback for handling delete video commands
     var onDeleteVideoCommand: ((DeleteVideoCommand) -> Void)?
 
+    /// Callbacks for synchronized playback commands
+    var onSyncPrepareCommand: ((SyncPrepareCommand) -> Void)?
+    var onSyncStartCommand: ((SyncStartCommand) -> Void)?
+    var onSyncResumeCommand: ((SyncResumeCommand) -> Void)?
+
     /// WebSocket task
     nonisolated(unsafe) private var webSocketTask: URLSessionWebSocketTask?
     private var urlSession: URLSession?
@@ -243,6 +248,18 @@ class WebSocketManager: ObservableObject {
                     let deleteCommand = try JSONDecoder().decode(DeleteVideoCommand.self, from: data)
                     print("[WebSocket] Delete command: \(deleteCommand.filename)")
                     onDeleteVideoCommand?(deleteCommand)
+                } else if let actionStr = json?["action"] as? String, actionStr == "syncPrepare" {
+                    let prepareCommand = try JSONDecoder().decode(SyncPrepareCommand.self, from: data)
+                    print("[WebSocket] Sync prepare: \(prepareCommand.filename)")
+                    onSyncPrepareCommand?(prepareCommand)
+                } else if let actionStr = json?["action"] as? String, actionStr == "syncStart" {
+                    let startCommand = try JSONDecoder().decode(SyncStartCommand.self, from: data)
+                    print("[WebSocket] Sync start at: \(startCommand.startAt)")
+                    onSyncStartCommand?(startCommand)
+                } else if let actionStr = json?["action"] as? String, actionStr == "syncResume" {
+                    let resumeCommand = try JSONDecoder().decode(SyncResumeCommand.self, from: data)
+                    print("[WebSocket] Sync resume at media time: \(resumeCommand.mediaTime)")
+                    onSyncResumeCommand?(resumeCommand)
                 } else {
                     let command = try JSONDecoder().decode(ServerCommand.self, from: data)
                     print("[WebSocket] Command: \(command.action), Format: \(command.videoFormat?.displayName ?? "nil")")
@@ -252,6 +269,17 @@ class WebSocketManager: ObservableObject {
             case "error":
                 let error = try JSONDecoder().decode(ErrorMessage.self, from: data)
                 print("[WebSocket] Server error: \(error.message)")
+
+            case "clockSync":
+                // Reply immediately — this is latency-sensitive, so it is
+                // handled here rather than routed through a callback.
+                let request = try JSONDecoder().decode(ClockSyncMessage.self, from: data)
+                let response = ClockSyncResponse(
+                    deviceId: deviceId,
+                    t0: request.t0,
+                    t1: Int64(Date().timeIntervalSince1970 * 1000)
+                )
+                send(response)
 
             case "pong":
                 // Heartbeat response
@@ -341,6 +369,17 @@ class WebSocketManager: ObservableObject {
         send(message)
     }
     
+    /// Sends sync readiness report to the controller
+    func sendSyncReady(filename: String, success: Bool, message: String? = nil) {
+        let ready = SyncReadyMessage(
+            deviceId: deviceId,
+            filename: filename,
+            success: success,
+            message: message
+        )
+        send(ready)
+    }
+
     /// Sends delete video response to the server
     func sendDeleteVideoResponse(filename: String, success: Bool, message: String?) {
         let response = DeleteVideoResponse(

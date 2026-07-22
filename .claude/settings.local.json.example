@@ -1,0 +1,13 @@
+{
+  "_comment": "TeamFlow connection for Mode 5 / task registration. Copy this to settings.local.json (gitignored) and paste your real tf_… token. NEVER commit the real token. The taskmanager-api skill reads these from the env.",
+  "_project": "TEAMFLOW_PROJECT_ID is the project tasks register into by default — set it so the team skips the 'pick a project' step and adds tasks straight to your project.",
+  "_assignees": "Single-person roles are auto-assigned from the *_ASSIGNEE ids below (resolve the numeric user id from GET /projects/<id>/board). Frontend & backend have MULTIPLE people, so leave them blank here and assign those tasks by hand in TeamFlow.",
+  "env": {
+    "TEAMFLOW_BASE": "https://teamflow.qoo.studio/api/v1/integration",
+    "TEAMFLOW_TOKEN": "tf_REPLACE_ME",
+    "TEAMFLOW_PROJECT_ID": "REPLACE_WITH_PROJECT_ID",
+    "TEAMFLOW_ASSIGNEE_TECH_LEAD": "",
+    "TEAMFLOW_ASSIGNEE_DEVOPS": "",
+    "TEAMFLOW_ASSIGNEE_TESTER": ""
+  }
+}

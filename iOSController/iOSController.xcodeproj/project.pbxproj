@@ -19,6 +19,8 @@
 		AA000010 /* VideoTransferView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100011 /* VideoTransferView.swift */; };
 		AA000011 /* SampleVideoHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100012 /* SampleVideoHelper.swift */; };
 		AA000012 /* SampleVideosView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100013 /* SampleVideosView.swift */; };
+		AA000099 /* SyncSessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100099 /* SyncSessionManager.swift */; };
+		AA000100 /* SyncControlPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100100 /* SyncControlPanel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -35,6 +37,8 @@
 		AA100011 /* VideoTransferView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoTransferView.swift; sourceTree = "<group>"; };
 		AA100012 /* SampleVideoHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleVideoHelper.swift; sourceTree = "<group>"; };
 		AA100013 /* SampleVideosView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleVideosView.swift; sourceTree = "<group>"; };
+		AA100099 /* SyncSessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncSessionManager.swift; sourceTree = "<group>"; };
+		AA100100 /* SyncControlPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncControlPanel.swift; sourceTree = "<group>"; };
 		AA200001 /* iOSController.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iOSController.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -71,6 +75,8 @@
 				AA100010 /* FileTransferServer.swift */,
 				AA100006 /* BonjourService.swift */,
 				AA100007 /* DeviceManager.swift */,
+				AA100099 /* SyncSessionManager.swift */,
+				AA100100 /* SyncControlPanel.swift */,
 				AA100003 /* Assets.xcassets */,
 				AA100009 /* Info.plist */,
 			);
@@ -161,6 +167,8 @@
 				AA000009 /* FileTransferServer.swift in Sources */,
 				AA000006 /* BonjourService.swift in Sources */,
 				AA000007 /* DeviceManager.swift in Sources */,
+				AA000099 /* SyncSessionManager.swift in Sources */,
+				AA000100 /* SyncControlPanel.swift in Sources */,
 				AA000008 /* DeviceCardView.swift in Sources */,
 				AA000010 /* VideoTransferView.swift in Sources */,
 				AA000011 /* SampleVideoHelper.swift in Sources */,
@@ -312,7 +320,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.4;
+				MARKETING_VERSION = 1.5;
 				PRODUCT_BUNDLE_IDENTIFIER = com.qoostudio.vpc;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -343,7 +351,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.4;
+				MARKETING_VERSION = 1.5;
 				PRODUCT_BUNDLE_IDENTIFIER = com.qoostudio.vpc;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;

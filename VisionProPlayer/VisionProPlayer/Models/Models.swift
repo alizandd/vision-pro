@@ -45,6 +45,66 @@ enum CommandAction: String, Codable {
     case stop
     case download      // Download video from controller
     case deleteVideo   // Delete a local video
+    case syncPrepare   // Prepare a local video for synchronized playback (no autoplay)
+    case syncStart     // Start prepared video at a scheduled wall-clock time
+    case syncPause     // Pause synchronized playback on all devices
+    case syncResume    // Resume synchronized playback at a scheduled time
+    case syncStop      // Stop synchronized playback
+}
+
+// MARK: - Synchronized Playback
+
+/// Command to prepare a local video for synchronized playback.
+/// The device opens the immersive space and prerolls the player,
+/// then reports readiness via SyncReadyMessage without starting playback.
+struct SyncPrepareCommand: Codable {
+    let type: String
+    let action: String
+    let filename: String
+    let videoFormat: String?
+    let timestamp: Int?
+}
+
+/// Command to start prepared playback at `startAt` (epoch ms, already
+/// converted to this device's clock by the controller).
+struct SyncStartCommand: Codable {
+    let type: String
+    let action: String
+    let startAt: Int64
+    let timestamp: Int?
+}
+
+/// Command to resume paused synchronized playback: seek to `mediaTime`
+/// seconds and start at `startAt` (epoch ms, device clock).
+struct SyncResumeCommand: Codable {
+    let type: String
+    let action: String
+    let mediaTime: Double
+    let startAt: Int64
+    let timestamp: Int?
+}
+
+/// Clock sync request from the controller (t0 = controller epoch ms).
+struct ClockSyncMessage: Codable {
+    let type: String
+    let t0: Int64
+}
+
+/// Clock sync reply: echoes t0 and adds this device's clock t1 (epoch ms).
+struct ClockSyncResponse: Codable {
+    var type: String = "clockSyncResponse"
+    let deviceId: String
+    let t0: Int64
+    let t1: Int64
+}
+
+/// Readiness report after a syncPrepare command.
+struct SyncReadyMessage: Codable {
+    var type: String = "syncReady"
+    let deviceId: String
+    let filename: String
+    let success: Bool
+    let message: String?
 }
 
 // MARK: - Download Command

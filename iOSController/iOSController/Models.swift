@@ -154,6 +154,86 @@ enum CommandAction: String, Codable {
     case change
     case stop
     case deleteVideo  // Delete a video from Vision Pro
+    case syncPrepare  // Prepare a local video for synchronized playback
+    case syncStart    // Start prepared video at a scheduled wall-clock time
+    case syncPause    // Pause synchronized playback
+    case syncResume   // Resume synchronized playback at a scheduled time
+    case syncStop     // Stop synchronized playback
+}
+
+// MARK: - Synchronized Playback Messages
+
+/// Tell a device to prepare a local video for synchronized playback
+/// (open immersive space, preroll, report readiness — no autoplay).
+struct SyncPrepareCommand: Codable {
+    var type: String = "command"
+    var action: String = CommandAction.syncPrepare.rawValue
+    let filename: String
+    let videoFormat: String?
+    let timestamp: Int
+
+    init(filename: String, videoFormat: VideoFormat?) {
+        self.filename = filename
+        self.videoFormat = videoFormat?.rawValue
+        self.timestamp = Int(Date().timeIntervalSince1970 * 1000)
+    }
+}
+
+/// Start prepared playback at `startAt` — epoch ms already converted
+/// to the target device's clock (controller applies the measured offset).
+struct SyncStartCommand: Codable {
+    var type: String = "command"
+    var action: String = CommandAction.syncStart.rawValue
+    let startAt: Int64
+    let timestamp: Int
+
+    init(startAt: Int64) {
+        self.startAt = startAt
+        self.timestamp = Int(Date().timeIntervalSince1970 * 1000)
+    }
+}
+
+/// Resume paused synchronized playback: seek to `mediaTime` seconds
+/// and start at `startAt` (epoch ms, target device's clock).
+struct SyncResumeCommand: Codable {
+    var type: String = "command"
+    var action: String = CommandAction.syncResume.rawValue
+    let mediaTime: Double
+    let startAt: Int64
+    let timestamp: Int
+
+    init(mediaTime: Double, startAt: Int64) {
+        self.mediaTime = mediaTime
+        self.startAt = startAt
+        self.timestamp = Int(Date().timeIntervalSince1970 * 1000)
+    }
+}
+
+/// Clock sync request (t0 = controller epoch ms at send time).
+struct ClockSyncMessage: Codable {
+    var type: String = "clockSync"
+    let t0: Int64
+
+    init(t0: Int64) {
+        self.t0 = t0
+    }
+}
+
+/// Clock sync reply from a device: echoes t0, adds device clock t1 (epoch ms).
+struct ClockSyncResponse: Codable {
+    let type: String
+    let deviceId: String
+    let t0: Int64
+    let t1: Int64
+}
+
+/// Readiness report from a device after syncPrepare.
+struct SyncReadyMessage: Codable {
+    let type: String
+    let deviceId: String
+    let filename: String
+    let success: Bool
+    let message: String?
 }
 
 /// Welcome message sent to new connections

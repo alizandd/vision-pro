@@ -47,6 +47,12 @@ class WebSocketServer: ObservableObject {
     /// Callback when a device sends delete response
     var onDeleteVideoResponse: ((String, DeleteVideoResponse) -> Void)?
     
+    /// Callback when a device replies to a clock sync request
+    var onClockSyncResponse: ((String, ClockSyncResponse) -> Void)?
+
+    /// Callback when a device reports sync readiness
+    var onSyncReady: ((String, SyncReadyMessage) -> Void)?
+
     /// Callback when a device disconnects
     var onDeviceDisconnected: ((String) -> Void)?
     
@@ -154,6 +160,16 @@ class WebSocketServer: ObservableObject {
         }
     }
     
+    /// Send any encodable message to a specific device (used by sync playback)
+    func send<T: Encodable>(to deviceId: String, message: T) {
+        guard let client = connections.values.first(where: { $0.deviceId == deviceId }) else {
+            print("[WebSocketServer] Device not found: \(deviceId)")
+            return
+        }
+
+        sendMessage(message, to: client)
+    }
+
     /// Send transfer command to a specific device
     func sendTransferCommand(to deviceId: String, command: TransferCommand) {
         guard let client = connections.values.first(where: { $0.deviceId == deviceId }) else {
@@ -308,6 +324,18 @@ class WebSocketServer: ObservableObject {
                     onDeleteVideoResponse?(deviceId, response)
                 }
                 
+            case "clockSyncResponse":
+                let response = try JSONDecoder().decode(ClockSyncResponse.self, from: data)
+                if let deviceId = client.deviceId {
+                    onClockSyncResponse?(deviceId, response)
+                }
+
+            case "syncReady":
+                let ready = try JSONDecoder().decode(SyncReadyMessage.self, from: data)
+                if let deviceId = client.deviceId {
+                    onSyncReady?(deviceId, ready)
+                }
+
             case "ping":
                 let pong = ["type": "pong", "timestamp": Int(Date().timeIntervalSince1970 * 1000)] as [String : Any]
                 if let data = try? JSONSerialization.data(withJSONObject: pong) {

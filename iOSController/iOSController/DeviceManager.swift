@@ -219,7 +219,10 @@ class DeviceManager: ObservableObject {
                 device.state.currentVideo = message.currentVideo
                 device.state.immersiveMode = message.immersiveMode
                 device.state.currentTime = message.currentTime ?? 0
-                
+
+                // Let an active sync session react (e.g. end when all devices finish)
+                self.syncManager.handleDeviceStatus(deviceId: deviceId, state: device.state.playbackState)
+
                 // Trigger UI update
                 self.objectWillChange.send()
             }

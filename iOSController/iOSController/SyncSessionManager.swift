@@ -27,6 +27,7 @@ class SyncSessionManager: ObservableObject {
         case failed(String)
         case playing
         case paused
+        case ended
     }
 
     @Published var state: SessionState = .idle
@@ -46,7 +47,9 @@ class SyncSessionManager: ObservableObject {
     /// Device IDs participating in the active session
     private(set) var sessionDevices: [String] = []
 
-    private let readyBarrierTimeout: TimeInterval = 15.0
+    /// Prepare + preroll of multi-GB videos can take well over 30s
+    /// (asset load + readiness wait), so the barrier must be generous.
+    private let readyBarrierTimeout: TimeInterval = 60.0
     private let startLeadTimeMs: Int64 = 1000
 
     /// Wiring provided by DeviceManager
@@ -85,6 +88,25 @@ class SyncSessionManager: ObservableObject {
         deviceStatus[deviceId] = .failed("Disconnected")
     }
 
+    /// Called for every status update a device sends. When every session
+    /// device reports stopped (e.g. the video played to its natural end),
+    /// the session is over — return the panel to idle.
+    func handleDeviceStatus(deviceId: String, state deviceState: PlaybackState) {
+        guard state == .playing || state == .paused else { return }
+        guard sessionDevices.contains(deviceId) else { return }
+
+        if deviceState == .stopped || deviceState == .idle {
+            deviceStatus[deviceId] = .ended
+            let stillActive = sessionDevices.contains { id in
+                id != deviceId && deviceStatus[id] != .ended
+            }
+            if !stillActive {
+                log?("🏁 Playback ended on all devices — sync session finished", .info)
+                endSession()
+            }
+        }
+    }
+
     // MARK: - Session control
 
     /// Runs the full sync-play sequence: clock sync → prepare barrier → scheduled start.
@@ -118,6 +140,12 @@ class SyncSessionManager: ObservableObject {
         let participants = Array(readyDevices)
 
         guard !participants.isEmpty else {
+            // Devices may be sitting in a prepared immersive space —
+            // tell them to exit before giving up.
+            let stopCommand = CommandMessage(action: .syncStop)
+            for deviceId in sessionDevices {
+                sendToDevice?(deviceId, stopCommand)
+            }
             log?("❌ No devices became ready — sync session aborted", .error)
             endSession()
             return
@@ -125,8 +153,14 @@ class SyncSessionManager: ObservableObject {
 
         if !allReady {
             let missing = sessionDevices.filter { !readyDevices.contains($0) }
-            for deviceId in missing where deviceStatus[deviceId] == .preparing {
-                deviceStatus[deviceId] = .failed("Ready timeout")
+            let stopCommand = CommandMessage(action: .syncStop)
+            for deviceId in missing {
+                if deviceStatus[deviceId] == .preparing {
+                    deviceStatus[deviceId] = .failed("Ready timeout")
+                }
+                // Excluded device may still finish preparing later — make it
+                // exit the immersive space instead of being stuck there.
+                sendToDevice?(deviceId, stopCommand)
             }
             log?("⚠️ Starting with \(participants.count)/\(sessionDevices.count) devices (others timed out)", .warning)
         }

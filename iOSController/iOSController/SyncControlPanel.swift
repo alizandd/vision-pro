@@ -355,6 +355,8 @@ struct DeviceSyncChip: View {
             Image(systemName: "play.circle.fill").font(.caption2).foregroundColor(.green)
         case .paused:
             Image(systemName: "pause.circle.fill").font(.caption2).foregroundColor(.yellow)
+        case .ended:
+            Image(systemName: "flag.checkered").font(.caption2).foregroundColor(.secondary)
         }
     }
 }

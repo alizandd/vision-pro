@@ -407,9 +407,6 @@ struct VisionProPlayerApp: App {
         appState.currentVideoURL = video.url
         appState.currentVideoFormat = format
 
-        // Suppress auto-start: playback begins only on syncStart
-        videoManager.autoPlayOnReady = false
-
         // Open immersive space (same lifecycle as a normal play)
         if !appState.isImmersiveActive {
             let result = await openImmersiveSpace(id: "ImmersiveVideoSpace")
@@ -427,8 +424,8 @@ struct VisionProPlayerApp: App {
 
         _ = await waitForImmersiveSpaceReady()
 
-        // Prepare without autoplay
-        let prepared = await videoManager.prepareVideo(url: video.url, format: format)
+        // Prepare without autoplay — playback starts only on syncStart
+        let prepared = await videoManager.prepareVideo(url: video.url, format: format, autoPlay: false)
         guard prepared else {
             print("[App] ERROR: Failed to prepare video for sync")
             videoManager.autoPlayOnReady = true

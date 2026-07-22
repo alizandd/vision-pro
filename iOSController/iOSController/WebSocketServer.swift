@@ -143,9 +143,15 @@ class WebSocketServer: ObservableObject {
         }
     }
     
+    /// Best connection for a device: prefer one whose socket is ready.
+    private func liveConnection(for deviceId: String) -> ClientConnection? {
+        let candidates = connections.values.filter { $0.deviceId == deviceId }
+        return candidates.first(where: { $0.connection.state == .ready }) ?? candidates.first
+    }
+
     /// Send command to a specific device
     func sendCommand(to deviceId: String, command: CommandMessage) {
-        guard let client = connections.values.first(where: { $0.deviceId == deviceId }) else {
+        guard let client = liveConnection(for: deviceId) else {
             print("[WebSocketServer] Device not found: \(deviceId)")
             return
         }
@@ -162,7 +168,7 @@ class WebSocketServer: ObservableObject {
     
     /// Send any encodable message to a specific device (used by sync playback)
     func send<T: Encodable>(to deviceId: String, message: T) {
-        guard let client = connections.values.first(where: { $0.deviceId == deviceId }) else {
+        guard let client = liveConnection(for: deviceId) else {
             print("[WebSocketServer] Device not found: \(deviceId)")
             return
         }
@@ -172,7 +178,7 @@ class WebSocketServer: ObservableObject {
 
     /// Send transfer command to a specific device
     func sendTransferCommand(to deviceId: String, command: TransferCommand) {
-        guard let client = connections.values.first(where: { $0.deviceId == deviceId }) else {
+        guard let client = liveConnection(for: deviceId) else {
             print("[WebSocketServer] Device not found: \(deviceId)")
             return
         }
@@ -182,7 +188,7 @@ class WebSocketServer: ObservableObject {
     
     /// Send delete video command to a specific device
     func sendDeleteVideoCommand(to deviceId: String, command: DeleteVideoCommand) {
-        guard let client = connections.values.first(where: { $0.deviceId == deviceId }) else {
+        guard let client = liveConnection(for: deviceId) else {
             print("[WebSocketServer] Device not found: \(deviceId)")
             return
         }
@@ -252,10 +258,15 @@ class WebSocketServer: ObservableObject {
     }
     
     private func removeConnection(_ client: ClientConnection) {
-        connections.removeValue(forKey: client.id)
+        // Already removed (e.g. replaced by a re-registration) — nothing to do.
+        guard connections.removeValue(forKey: client.id) != nil else { return }
         connectionCount = connections.count
-        
-        if let deviceId = client.deviceId {
+
+        // Only report the device as gone when NO other connection carries the
+        // same deviceId — a dying stale connection must not remove a device
+        // that reconnected on a fresh socket.
+        if let deviceId = client.deviceId,
+           !connections.values.contains(where: { $0.deviceId == deviceId }) {
             onDeviceDisconnected?(deviceId)
         }
     }
@@ -265,6 +276,10 @@ class WebSocketServer: ObservableObject {
             Task { @MainActor in
                 if let error = error {
                     print("[WebSocketServer] Receive error: \(error)")
+                    // A dead receive loop means a dead connection — clean it up
+                    // instead of leaving a zombie entry in `connections`.
+                    client.connection.cancel()
+                    self?.removeConnection(client)
                     return
                 }
                 
@@ -352,6 +367,19 @@ class WebSocketServer: ObservableObject {
     }
     
     private func handleRegistration(_ message: RegistrationMessage, from client: ClientConnection) {
+        // Replace any older connection for this deviceId: remove it from the
+        // table FIRST (so its cancellation is a no-op in removeConnection),
+        // then cancel it. Otherwise stale sockets accumulate and sends may be
+        // routed to a dead connection, whose failure would then remove the
+        // live device.
+        let duplicates = connections.values.filter { $0.deviceId == message.deviceId && $0.id != client.id }
+        for duplicate in duplicates {
+            print("[WebSocketServer] Replacing stale connection \(duplicate.id) for device \(message.deviceId)")
+            connections.removeValue(forKey: duplicate.id)
+            duplicate.connection.cancel()
+        }
+        connectionCount = connections.count
+
         client.deviceId = message.deviceId
         client.deviceName = message.deviceName
         client.deviceType = message.deviceType

@@ -110,12 +110,16 @@ class NativeVideoPlayerManager: ObservableObject {
     
     /// Prepares a video for playback without starting it.
     /// This is optimized for large files and doesn't have resolution limits.
-    func prepareVideo(url: String, format: VideoFormat = .mono2D) async -> Bool {
+    /// `autoPlay: false` (sync sessions) suppresses the auto-start in the
+    /// app's onPlayerReady handler — set AFTER the internal stop(), which
+    /// would otherwise reset the flag back to true.
+    func prepareVideo(url: String, format: VideoFormat = .mono2D, autoPlay: Bool = true) async -> Bool {
         print("[NativeVideoPlayer] Preparing video: \(url)")
-        print("[NativeVideoPlayer] Format: \(format.displayName)")
-        
+        print("[NativeVideoPlayer] Format: \(format.displayName), autoPlay: \(autoPlay)")
+
         // Stop any existing playback
         stop()
+        autoPlayOnReady = autoPlay
         
         // Convert URL if needed (for simulator compatibility)
         let processedURL = convertURLForSimulator(url)

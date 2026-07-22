@@ -231,6 +231,45 @@ struct VisionProPlayerApp: App {
             }
         }
 
+        // Handle sync prepare: open immersive space, prepare + preroll the
+        // local video WITHOUT starting playback, then report readiness.
+        webSocketManager.onSyncPrepareCommand = { prepareCommand in
+            Task { @MainActor in
+                await self.handleSyncPrepare(
+                    prepareCommand,
+                    appState: state,
+                    videoManager: vidManager,
+                    localManager: localManager,
+                    wsManager: wsManager
+                )
+            }
+        }
+
+        // Handle sync start: begin prepared playback at the scheduled moment
+        webSocketManager.onSyncStartCommand = { startCommand in
+            Task { @MainActor in
+                print("[App] Sync start scheduled for \(startCommand.startAt)")
+                vidManager.startPlayback(atDeviceEpochMs: startCommand.startAt)
+                wsManager.sendStatus(
+                    state: PlaybackState.playing.rawValue,
+                    currentVideo: state.currentVideoURL,
+                    immersiveMode: state.isImmersiveActive,
+                    currentTime: vidManager.currentTime
+                )
+            }
+        }
+
+        // Handle sync resume: seek + scheduled restart
+        webSocketManager.onSyncResumeCommand = { resumeCommand in
+            Task { @MainActor in
+                print("[App] Sync resume at \(resumeCommand.mediaTime)s, scheduled for \(resumeCommand.startAt)")
+                await vidManager.scheduledResume(
+                    mediaTime: resumeCommand.mediaTime,
+                    atDeviceEpochMs: resumeCommand.startAt
+                )
+            }
+        }
+
         // Send status updates when video state changes
         nativeVideoManager.onStateChange = { playbackState in
             wsManager.sendStatus(
@@ -266,9 +305,15 @@ struct VisionProPlayerApp: App {
 
         // Handle player ready callback for proper lifecycle
         nativeVideoManager.onPlayerReady = {
+            guard vidManager.autoPlayOnReady else {
+                // Sync session: playback starts later via a scheduled syncStart
+                print("[App] Player ready (sync session) - waiting for syncStart")
+                return
+            }
+
             print("[App] Native video player ready, starting playback")
             vidManager.startPlayback()
-            
+
             // Update status
             wsManager.sendStatus(
                 state: PlaybackState.playing.rawValue,
@@ -312,7 +357,14 @@ struct VisionProPlayerApp: App {
             // Delete commands are handled separately via onDeleteVideoCommand callback
             print("[App] Delete command received via regular handler - ignoring (handled separately)")
 
-        case .stop:
+        case .syncPrepare, .syncStart, .syncResume:
+            // Handled via dedicated callbacks (onSyncPrepareCommand etc.)
+            print("[App] \(command.action) received via regular handler - ignoring (handled separately)")
+
+        case .syncPause:
+            videoManager.syncPause()
+
+        case .stop, .syncStop:
             videoManager.stop()
 
             // Close immersive space and restore main window
@@ -320,12 +372,81 @@ struct VisionProPlayerApp: App {
                 await dismissImmersiveSpace()
                 appState.isImmersiveActive = false
                 print("[App] Immersive space closed")
-                
+
                 // Reopen the main window
                 openWindow(id: "main")
                 print("[App] Main window reopened")
             }
         }
+    }
+
+    /// Handles a syncPrepare command: opens the immersive space, prepares and
+    /// prerolls the named local video without starting playback, then reports
+    /// readiness back to the controller.
+    @MainActor
+    private func handleSyncPrepare(
+        _ command: SyncPrepareCommand,
+        appState: AppState,
+        videoManager: NativeVideoPlayerManager,
+        localManager: LocalVideoManager,
+        wsManager: WebSocketManager
+    ) async {
+        let format = command.videoFormat.flatMap { VideoFormat(rawValue: $0) } ?? .hemisphere180SBS
+
+        print("[App] ========== SYNC PREPARE ==========")
+        print("[App] Filename: \(command.filename), Format: \(format.displayName)")
+
+        // Resolve the local file
+        localManager.scanVideos()
+        guard let video = localManager.localVideos.first(where: { $0.filename == command.filename }) else {
+            print("[App] ERROR: local video not found: \(command.filename)")
+            wsManager.sendSyncReady(filename: command.filename, success: false, message: "Video not found on device")
+            return
+        }
+
+        appState.currentVideoURL = video.url
+        appState.currentVideoFormat = format
+
+        // Suppress auto-start: playback begins only on syncStart
+        videoManager.autoPlayOnReady = false
+
+        // Open immersive space (same lifecycle as a normal play)
+        if !appState.isImmersiveActive {
+            let result = await openImmersiveSpace(id: "ImmersiveVideoSpace")
+            switch result {
+            case .opened:
+                appState.isImmersiveActive = true
+                dismissWindow(id: "main")
+            default:
+                print("[App] ERROR: Failed to open immersive space for sync prepare")
+                videoManager.autoPlayOnReady = true
+                wsManager.sendSyncReady(filename: command.filename, success: false, message: "Failed to open immersive space")
+                return
+            }
+        }
+
+        _ = await waitForImmersiveSpaceReady()
+
+        // Prepare without autoplay
+        let prepared = await videoManager.prepareVideo(url: video.url, format: format)
+        guard prepared else {
+            print("[App] ERROR: Failed to prepare video for sync")
+            videoManager.autoPlayOnReady = true
+            wsManager.sendSyncReady(filename: command.filename, success: false, message: "Failed to prepare video")
+            return
+        }
+
+        // Preroll so the scheduled start is frame-accurate
+        let prerolled = await videoManager.prerollForSync()
+        guard prerolled else {
+            print("[App] ERROR: Preroll failed")
+            videoManager.autoPlayOnReady = true
+            wsManager.sendSyncReady(filename: command.filename, success: false, message: "Preroll failed")
+            return
+        }
+
+        print("[App] Sync prepare complete — reporting ready")
+        wsManager.sendSyncReady(filename: command.filename, success: true)
     }
     
     /// Handles play and change commands using native AVPlayer for 16K support.

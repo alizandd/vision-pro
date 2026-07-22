@@ -36,45 +36,65 @@ struct SyncControlPanel: View {
 
             if commonVideos.isEmpty {
                 // Empty state: no video exists on every device
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(spacing: 8) {
+                    Image(systemName: "film.stack")
+                        .font(.title2)
+                        .foregroundColor(.secondary)
                     Text("No videos available on all devices")
                         .font(.caption)
+                        .fontWeight(.medium)
                         .foregroundColor(.secondary)
-                    Text("Transfer the same video to every Vision Pro first (share button above).")
+                    Text("Transfer the same video to every Vision Pro first using the share button above.")
                         .font(.caption2)
                         .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
                 }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
             } else {
-                // Video + format pickers
-                HStack(spacing: 8) {
-                    Menu {
-                        ForEach(commonVideos, id: \.self) { filename in
-                            Button(filename) { selectedFilename = filename }
-                        }
-                    } label: {
-                        HStack {
-                            Image(systemName: "film")
-                            Text(selectedFilename.isEmpty ? "Select video" : selectedFilename)
-                                .lineLimit(1)
-                                .truncationMode(.middle)
-                            Image(systemName: "chevron.up.chevron.down")
-                                .font(.caption2)
-                        }
-                        .font(.caption)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                        .background(Color(.systemGray5))
-                        .cornerRadius(8)
-                    }
-                    .disabled(isSessionActive)
+                // Readable, selectable video list
+                Text("Videos on all devices".uppercased())
+                    .font(.caption2)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.secondary)
 
+                ScrollView {
+                    VStack(spacing: 6) {
+                        ForEach(commonVideos, id: \.self) { filename in
+                            SyncVideoRow(
+                                filename: filename,
+                                size: videoSize(for: filename),
+                                isSelected: selectedFilename == filename,
+                                isDisabled: isSessionActive
+                            ) {
+                                selectedFilename = filename
+                            }
+                        }
+                    }
+                }
+                .frame(height: min(CGFloat(commonVideos.count), 3.5) * 64)
+
+                // Format picker, visually separated from the list
+                HStack(spacing: 8) {
+                    Text("Format")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
                     Menu {
                         ForEach(VideoFormat.allCases, id: \.self) { format in
-                            Button(format.displayName) { selectedFormat = format }
+                            Button {
+                                selectedFormat = format
+                            } label: {
+                                if format == selectedFormat {
+                                    Label(format.displayName, systemImage: "checkmark")
+                                } else {
+                                    Text(format.displayName)
+                                }
+                            }
                         }
                     } label: {
-                        HStack {
+                        HStack(spacing: 4) {
                             Text(selectedFormat.displayName)
+                                .fontWeight(.medium)
                             Image(systemName: "chevron.up.chevron.down")
                                 .font(.caption2)
                         }
@@ -184,6 +204,16 @@ struct SyncControlPanel: View {
         }
     }
 
+    /// File size of a common video, read from the first device that has it
+    private func videoSize(for filename: String) -> Int64? {
+        for device in deviceManager.devices {
+            if let video = device.localVideos.first(where: { $0.filename == filename }) {
+                return video.size
+            }
+        }
+        return nil
+    }
+
     private var stateBadge: some View {
         Group {
             switch syncManager.state {
@@ -210,6 +240,85 @@ struct SyncControlPanel: View {
             .background(color.opacity(0.2))
             .foregroundColor(color)
             .cornerRadius(6)
+    }
+}
+
+/// One selectable row in the sync panel's video list.
+/// Shows a cleaned-up, human-readable name plus the file size.
+struct SyncVideoRow: View {
+    let filename: String
+    let size: Int64?
+    let isSelected: Bool
+    let isDisabled: Bool
+    let action: () -> Void
+
+    /// "1140_SCOPE_360sbs_test_meta.mp4" → "1140 SCOPE 360sbs test meta"
+    private var displayName: String {
+        (filename as NSString).deletingPathExtension
+            .replacingOccurrences(of: "_", with: " ")
+            .replacingOccurrences(of: "-", with: " ")
+    }
+
+    private var fileExtension: String {
+        (filename as NSString).pathExtension.uppercased()
+    }
+
+    private var sizeText: String? {
+        size.map { ByteCountFormatter.string(fromByteCount: $0, countStyle: .file) }
+    }
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 10) {
+                Image(systemName: "film")
+                    .font(.subheadline)
+                    .foregroundColor(isSelected ? .purple : .secondary)
+                    .frame(width: 24)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(displayName)
+                        .font(.subheadline)
+                        .fontWeight(isSelected ? .semibold : .regular)
+                        .foregroundColor(.primary)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+
+                    HStack(spacing: 6) {
+                        if !fileExtension.isEmpty {
+                            Text(fileExtension)
+                                .font(.caption2)
+                                .fontWeight(.medium)
+                                .padding(.horizontal, 4)
+                                .padding(.vertical, 1)
+                                .background(Color(.systemGray4))
+                                .cornerRadius(3)
+                        }
+                        if let sizeText {
+                            Text(sizeText)
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+
+                Spacer()
+
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                    .font(.body)
+                    .foregroundColor(isSelected ? .purple : Color(.systemGray3))
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .background(isSelected ? Color.purple.opacity(0.1) : Color(.systemGray5).opacity(0.6))
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(isSelected ? Color.purple.opacity(0.5) : Color.clear, lineWidth: 1)
+            )
+            .cornerRadius(10)
+        }
+        .buttonStyle(.plain)
+        .disabled(isDisabled)
+        .opacity(isDisabled ? 0.5 : 1)
     }
 }
 

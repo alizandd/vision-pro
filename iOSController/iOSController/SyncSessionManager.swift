@@ -83,9 +83,17 @@ class SyncSessionManager: ObservableObject {
 
     func handleDeviceDisconnected(deviceId: String) {
         guard state != .idle else { return }
+        guard sessionDevices.contains(deviceId) else { return }
         sessionDevices.removeAll { $0 == deviceId }
         readyDevices.remove(deviceId)
         deviceStatus[deviceId] = .failed("Disconnected")
+        log?("⚠️ \(deviceId) left the sync session — \(activeSessionDevices.count) device(s) remain", .warning)
+
+        // Last active device gone → nothing left to control.
+        if (state == .playing || state == .paused) && activeSessionDevices.isEmpty {
+            log?("🏁 No active devices left — sync session finished", .info)
+            endSession()
+        }
     }
 
     /// Called for every status update a device sends. When every session
@@ -97,10 +105,9 @@ class SyncSessionManager: ObservableObject {
 
         if deviceState == .stopped || deviceState == .idle {
             deviceStatus[deviceId] = .ended
-            let stillActive = sessionDevices.contains { id in
-                id != deviceId && deviceStatus[id] != .ended
-            }
-            if !stillActive {
+            // Session is over only when no ACTIVE device remains — a failed
+            // or ended device must not keep the session alive.
+            if activeSessionDevices.isEmpty {
                 log?("🏁 Playback ended on all devices — sync session finished", .info)
                 endSession()
             }
@@ -170,25 +177,37 @@ class SyncSessionManager: ObservableObject {
         scheduleStart(mediaTime: nil)
     }
 
-    /// Pause playback on all session devices immediately.
+    /// Devices still actively participating (excludes failed/ended ones so
+    /// group commands never disturb a device that already left the session).
+    private var activeSessionDevices: [String] {
+        sessionDevices.filter { id in
+            switch deviceStatus[id] {
+            case .ready, .playing, .paused: return true
+            default: return false
+            }
+        }
+    }
+
+    /// Pause playback on the active session devices immediately.
     func pauseAll() {
         guard state == .playing else { return }
         let command = CommandMessage(action: .syncPause)
-        for deviceId in sessionDevices {
+        let targets = activeSessionDevices
+        for deviceId in targets {
             sendToDevice?(deviceId, command)
             deviceStatus[deviceId] = .paused
         }
         state = .paused
-        log?("⏸️ Sync pause sent to \(sessionDevices.count) device(s)", .info)
+        log?("⏸️ Sync pause sent to \(targets.count) device(s)", .info)
     }
 
-    /// Resume all session devices at the same media time and wall-clock moment.
+    /// Resume the active session devices at the same media time and wall-clock moment.
     func resumeAll() {
         guard state == .paused else { return }
 
-        // Use the furthest-ahead device as the common resume point; devices
-        // paused within a few ms of each other so the values are near-equal.
-        let mediaTime = sessionDevices
+        // Use the furthest-ahead ACTIVE device as the common resume point;
+        // devices paused within a few ms of each other so values are near-equal.
+        let mediaTime = activeSessionDevices
             .compactMap { deviceCurrentTime?($0) }
             .max() ?? 0
 
@@ -209,12 +228,12 @@ class SyncSessionManager: ObservableObject {
 
     // MARK: - Internals
 
-    /// Sends `syncStart` (mediaTime == nil) or `syncResume` to every session
-    /// device with a per-device offset-adjusted start time.
+    /// Sends `syncStart` (mediaTime == nil) or `syncResume` to every ACTIVE
+    /// session device with a per-device offset-adjusted start time.
     private func scheduleStart(mediaTime: Double?) {
         let startAtController = nowMs + startLeadTimeMs
 
-        for deviceId in sessionDevices {
+        for deviceId in activeSessionDevices {
             // deviceClock = controllerClock + offset
             let startAtDevice = startAtController + (clockOffsets[deviceId] ?? 0)
             if let mediaTime {
@@ -226,7 +245,7 @@ class SyncSessionManager: ObservableObject {
         }
 
         state = .playing
-        log?("🚀 Sync \(mediaTime == nil ? "start" : "resume") scheduled (+\(startLeadTimeMs)ms) for \(sessionDevices.count) device(s)", .success)
+        log?("🚀 Sync \(mediaTime == nil ? "start" : "resume") scheduled (+\(startLeadTimeMs)ms) for \(activeSessionDevices.count) device(s)", .success)
     }
 
     /// Measures clock offsets with several samples per device, keeping the

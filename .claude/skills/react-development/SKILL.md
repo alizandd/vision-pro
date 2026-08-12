@@ -8,8 +8,8 @@ description: The team's standards for building React apps — components/hooks, 
 Goal: React apps that are composable, correctly separate server vs client state, and stay fast. Owned by the **frontend** specialist; the cross-framework rules live in `frontend-standards`. Pairs with `api-conventions` (data shape) and `threejs-3d` / `canvas-graphics` for visuals.
 
 ## Stack (current baseline — verify with `tech-research`)
-- **React 19** with **TypeScript**. Function components + hooks only (no classes). Use the React Compiler where available to cut manual memoization; still write render-pure components.
-- **Next.js 15 (App Router)** for SSR/SSG/RSC apps; Vite + React for SPAs. Know **Server vs Client Components** — keep `"use client"` at the leaves, fetch on the server where possible, use Server Actions for mutations in Next.
+- **React 19** (19.2.x) with **TypeScript**. Function components + hooks only (no classes). The **React Compiler is stable (v1)** — enable it and drop manual `useMemo`/`useCallback` noise; still write render-pure components. 19.2 adds `<Activity>`, `useEffectEvent`, and `cacheSignal`.
+- **Next.js 16 (App Router)** for SSR/SSG/RSC apps — 16.2.x is the LTS line; **Next.js 15 goes end-of-support on 2026-10-21**, so plan the 15 → 16 upgrade now. Security note: the May 2026 release patched 13 advisories (middleware bypass, SSRF, cache poisoning, XSS) — never run below 15.5.18 / 16.2.6. Vite + React for SPAs. Know **Server vs Client Components** — keep `"use client"` at the leaves, fetch on the server where possible, use Server Actions for mutations in Next.
 - Build/lint/test: Vite or Next, ESLint (react-hooks rules), Vitest + React Testing Library, Playwright for e2e.
 
 ## Components & hooks

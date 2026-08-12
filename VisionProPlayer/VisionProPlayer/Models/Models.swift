@@ -166,6 +166,9 @@ struct StatusMessage: Codable {
     let currentVideo: String?
     let immersiveMode: Bool
     let currentTime: Double?
+    /// Running time of the asset currently loaded. The controller uses it to
+    /// confirm a paired preview video really matches before showing it.
+    let duration: Double?
 }
 
 /// Welcome message received from server
@@ -204,6 +207,47 @@ struct LocalVideo: Codable, Identifiable {
         case id, filename, name, url, size, modified
         case fileExtension = "extension"
     }
+}
+
+/// Where the wearer is looking, plus exactly where playback is.
+///
+/// Sent only while an immersive space is open **and** a controller has asked
+/// for it, so a headset nobody is previewing adds no traffic at all.
+///
+/// Head pose only — visionOS does not expose eye/gaze tracking to apps, and
+/// this deliberately does not attempt to infer it.
+struct ViewerStateMessage: Codable {
+    let type: String = "viewerState"
+    let deviceId: String
+    /// Horizontal look direction in radians, 0 = the video's forward centre.
+    let yaw: Double
+    /// Vertical look direction in radians, positive is up.
+    let pitch: Double
+    /// Playback position at the moment the pose was sampled.
+    let mediaTime: Double
+    /// Headset epoch milliseconds, so the controller can age the sample.
+    let timestamp: Int64
+
+    enum CodingKeys: String, CodingKey {
+        case type, deviceId, yaw, pitch, mediaTime, timestamp
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(type, forKey: .type)
+        try container.encode(deviceId, forKey: .deviceId)
+        try container.encode(yaw, forKey: .yaw)
+        try container.encode(pitch, forKey: .pitch)
+        try container.encode(mediaTime, forKey: .mediaTime)
+        try container.encode(timestamp, forKey: .timestamp)
+    }
+}
+
+/// Controller asking this headset to start or stop reporting viewer state.
+struct PreviewSubscribeCommand: Codable {
+    let type: String
+    let action: String
+    let enabled: Bool
 }
 
 /// Message to send local video list to server
@@ -288,23 +332,94 @@ struct AppConfiguration {
     static let serverURLKey = "websocket_server_url"
     static let deviceNameKey = "device_name"
     static let autoConnectKey = "auto_connect"
+    static let preferredControllerIdKey = "preferred_controller_id"
 
+    /// Registers the shipped defaults. Call once at launch, before anything
+    /// reads configuration.
+    ///
+    /// `autoConnect` defaults to **true**: the headset is meant to find its
+    /// controller by itself, and `UserDefaults.bool` would otherwise silently
+    /// return `false` on a fresh install and leave it sitting idle.
+    static func registerDefaults() {
+        UserDefaults.standard.register(defaults: [
+            autoConnectKey: true
+        ])
+    }
+
+    /// WebSocket URL of the controller.
+    ///
+    /// Empty on a fresh install — deliberately **not** `ws://localhost:8080`,
+    /// which made the headset connect to itself and masked discovery failures.
+    /// It is filled in by Bonjour discovery, or by hand for non-Bonjour setups.
     static var serverURL: String {
         get {
-            UserDefaults.standard.string(forKey: serverURLKey) ?? "ws://localhost:8080"
+            UserDefaults.standard.string(forKey: serverURLKey) ?? ""
         }
         set {
             UserDefaults.standard.set(newValue, forKey: serverURLKey)
         }
     }
 
-    static var deviceName: String {
+    /// Stable id of the controller this headset should follow, as published in
+    /// the Bonjour TXT record. Stored instead of an IP address so a controller
+    /// that moves to a new DHCP lease is still recognised.
+    static var preferredControllerId: String? {
         get {
-            UserDefaults.standard.string(forKey: deviceNameKey) ?? "Vision Pro"
+            UserDefaults.standard.string(forKey: preferredControllerIdKey)
         }
         set {
-            UserDefaults.standard.set(newValue, forKey: deviceNameKey)
+            UserDefaults.standard.set(newValue, forKey: preferredControllerIdKey)
         }
+    }
+
+    /// Longest name the device card can show without truncating awkwardly.
+    static let deviceNameMaxLength = 40
+
+    /// Name this headset introduces itself with.
+    ///
+    /// Persisted in UserDefaults, so it survives quitting and relaunching the
+    /// app and is only cleared when the app itself is deleted. Nothing but the
+    /// user changes it — reconnects, controller restarts and network changes all
+    /// leave it alone.
+    ///
+    /// Setting an empty or whitespace-only name falls back to the default
+    /// rather than leaving a blank entry on the operator's device list.
+    static var deviceName: String {
+        get {
+            let stored = UserDefaults.standard.string(forKey: deviceNameKey)?
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            guard let stored, !stored.isEmpty else { return defaultDeviceName }
+            return stored
+        }
+        set {
+            let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty else {
+                UserDefaults.standard.removeObject(forKey: deviceNameKey)
+                return
+            }
+            UserDefaults.standard.set(String(trimmed.prefix(deviceNameMaxLength)), forKey: deviceNameKey)
+        }
+    }
+
+    /// Default name for a headset whose owner hasn't chosen one.
+    ///
+    /// Suffixed with part of this device's persistent id, because a room full of
+    /// headsets all called "Vision Pro" is exactly the problem the name exists
+    /// to solve. Any name the user sets replaces this entirely.
+    static var defaultDeviceName: String {
+        let suffix = deviceIdentifier.replacingOccurrences(of: "-", with: "").suffix(4).uppercased()
+        return suffix.isEmpty ? "Vision Pro" : "Vision Pro \(suffix)"
+    }
+
+    /// Stable per-install identifier, shared with `WebSocketManager`.
+    static var deviceIdentifier: String {
+        let key = "device_id"
+        if let stored = UserDefaults.standard.string(forKey: key) {
+            return stored
+        }
+        let created = UUID().uuidString
+        UserDefaults.standard.set(created, forKey: key)
+        return created
     }
 
     static var autoConnect: Bool {

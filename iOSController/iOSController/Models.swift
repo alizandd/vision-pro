@@ -27,6 +27,35 @@ struct DeviceState {
     var currentVideo: String? = nil
     var immersiveMode: Bool = false
     var currentTime: Double = 0
+    /// Running time the headset reported for the loaded asset. Nil until it
+    /// reports one (or if the headset runs an older build).
+    var duration: Double? = nil
+    /// Latest look direction reported by the wearer's headset, if subscribed.
+    var viewer: ViewerLook? = nil
+    /// Projection format the headset was told to use for the current video.
+    /// Decides whether a look direction means anything worth showing.
+    var currentFormat: VideoFormat? = nil
+
+    /// File name of the video currently loaded, derived from its URL.
+    var currentFilename: String? {
+        guard let currentVideo, let url = URL(string: currentVideo) else { return nil }
+        return url.lastPathComponent.removingPercentEncoding ?? url.lastPathComponent
+    }
+}
+
+/// A sampled look direction from a headset.
+struct ViewerLook {
+    let yaw: Double
+    let pitch: Double
+    let mediaTime: Double
+    /// When this controller received it — used to detect a stalled feed.
+    let receivedAt: Date
+
+    /// Updates stop arriving when the wearer leaves the immersive space or the
+    /// link degrades; past this the indicator should say so rather than lie.
+    var isStale: Bool {
+        Date().timeIntervalSince(receivedAt) > 2.0
+    }
 }
 
 /// Playback states
@@ -87,6 +116,21 @@ enum VideoFormat: String, Codable, CaseIterable {
         case .sphere360SBS: return "360° VR 3D (SBS)"
         }
     }
+
+    /// How much of the world the wearer can turn through and still be looking
+    /// at content, in radians. Nil for flat formats, where the picture sits on a
+    /// fixed screen and "where they are looking" carries no meaning worth
+    /// drawing — showing a direction there would be inventing information.
+    var lookRange: Double? {
+        switch self {
+        case .mono2D, .sideBySide3D, .overUnder3D:
+            return nil
+        case .hemisphere180, .hemisphere180SBS:
+            return .pi          // 180°
+        case .sphere360, .sphere360OU, .sphere360SBS:
+            return 2 * .pi      // 360°
+        }
+    }
 }
 
 // MARK: - WebSocket Messages
@@ -121,6 +165,33 @@ struct StatusMessage: Codable {
     let currentVideo: String?
     let immersiveMode: Bool
     let currentTime: Double?
+    /// Running time of the asset on the headset. Optional — a headset running an
+    /// older build simply omits it, and the preview stays unverified.
+    let duration: Double?
+}
+
+/// Where a headset wearer is looking, plus exactly where playback is.
+struct ViewerStateMessage: Codable {
+    let type: String
+    let deviceId: String
+    /// Horizontal look direction in radians, 0 = the centre of the content.
+    let yaw: Double
+    /// Vertical look direction in radians, positive is up.
+    let pitch: Double
+    let mediaTime: Double
+    /// Headset epoch milliseconds.
+    let timestamp: Int64
+}
+
+/// Asks a headset to start or stop reporting viewer state.
+struct PreviewSubscribeCommand: Codable {
+    let type: String = "command"
+    let action: String = "previewSubscribe"
+    let enabled: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case type, action, enabled
+    }
 }
 
 /// Local videos message from device

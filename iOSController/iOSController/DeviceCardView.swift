@@ -144,7 +144,9 @@ struct VideoSelectionView: View {
     @Binding var selectedFormat: VideoFormat
     @State private var showDeleteConfirmation = false
     @State private var videoToDelete: LocalVideo?
-    
+    /// Video whose preview pairing is being edited.
+    @State private var pairingTarget: LocalVideo?
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             // Section Header
@@ -194,6 +196,28 @@ struct VideoSelectionView: View {
                                     showDeleteConfirmation = true
                                 }
                             )
+                            .overlay(alignment: .topLeading) {
+                                if deviceManager.pairingStore.isPaired(headsetFilename: video.filename) {
+                                    Image(systemName: "rectangle.on.rectangle.angled.fill")
+                                        .font(.caption2)
+                                        .padding(4)
+                                        .background(.thinMaterial, in: Circle())
+                                        .padding(6)
+                                        .accessibilityLabel("Has a preview video")
+                                }
+                            }
+                            .contextMenu {
+                                Button {
+                                    pairingTarget = video
+                                } label: {
+                                    Label(
+                                        deviceManager.pairingStore.isPaired(headsetFilename: video.filename)
+                                            ? "Change preview video"
+                                            : "Set preview video",
+                                        systemImage: "rectangle.on.rectangle.angled"
+                                    )
+                                }
+                            }
                         }
                     }
                     .padding(.top, 4)  // Space for selection border
@@ -216,6 +240,9 @@ struct VideoSelectionView: View {
                 .tint(.primary)
             }
             
+            // What the wearer is watching (only when a preview is paired)
+            CompanionPreviewView(device: device)
+
             // Currently Playing
             if let currentVideo = device.state.currentVideo {
                 VStack(alignment: .leading, spacing: 4) {
@@ -232,6 +259,17 @@ struct VideoSelectionView: View {
             }
         }
         .padding()
+        .sheet(item: $pairingTarget) { video in
+            CompanionPairingView(
+                headsetVideo: video,
+                // Only trust a reported duration when it belongs to this video.
+                headsetDuration: device.state.currentFilename == video.filename
+                    ? device.state.duration
+                    : nil,
+                library: deviceManager.companionLibrary,
+                pairings: deviceManager.pairingStore
+            )
+        }
         .alert("Delete Video", isPresented: $showDeleteConfirmation) {
             Button("Cancel", role: .cancel) {
                 videoToDelete = nil

@@ -5,12 +5,16 @@ import SwiftUI
 struct SettingsView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var webSocketManager: WebSocketManager
-    @StateObject private var bonjourDiscovery = BonjourDiscovery()
+    /// Shared with the app — discovery runs for the whole session, Settings is
+    /// only a window onto it.
+    @EnvironmentObject var bonjourDiscovery: BonjourDiscovery
     @ObservedObject private var debug = StereoDebugSettings.shared
 
     @State private var serverURL: String = AppConfiguration.serverURL
     @State private var deviceName: String = AppConfiguration.deviceName
     @State private var autoConnect: Bool = AppConfiguration.autoConnect
+    /// Controller picked in this screen, remembered by id rather than address.
+    @State private var selectedControllerId: String? = AppConfiguration.preferredControllerId
     @State private var showingSaveConfirmation: Bool = false
 
     @Environment(\.dismiss) private var dismiss
@@ -43,6 +47,7 @@ struct SettingsView: View {
                     ForEach(bonjourDiscovery.discoveredControllers) { controller in
                         Button {
                             serverURL = controller.webSocketURL
+                            selectedControllerId = controller.controllerId
                         } label: {
                             HStack {
                                 Image(systemName: "iphone")
@@ -97,6 +102,12 @@ struct SettingsView: View {
                 // Server Configuration
                 Section {
                     TextField("WebSocket Server URL", text: $serverURL)
+                        .onChange(of: serverURL) { _, newValue in
+                            // Typing an address by hand overrides discovery.
+                            if bonjourDiscovery.discoveredControllers.first(where: { $0.webSocketURL == newValue }) == nil {
+                                selectedControllerId = nil
+                            }
+                        }
                         .textContentType(.URL)
                         .autocapitalization(.none)
                         .disableAutocorrection(true)
@@ -113,6 +124,17 @@ struct SettingsView: View {
                 // Device Settings
                 Section {
                     TextField("Device Name", text: $deviceName)
+                        .onChange(of: deviceName) { _, newValue in
+                            // Cap at the source so the operator's device card
+                            // can't be broken by a very long name.
+                            if newValue.count > AppConfiguration.deviceNameMaxLength {
+                                deviceName = String(newValue.prefix(AppConfiguration.deviceNameMaxLength))
+                            }
+                        }
+
+                    Text("Shown on the controller so you can tell this headset apart from the others. Kept until you change it or delete the app.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
 
                     Toggle("Auto-connect on launch", isOn: $autoConnect)
                 } header: {
@@ -266,14 +288,27 @@ struct SettingsView: View {
     /// Saves the current settings
     private func saveSettings() {
         let urlChanged = serverURL != AppConfiguration.serverURL
+        let nameChanged = deviceName.trimmingCharacters(in: .whitespacesAndNewlines)
+            != AppConfiguration.deviceName
 
         AppConfiguration.serverURL = serverURL
         AppConfiguration.deviceName = deviceName
         AppConfiguration.autoConnect = autoConnect
 
+        // Reflect whatever was actually stored — an empty entry falls back to
+        // the default, and the field should show that rather than stay blank.
+        deviceName = AppConfiguration.deviceName
+        // A hand-typed URL is deliberately not tied to a discovered controller,
+        // so clear the preference rather than leaving a stale one behind.
+        AppConfiguration.preferredControllerId = selectedControllerId
+
         if urlChanged && webSocketManager.isConnected {
             // Reconnect with new URL
             webSocketManager.updateServerURL(serverURL)
+        } else if nameChanged {
+            // Push the new name straight away, so the operator's device list
+            // stops showing the old one without waiting for a reconnect.
+            webSocketManager.announceIdentity()
         }
 
         showingSaveConfirmation = true

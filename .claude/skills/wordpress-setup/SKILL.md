@@ -5,6 +5,10 @@ description: The team's standard approach to setting up, developing, and maintai
 
 # WordPress Setup and Development
 
+## Stack (current baseline — verify with `tech-research`)
+- **WordPress 7.0+** (April 2026). Core's hard minimum is now PHP 7.4 (7.2/7.3 dropped), but the team's floor is **PHP 8.3+** — run 8.4 where the host allows.
+- Keep core, plugins, and themes on auto-updating minor releases; an unmaintained plugin is the most common WordPress compromise path.
+
 ## Project structure
 - Composer-based (manage core/plugin/theme via composer + `wpackagist`).
 - `wp-config.php` reads from env (use `vlucas/phpdotenv` or environment constants).

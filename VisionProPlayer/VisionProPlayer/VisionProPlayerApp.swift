@@ -23,6 +23,13 @@ struct VisionProPlayerApp: App {
     @StateObject private var nativeVideoManager = NativeVideoPlayerManager()
     @StateObject private var localVideoManager = LocalVideoManager()
     @StateObject private var downloadManager = DownloadManager()
+    /// Owned by the app, not by Settings: discovery runs for the whole session
+    /// so a headset joining the network connects without anyone opening a screen.
+    @StateObject private var bonjourDiscovery = BonjourDiscovery()
+
+    init() {
+        AppConfiguration.registerDefaults()
+    }
 
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.openImmersiveSpace) private var openImmersiveSpace
@@ -38,16 +45,19 @@ struct VisionProPlayerApp: App {
                 .environmentObject(webSocketManager)
                 .environmentObject(nativeVideoManager)
                 .environmentObject(localVideoManager)
+                .environmentObject(bonjourDiscovery)
                 .onAppear {
                     RemoteLogger.shared.logEnvironment()
                     setupCommandHandling()
                     setupLocalVideoSync()
-                    
-                    // Only auto-connect if enabled in settings
-                    if AppConfiguration.autoConnect {
+                    setupAutoDiscovery()
+
+                    // Connect straight away only if a controller is already
+                    // known; otherwise discovery below supplies one.
+                    if AppConfiguration.autoConnect && !AppConfiguration.serverURL.isEmpty {
                         webSocketManager.connect()
                     }
-                    
+
                     // Scan local videos on startup
                     localVideoManager.scanVideos()
                 }
@@ -63,6 +73,7 @@ struct VisionProPlayerApp: App {
             SettingsView()
                 .environmentObject(appState)
                 .environmentObject(webSocketManager)
+                .environmentObject(bonjourDiscovery)
         }
         .windowStyle(.plain)
         .defaultSize(width: 550, height: 500)
@@ -72,8 +83,44 @@ struct VisionProPlayerApp: App {
             NativeImmersiveView()
                 .environmentObject(appState)
                 .environmentObject(nativeVideoManager)
+                .environmentObject(webSocketManager)
         }
         .immersionStyle(selection: .constant(.full), in: .full)
+    }
+
+    /// Starts continuous Bonjour discovery and wires automatic connection.
+    ///
+    /// This is what makes the headset zero-config: it browses for
+    /// `_visionproctl._tcp` for the whole session, and when the controller it
+    /// should follow appears, it retargets the WebSocket at the freshly resolved
+    /// address and connects. No IP is ever typed, and none is persisted — only
+    /// the controller's stable id is remembered.
+    private func setupAutoDiscovery() {
+        bonjourDiscovery.onAutoConnect = { controller in
+            Task { @MainActor in
+                guard AppConfiguration.autoConnect else {
+                    print("[App] Controller '\(controller.name)' found but auto-connect is off")
+                    return
+                }
+
+                // Remember *who*, not *where*.
+                AppConfiguration.preferredControllerId = controller.controllerId
+
+                print("[App] 📡 Controller '\(controller.name)' resolved to \(controller.webSocketURL)")
+                webSocketManager.retarget(to: controller.webSocketURL)
+            }
+        }
+
+        // When the socket keeps failing, the cached address is the prime
+        // suspect — re-resolve it rather than dialling it forever.
+        webSocketManager.onRediscoveryNeeded = {
+            Task { @MainActor in
+                bonjourDiscovery.allowReconnect()
+                bonjourDiscovery.refresh()
+            }
+        }
+
+        bonjourDiscovery.startSearching()
     }
 
     /// Sets up syncing of local videos with server when connected
@@ -254,7 +301,8 @@ struct VisionProPlayerApp: App {
                     state: PlaybackState.playing.rawValue,
                     currentVideo: state.currentVideoURL,
                     immersiveMode: state.isImmersiveActive,
-                    currentTime: vidManager.currentTime
+                    currentTime: vidManager.currentTime,
+                    duration: vidManager.duration
                 )
             }
         }
@@ -276,7 +324,8 @@ struct VisionProPlayerApp: App {
                 state: playbackState.rawValue,
                 currentVideo: state.currentVideoURL,
                 immersiveMode: state.isImmersiveActive,
-                currentTime: vidManager.currentTime
+                currentTime: vidManager.currentTime,
+                duration: vidManager.duration
             )
         }
         
@@ -314,12 +363,15 @@ struct VisionProPlayerApp: App {
             print("[App] Native video player ready, starting playback")
             vidManager.startPlayback()
 
-            // Update status
+            // Update status. The asset is loaded by now, so this is the first
+            // point the real running time is known — and the controller needs it
+            // to decide whether a paired preview may be shown.
             wsManager.sendStatus(
                 state: PlaybackState.playing.rawValue,
                 currentVideo: state.currentVideoURL,
                 immersiveMode: state.isImmersiveActive,
-                currentTime: 0
+                currentTime: 0,
+                duration: vidManager.duration
             )
         }
     }
@@ -578,6 +630,10 @@ struct VisionProPlayerApp: App {
             // Only auto-reconnect if auto-connect is enabled
             if AppConfiguration.autoConnect && !webSocketManager.isConnected {
                 print("[App] WebSocket disconnected, auto-reconnecting...")
+                // The controller may have moved while the headset was off, so
+                // re-resolve rather than trusting the last address.
+                bonjourDiscovery.allowReconnect()
+                bonjourDiscovery.startSearching()
                 webSocketManager.connect()
             }
             

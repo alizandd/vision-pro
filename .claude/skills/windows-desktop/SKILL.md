@@ -8,7 +8,7 @@ description: The team's standards for building native Windows desktop apps with 
 Goal: native Windows 11 apps that are modern (Fluent), maintainable, packaged, and secure. Owned by the **windows-engineer**; lean on the shared `engineering-principles`, `security`, `testing-strategy`, and `git-workflow` skills.
 
 ## Stack (current baseline — verify with `tech-research`)
-- **C# on current .NET** (LTS preferred) with **WinUI 3 + the Windows App SDK** for new native Windows apps — Fluent Design, modern windowing, decoupled from the OS via NuGet.
+- **C# on .NET 10 (LTS, supported to 2028-11-10)** with **WinUI 3 + the Windows App SDK** for new native Windows apps. **.NET 8 and .NET 9 both go end-of-support on 2026-11-10** — anything still on them needs a migration ticket now. .NET 11 (RTM expected 2026-11-10) is an STS release: adopt only with a stated reason, otherwise stay on the LTS. — Fluent Design, modern windowing, decoupled from the OS via NuGet.
 - **WPF** remains valid for existing line-of-business apps; choose **.NET MAUI** only when genuinely cross-platform (it uses WinUI under the hood on Windows). State the choice and why (ADR) — don't default to MAUI for a Windows-only app.
 - Official **WinUI .NET CLI templates** allow create/build/run from the command line for CI.
 

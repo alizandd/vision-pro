@@ -20,6 +20,7 @@ import ARKit
 struct NativeImmersiveView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var videoManager: NativeVideoPlayerManager
+    @EnvironmentObject var webSocketManager: WebSocketManager
 
     /// Debug/test settings (live UV override + diagnostics panel).
     @ObservedObject private var debug = StereoDebugSettings.shared
@@ -48,6 +49,12 @@ struct NativeImmersiveView: View {
     @State private var arkitSession = ARKitSession()
     @State private var worldTracking = WorldTrackingProvider()
     @State private var isARKitReady = false
+
+    /// Heading the video was recentred to, in the same frame `getYawRotation`
+    /// reports. Look direction is published *relative to this*: the sphere is
+    /// oriented to wherever the wearer was facing when playback began, so the
+    /// centre of the content is not world-forward.
+    @State private var contentYaw: Float = .pi
     
     // MARK: - Constants
     
@@ -89,6 +96,9 @@ struct NativeImmersiveView: View {
                 
                 // Start ARKit session for head tracking
                 await startARKitSession()
+
+                // Report the wearer's look direction while a controller wants it.
+                Task { await publishViewerState() }
                 
                 // If video is already ready, create the screen with recentering
                 if videoManager.isPlayerReady {
@@ -386,6 +396,46 @@ struct NativeImmersiveView: View {
         }
     }
     
+    /// Publishes where the wearer is looking, for the controller's preview.
+    ///
+    /// Reuses the ARKit session already running for recentering rather than
+    /// starting a second one, and reports only while a controller is actually
+    /// subscribed — otherwise this loop costs nothing but a sleep.
+    private func publishViewerState() async {
+        let interval: UInt64 = 100_000_000 // 10 Hz
+
+        while !Task.isCancelled {
+            try? await Task.sleep(nanoseconds: interval)
+
+            guard isARKitReady, webSocketManager.isPreviewSubscribed else { continue }
+            guard let transform = worldTracking.queryDeviceAnchor(atTimestamp: CACurrentMediaTime())?
+                .originFromAnchorTransform else { continue }
+
+            // Head yaw, using the SAME convention the recentring path uses, so
+            // the frame's own offset cancels in the subtraction below rather
+            // than leaking through as a constant error.
+            let headYaw = getYawRotation(from: transform)
+
+            // Positive = looking right of the content's centre. Both angles are
+            // in the same frame, so `contentYaw − headYaw` is the signed offset
+            // from whatever direction the video was recentred to; at the moment
+            // playback starts the two are equal and this is exactly 0.
+            var relativeYaw = contentYaw - headYaw
+            while relativeYaw > .pi { relativeYaw -= 2 * .pi }
+            while relativeYaw < -.pi { relativeYaw += 2 * .pi }
+
+            // Pitch is unaffected by recentring, which is yaw-only.
+            let forwardY = -transform.columns.2.y
+            let pitch = asin(max(-1, min(1, forwardY)))
+
+            webSocketManager.sendViewerState(
+                yaw: Double(relativeYaw),
+                pitch: Double(pitch),
+                mediaTime: videoManager.currentTime
+            )
+        }
+    }
+
     /// Gets the current head (device) transform from ARKit
     private func getCurrentHeadTransform() async -> simd_float4x4? {
         guard let deviceAnchor = worldTracking.queryDeviceAnchor(atTimestamp: CACurrentMediaTime()) else {
@@ -440,6 +490,10 @@ struct NativeImmersiveView: View {
             
             // Orient video to face user's gaze direction
             videoEntity.orientation = simd_quatf(angle: -yaw + meshAlignmentOffset, axis: .init(0, 1, 0))
+
+            // Remember where the content now faces, so the controller's viewer
+            // direction can be reported relative to it rather than to the world.
+            contentYaw = yaw
             
             print("[NativeImmersiveView] Recentered: pos=(\(headPosition.x), \(headPosition.y), \(headPosition.z)), yaw=\(yaw * 180 / .pi)°")
         } else {

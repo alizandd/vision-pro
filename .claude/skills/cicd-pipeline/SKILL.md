@@ -116,7 +116,10 @@ Run on PRs too, so a red build blocks merge before anything reaches a server.
 - Re-run the deploy step pinning the **previous** `sha-<short>` (re-pin `.env` + `docker compose up -d <service>`) — no rebuild, since the old image is still in the registry. Reassess `migrate:rollback` if the bad deploy migrated.
 
 ## Hardening backlog (surface to the lead)
-- **Pin third-party actions to commit SHAs**, not floating tags — supply-chain hygiene on a self-hosted runner that touches prod.
+- **Pin third-party actions to commit SHAs**, not floating tags — supply-chain hygiene on a self-hosted runner that touches prod. Keep the version tag in a trailing comment so the pin stays readable, and let Dependabot move the SHA.
+- **Least-privilege `GITHUB_TOKEN`**: set `permissions:` read-only at workflow level and grant write only on the job that needs it. Never expose privileged credentials to a job that runs untrusted PR code.
+- **Deterministic installs**: `npm ci` (not `npm install`) and `composer install` from the committed lockfile, with **install scripts off** by default — 2026's npm/Packagist compromises executed on install (see the registry supply-chain section in `security`). Allow-list the rare package that needs a script.
+- **Prefer OIDC over stored cloud credentials** for any cloud provider step — short-lived, run-scoped tokens instead of long-lived secrets.
 - `.env` grows on every deploy (append-only; last value wins so it functions). Prefer an idempotent set-key or a dedicated tag-override file.
 - `StrictHostKeyChecking=no` trades TOFU safety for convenience — pre-seed `known_hosts` for the deploy targets instead.
 - Don't disable signing on protected branches; verify signatures at deploy time if/when feasible.

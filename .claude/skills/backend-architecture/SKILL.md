@@ -19,6 +19,11 @@ Goal: server applications that are correct, secure, observable, and extensible �
 - **Python** (FastAPI default for new APIs; Django where the batteries help) — type hints + Pydantic models, dependency-injection via FastAPI, async where I/O-bound.
 - Default to the project's existing stack; justify any deviation in an ADR.
 
+## Runtime currency (verify with `tech-research` — versions move)
+- **Node.js 24 is Active LTS**; 22 is in maintenance. Node 26 becomes LTS in October 2026, and from then Node moves to **one major per April, LTS every October, with every release an LTS** — pin the major in `.nvmrc`/Docker and upgrade deliberately.
+- **Python 3.14** is the target for new services — **free-threaded (no-GIL) builds are officially supported** (PEP 779), with a ~5–10% single-thread cost; use them only where real parallelism pays for it. 3.15 lands October 2026.
+- **PHP**: see `laravel-php` (8.4 default, 8.5 stable, 8.2 out of security support end of 2026).
+
 ## Auth & authorization (see `security`)
 - Authentication (who) separate from authorization (what they may do). Centralize authz in policies/guards/middleware — never scatter `if role ==` through handlers.
 - Stateless APIs: short-lived access tokens (JWT/opaque) + refresh; rotate and revoke. Hash passwords with bcrypt/argon2. Enforce least privilege on every endpoint.

@@ -22,7 +22,7 @@ These rules apply to **every** frontend project regardless of framework. Framewo
 
 ## Styling
 - **One approach per project** (Tailwind, CSS Modules, or CSS-in-JS) — never a mix. Tailwind is the team default for new work.
-- **Tailwind v4**: configure via the CSS-first config (`@theme`) and design tokens; centralize color/spacing/typography tokens (align with `design-system`). Extract repeated utility clusters into components or `@apply`d classes — don't copy-paste long class strings. Keep it responsive (mobile-first) and theme-aware (dark mode).
+- **Tailwind v4** (4.3.x current): configure via the CSS-first config (`@theme`) and design tokens; centralize color/spacing/typography tokens (align with `design-system`). Extract repeated utility clusters into components or `@apply`d classes — don't copy-paste long class strings. Keep it responsive (mobile-first) and theme-aware (dark mode).
 - No magic numbers/hex scattered in markup; tokens are the source of truth.
 
 ## TypeScript & quality

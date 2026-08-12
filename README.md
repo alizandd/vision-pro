@@ -366,12 +366,33 @@ For a permanent installation, option 2. For anything travelling between venues,
 
 ### Known limitation: no peer-to-peer fallback yet
 
-Apple's Network framework can carry this traffic over **AWDL peer-to-peer WiFi**,
-which needs no access point at all and would sidestep every restriction above.
-The Vision Pro's browser already opts in (`includePeerToPeer = true`), but the
-iOS Controller's listeners do not, so the path is not available end to end
-today. Enabling it on both sides is the cleanest long-term answer to venue
-networks and is tracked as future work.
+Apple's Network framework can carry traffic over **AWDL peer-to-peer WiFi** —
+the same radio path AirDrop uses. It needs no access point at all, so it would
+sidestep every restriction above, including client isolation.
+
+Today only the Vision Pro's Bonjour browser opts in (`includePeerToPeer = true`
+in `BonjourDiscovery`); the controller's two listeners do not. **But turning the
+flag on everywhere would not be enough**, and it's worth being precise about why:
+
+- **The control channel would work.** WebSocket traffic goes through
+  `NWListener`/`NWConnection`, which resolve a Bonjour endpoint to whatever
+  interface actually carries it — including `awdl0`.
+- **The file transfer would not.** It is a separate HTTP server addressed by a
+  literal IPv4 string, and `NetworkUtils.getLocalIPAddress()` only ever returns
+  an `en0`/`en1`/`bridge` address. On a pure peer-to-peer link there is no such
+  address, so it returns `nil` and the transfer aborts before it starts. Moving
+  transfers onto peer-to-peer means carrying them over the Network framework
+  connection instead of an IP-addressed HTTP endpoint — a real change, not a flag.
+
+Two further unknowns to settle before committing to this route: whether AWDL
+peer-to-peer listening is supported on **visionOS** at all, and how many headsets
+one controller can hold. There is no framework-level peer limit to configure, so
+that ceiling has to be found by measurement.
+
+**This is a fallback, not the main answer.** For a venue, a travel router (option
+1 above) is simpler, has no peer ceiling, transfers at full speed, and relies on
+no Apple-specific behaviour. Peer-to-peer earns its place only where you cannot
+put your own access point in the room.
 
 ---
 

@@ -395,6 +395,15 @@ curl http://localhost:8080/api/videos
 
 ## Changelog
 
+### 2026-08-12 (Update 2)
+- **[Controller Live Preview]** The operator can see what the headset wearer is watching, and where they are looking
+  - **ADR**: `docs/adr/2026-08-12-controller-live-preview.md`
+  - **Approach**: a small, flat, mono "companion" video of identical running time is imported onto the controller and paired to an immersive video. Copying multi-gigabyte immersive files to a phone, and unwarping equirectangular + side-by-side on the tablet, are both avoided entirely — which also means the stereo formats never produce a doubled preview.
+  - **iOS Controller**: `CompanionLibrary` (Photos + Files import, chunked off-main-actor copy with real progress, duration + thumbnail, persisted index), `CompanionPairingStore` (keyed by headset filename, duration-verified), `CompanionPreviewPlayer` (muted AVPlayer, drift deadband 0.3 s → rate nudge → seek), `ViewerDirectionIndicator`.
+  - **Vision Pro**: new `viewerState` message (yaw, pitch, mediaTime, timestamp) at 10 Hz, sourced from the ARKit session already running in `NativeImmersiveView`; gated behind a `previewSubscribe` command so a headset nobody is previewing sends nothing. Head pose only — visionOS does not expose gaze to apps.
+  - **Protocol**: `status` gained an optional `duration`; a companion whose running time disagrees with the asset the headset actually loaded is withheld with both times shown, rather than sitting convincingly on the wrong moment.
+  - **Strictly additive**: with no companion paired, the wire traffic and the device card are exactly what they were — verified by log inspection (zero `viewerState`/`previewSubscribe` at rest).
+
 ### 2026-08-12
 - **[Zero-Config Auto-Discovery]** A Vision Pro joining the local network now finds its controller and connects with no manually entered IP
   - **iOS Controller**: removed `BonjourService.swift`, which opened a *second* `NWListener` on the same port 8080 advertising `_visionproctl._tcp` a second time and cancelled every connection it received. `WebSocketServer` — the listener that actually accepts connections — is now the single advertiser.

@@ -212,6 +212,40 @@ For detailed network setup instructions, see [NETWORK_SETUP.md](NETWORK_SETUP.md
 
 ---
 
+## Seeing what the headset wearer is watching
+
+The operator holding the controller can watch along with the person in the
+headset — where they are in the video, and where they are looking.
+
+**How it works.** For each immersive video you add a **preview video**: a small,
+flat, ordinary 2D cut of the same content with the **same running time**. When
+the headset plays the immersive original, the controller plays the preview in
+step with it, and shows a direction indicator for where the wearer's head is
+pointed.
+
+The preview is a separate flat file rather than the immersive one, because the
+immersive files are gigabytes and are usually stereoscopic — showing one raw on
+a tablet would be impractical and would appear doubled.
+
+**Using it**
+1. Tap the **preview videos** button in the toolbar.
+2. Add a flat cut from **Photos** or from **Files** (iCloud Drive, an external
+   drive, any provider the Files app reaches).
+3. Long-press a video on a device card → **Set preview video**. A file with the
+   same base name is suggested; confirm it, or pick another.
+4. Play. The preview appears on the card with a LIVE badge and a position
+   readout.
+
+**The one hard rule.** The preview must be **exactly the same length** as the
+immersive original. A recut version would put the operator confidently on the
+wrong moment, so a mismatch is refused and the reason is shown.
+
+If a video has no preview paired, everything behaves exactly as it always has —
+the card shows the timeline and controls, and nothing extra is sent over the
+network.
+
+---
+
 ## Network Requirements (read this before any venue deployment)
 
 This is the section to read when the apps work perfectly in the office and then

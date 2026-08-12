@@ -240,6 +240,9 @@ struct VideoSelectionView: View {
                 .tint(.primary)
             }
             
+            // What the wearer is watching (only when a preview is paired)
+            CompanionPreviewView(device: device)
+
             // Currently Playing
             if let currentVideo = device.state.currentVideo {
                 VStack(alignment: .leading, spacing: 4) {

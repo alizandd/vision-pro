@@ -67,12 +67,18 @@ class BonjourDiscovery: ObservableObject {
 
     /// Start searching. Safe to call repeatedly.
     func startSearching() {
-        guard !isSearching else { return }
+        // `isSearching` only flips once the browser reports `.ready`, so guard on
+        // the browser itself — otherwise a second call during startup builds a
+        // duplicate browser and every service gets resolved twice.
+        guard browser == nil else { return }
 
         let parameters = NWParameters()
         parameters.includePeerToPeer = true
 
-        browser = NWBrowser(for: .bonjour(type: serviceType, domain: nil), using: parameters)
+        // `.bonjour` does NOT deliver TXT records — the descriptor has to be
+        // `.bonjourWithTXTRecord`, or `result.metadata` is always `.none` and
+        // the controller's id/ports/version never arrive.
+        browser = NWBrowser(for: .bonjourWithTXTRecord(type: serviceType, domain: nil), using: parameters)
 
         browser?.stateUpdateHandler = { [weak self] state in
             Task { @MainActor in

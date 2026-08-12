@@ -183,6 +183,18 @@ class DeviceManager: ObservableObject {
         webSocketServer.$connectionCount
             .receive(on: DispatchQueue.main)
             .assign(to: &$connectionCount)
+
+        // Keep the advertised TXT record honest about the file-transfer port:
+        // the HTTP listener may land on a different port than the 8081 default.
+        fileTransferServer.$port
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] httpPort in
+                guard let self = self else { return }
+                self.webSocketServer.fileTransferPort = httpPort
+                self.webSocketServer.refreshAdvertisement()
+            }
+            .store(in: &cancellables)
     }
     
     private func setupCallbacks() {

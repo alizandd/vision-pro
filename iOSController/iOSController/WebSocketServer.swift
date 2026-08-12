@@ -35,6 +35,51 @@ class WebSocketServer: ObservableObject {
     private var serviceName: String {
         UIDevice.current.name
     }
+
+    /// Port of the companion HTTP file-transfer server, published in the TXT
+    /// record so the Vision Pro never has to assume 8081.
+    var fileTransferPort: UInt16 = 8081
+
+    /// Version of the controller protocol carried in the TXT record, so a
+    /// headset can refuse a controller it is too old to talk to.
+    static let protocolVersion = 1
+
+    /// Stable identity for this controller, persisted so a headset can keep
+    /// following the same controller across restarts and IP changes.
+    static var controllerId: String {
+        let key = "controller_id"
+        if let stored = UserDefaults.standard.string(forKey: key) {
+            return stored
+        }
+        let created = UUID().uuidString
+        UserDefaults.standard.set(created, forKey: key)
+        return created
+    }
+
+    /// TXT record advertised alongside the service.
+    ///
+    /// Keys: `name` (human-readable controller name), `ws` (WebSocket port),
+    /// `http` (file-transfer port), `v` (protocol version), `id` (stable id).
+    private func makeTXTRecord() -> NWTXTRecord {
+        var txt = NWTXTRecord()
+        txt["name"] = serviceName
+        txt["ws"] = String(port)
+        txt["http"] = String(fileTransferPort)
+        txt["v"] = String(Self.protocolVersion)
+        txt["id"] = Self.controllerId
+        return txt
+    }
+
+    /// Re-publishes the TXT record — call after the service name or a port changes.
+    func refreshAdvertisement() {
+        guard listener != nil else { return }
+        listener?.service = NWListener.Service(
+            name: serviceName,
+            type: bonjourServiceType,
+            txtRecord: makeTXTRecord()
+        )
+        print("[WebSocketServer] 📡 Bonjour TXT refreshed: name=\(serviceName) ws=\(port) http=\(fileTransferPort) v=\(Self.protocolVersion)")
+    }
     
     /// Callback when a new device registers
     var onDeviceRegistered: ((ClientConnection, RegistrationMessage) -> Void)?
@@ -79,8 +124,14 @@ class WebSocketServer: ObservableObject {
             // Create listener
             listener = try NWListener(using: parameters, on: NWEndpoint.Port(rawValue: port)!)
             
-            // Enable Bonjour advertising so Vision Pro can auto-discover this controller
-            listener?.service = NWListener.Service(name: serviceName, type: bonjourServiceType)
+            // Enable Bonjour advertising so Vision Pro can auto-discover this
+            // controller. The TXT record carries the identity and both ports, so
+            // the headset needs no hardcoded assumptions.
+            listener?.service = NWListener.Service(
+                name: serviceName,
+                type: bonjourServiceType,
+                txtRecord: makeTXTRecord()
+            )
             
             listener?.serviceRegistrationUpdateHandler = { [weak self] serviceChange in
                 Task { @MainActor in

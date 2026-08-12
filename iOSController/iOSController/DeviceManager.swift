@@ -81,6 +81,9 @@ class DeviceManager: ObservableObject {
     func play(deviceId: String, videoUrl: String, format: VideoFormat) {
         let command = CommandMessage(action: .play, videoUrl: videoUrl, videoFormat: format)
         webSocketServer.sendCommand(to: deviceId, command: command)
+        // Remember the projection we asked for — the preview needs it to know
+        // whether a look direction is meaningful for this content.
+        devices.first(where: { $0.deviceId == deviceId })?.state.currentFormat = format
         log("Play command sent to \(deviceName(for: deviceId))", type: .success)
     }
     
@@ -288,9 +291,16 @@ class DeviceManager: ObservableObject {
                 guard let self = self,
                       let device = self.devices.first(where: { $0.deviceId == deviceId }) else { return }
 
+                // Smooth the pose: raw head tracking jitters a degree or two at
+                // rest, which reads as a twitching indicator.
+                let alpha = 0.35
+                let previous = device.state.viewer
+                let smoothedYaw = previous.map { $0.yaw + alpha * shortestAngleDelta(from: $0.yaw, to: message.yaw) } ?? message.yaw
+                let smoothedPitch = previous.map { $0.pitch + alpha * (message.pitch - $0.pitch) } ?? message.pitch
+
                 device.state.viewer = ViewerLook(
-                    yaw: message.yaw,
-                    pitch: message.pitch,
+                    yaw: smoothedYaw,
+                    pitch: smoothedPitch,
                     mediaTime: message.mediaTime,
                     receivedAt: Date()
                 )
@@ -375,6 +385,15 @@ class DeviceManager: ObservableObject {
     func clearLogs() {
         logs.removeAll()
     }
+}
+
+/// Shortest signed rotation between two angles, so smoothing across the ±π
+/// wrap-around does not spin the indicator the long way round.
+func shortestAngleDelta(from: Double, to: Double) -> Double {
+    var delta = to - from
+    while delta > .pi { delta -= 2 * .pi }
+    while delta < -.pi { delta += 2 * .pi }
+    return delta
 }
 
 // MARK: - Log Entry

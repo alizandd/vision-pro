@@ -17,6 +17,7 @@
 		AA0000A4 /* CompanionPairingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1000A4 /* CompanionPairingView.swift */; };
 		AA0000A5 /* CompanionPreviewPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1000A5 /* CompanionPreviewPlayer.swift */; };
 		AA0000A6 /* CompanionPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1000A6 /* CompanionPreviewView.swift */; };
+		AA0000A7 /* ViewerDirectionIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1000A7 /* ViewerDirectionIndicator.swift */; };
 		AA000005 /* WebSocketServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100005 /* WebSocketServer.swift */; };
 		AA000007 /* DeviceManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100007 /* DeviceManager.swift */; };
 		AA000008 /* DeviceCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100008 /* DeviceCardView.swift */; };
@@ -39,6 +40,7 @@
 		AA1000A4 /* CompanionPairingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionPairingView.swift; sourceTree = "<group>"; };
 		AA1000A5 /* CompanionPreviewPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionPreviewPlayer.swift; sourceTree = "<group>"; };
 		AA1000A6 /* CompanionPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionPreviewView.swift; sourceTree = "<group>"; };
+		AA1000A7 /* ViewerDirectionIndicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewerDirectionIndicator.swift; sourceTree = "<group>"; };
 		AA100005 /* WebSocketServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSocketServer.swift; sourceTree = "<group>"; };
 		AA100007 /* DeviceManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceManager.swift; sourceTree = "<group>"; };
 		AA100008 /* DeviceCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceCardView.swift; sourceTree = "<group>"; };
@@ -87,6 +89,7 @@
 				AA1000A4 /* CompanionPairingView.swift */,
 				AA1000A5 /* CompanionPreviewPlayer.swift */,
 				AA1000A6 /* CompanionPreviewView.swift */,
+				AA1000A7 /* ViewerDirectionIndicator.swift */,
 				AA100005 /* WebSocketServer.swift */,
 				AA100010 /* FileTransferServer.swift */,
 				AA100007 /* DeviceManager.swift */,
@@ -184,6 +187,7 @@
 				AA0000A4 /* CompanionPairingView.swift in Sources */,
 				AA0000A5 /* CompanionPreviewPlayer.swift in Sources */,
 				AA0000A6 /* CompanionPreviewView.swift in Sources */,
+				AA0000A7 /* ViewerDirectionIndicator.swift in Sources */,
 				AA000005 /* WebSocketServer.swift in Sources */,
 				AA000009 /* FileTransferServer.swift in Sources */,
 				AA000007 /* DeviceManager.swift in Sources */,

@@ -83,6 +83,16 @@ struct CompanionPreviewView: View {
                 }
             }
 
+            // Where the head is pointed — only meaningful for immersive
+            // projections, so flat formats show nothing rather than a fake.
+            if let range = device.state.currentFormat?.lookRange {
+                ViewerDirectionIndicator(
+                    yaw: device.state.viewer?.yaw ?? 0,
+                    range: range,
+                    isStale: device.state.viewer?.isStale ?? true
+                )
+            }
+
             Text(companion.displayName)
                 .font(.caption)
                 .foregroundStyle(.secondary)

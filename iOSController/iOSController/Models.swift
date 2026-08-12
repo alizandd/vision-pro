@@ -32,6 +32,9 @@ struct DeviceState {
     var duration: Double? = nil
     /// Latest look direction reported by the wearer's headset, if subscribed.
     var viewer: ViewerLook? = nil
+    /// Projection format the headset was told to use for the current video.
+    /// Decides whether a look direction means anything worth showing.
+    var currentFormat: VideoFormat? = nil
 
     /// File name of the video currently loaded, derived from its URL.
     var currentFilename: String? {
@@ -111,6 +114,21 @@ enum VideoFormat: String, Codable, CaseIterable {
         case .sphere360: return "360° VR"
         case .sphere360OU: return "360° VR 3D (OU)"
         case .sphere360SBS: return "360° VR 3D (SBS)"
+        }
+    }
+
+    /// How much of the world the wearer can turn through and still be looking
+    /// at content, in radians. Nil for flat formats, where the picture sits on a
+    /// fixed screen and "where they are looking" carries no meaning worth
+    /// drawing — showing a direction there would be inventing information.
+    var lookRange: Double? {
+        switch self {
+        case .mono2D, .sideBySide3D, .overUnder3D:
+            return nil
+        case .hemisphere180, .hemisphere180SBS:
+            return .pi          // 180°
+        case .sphere360, .sphere360OU, .sphere360SBS:
+            return 2 * .pi      // 360°
         }
     }
 }

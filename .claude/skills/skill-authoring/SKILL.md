@@ -45,6 +45,12 @@ The `description` is the only thing the model sees to decide whether to load the
 - **Make instructions verifiable.** If the agent can't tell whether it followed the rule, the rule is too vague.
 - **Bundle what repeats.** Deterministic helper code goes in `scripts/`, not as prose instructions. Don't reinvent MCP as scripts.
 
+## Interop standard (MCP) — currency note
+Skills carry the *procedural knowledge*; **MCP** carries the *actions* a skill invokes. Keep that split — a skill that hand-rolls a transport is doing MCP's job badly.
+- Current spec revision: **2026-07-28** — a **stateless protocol core** (scales on ordinary HTTP infrastructure), multi-round-trip requests, header-based routing, cacheable list results, **hardened authorization** aligned with OAuth/OIDC, and a formal **extensions** framework (MCP Apps for server-rendered UI, Tasks for long-running work).
+- MCP is now stewarded by the **Linux Foundation's Agentic AI Foundation** (donated December 2025) — treat it as a vendor-neutral standard when choosing an integration path.
+- Skills are themselves a supply-chain surface: a third-party skill is executable instructions. Adopt one the same way as a dependency — read it end to end, record provenance and license in `skills-lock.json`, and re-check on update (see `capability-expansion`).
+
 ## The tier ladder — graduate, don't assume (Day 4)
 Authority is earned. Match the eval bar to what the skill is allowed to do:
 - **Read-only** (fetch/describe, no state change) → trigger accuracy ~90%; lightest bar.

@@ -27,6 +27,15 @@ struct DeviceState {
     var currentVideo: String? = nil
     var immersiveMode: Bool = false
     var currentTime: Double = 0
+    /// Running time the headset reported for the loaded asset. Nil until it
+    /// reports one (or if the headset runs an older build).
+    var duration: Double? = nil
+
+    /// File name of the video currently loaded, derived from its URL.
+    var currentFilename: String? {
+        guard let currentVideo, let url = URL(string: currentVideo) else { return nil }
+        return url.lastPathComponent.removingPercentEncoding ?? url.lastPathComponent
+    }
 }
 
 /// Playback states
@@ -121,6 +130,9 @@ struct StatusMessage: Codable {
     let currentVideo: String?
     let immersiveMode: Bool
     let currentTime: Double?
+    /// Running time of the asset on the headset. Optional — a headset running an
+    /// older build simply omits it, and the preview stays unverified.
+    let duration: Double?
 }
 
 /// Local videos message from device

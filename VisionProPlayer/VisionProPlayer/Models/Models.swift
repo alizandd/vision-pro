@@ -166,6 +166,9 @@ struct StatusMessage: Codable {
     let currentVideo: String?
     let immersiveMode: Bool
     let currentTime: Double?
+    /// Running time of the asset currently loaded. The controller uses it to
+    /// confirm a paired preview video really matches before showing it.
+    let duration: Double?
 }
 
 /// Welcome message received from server

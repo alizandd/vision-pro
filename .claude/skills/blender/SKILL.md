@@ -8,7 +8,7 @@ description: The team's standards for using Blender as the authoring tool — mo
 Goal: a clean, repeatable Blender workflow that produces engine/web-ready assets and automates the boring parts with Python. Owned by the **3d-artist**; the asset *standards* live in `3d-modeling` — this skill covers the *tool*. Lean on `engineering-principles` and `git-workflow`.
 
 ## Stack (current baseline — verify with `tech-research`)
-- **Blender 4.x+** (use the current stable/LTS). The built-in **glTF 2.0 I/O** exporter is the primary delivery path (numpy-accelerated, supports Geometry Nodes instances and PBR material extensions); FBX where an engine expects it.
+- **Blender 5.2 LTS** (July 2026, supported to July 2028) — the current production target; 4.5 LTS only for pipelines not yet migrated off it. Pin the Blender version per project: `bpy` API breakage across majors is the usual cause of a broken add-on. The built-in **glTF 2.0 I/O** exporter is the primary delivery path (numpy-accelerated, supports Geometry Nodes instances and PBR material extensions); FBX where an engine expects it.
 - Materials authored with the **Principled BSDF** map directly to the glTF metal/rough PBR model.
 
 ## Authoring workflow

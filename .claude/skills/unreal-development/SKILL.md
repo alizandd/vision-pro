@@ -8,7 +8,7 @@ description: The team's standards for building games and real-time experiences i
 Goal: Unreal projects that hit frame budget on target hardware, keep a clean C++/Blueprint boundary, and build to every platform. Owned by the **game-developer**; lean on the shared `engineering-principles`, `security`, `testing-strategy`, and `git-workflow` skills. Pairs with `3d-modeling` and `blender` for assets.
 
 ## Stack (current baseline — verify with `tech-research`)
-- **Unreal Engine 5** (current 5.x release) with **C++ for systems/gameplay foundations** and **Blueprints for composition, tuning, and designer-facing logic**.
+- **Unreal Engine 5.8** (June 2026 — the latest and **last planned UE5 major**; Epic is now on UE6, with UE5 continuing to get bug/regression fixes) with **C++ for systems/gameplay foundations** and **Blueprints for composition, tuning, and designer-facing logic**.
 - Core renderer features: **Nanite** (virtualized geometry), **Lumen** (dynamic GI — SWRT with HWRT fallback), **Virtual Shadow Maps**. Know their limits (see below).
 
 ## C++ / Blueprint boundary

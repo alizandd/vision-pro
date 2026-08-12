@@ -8,6 +8,7 @@ description: The team's standards for building native iOS (and Apple-platform) a
 Goal: native Apple apps that are correct, concurrency-safe, accessible, and pass App Store review the first time. Owned by the **mobile-engineer**; lean on the shared `engineering-principles`, `security`, `testing-strategy`, and `git-workflow` skills.
 
 ## Stack (current baseline — verify with `tech-research`)
+- **Xcode 26 + the iOS/iPadOS/tvOS/visionOS/watchOS 26 SDKs are mandatory** for App Store Connect uploads (enforced since 2026-04-28). Building against the 26 SDK does not raise your deployment target — keep supporting older OS versions there.
 - **Swift 6** with **strict concurrency** as the compiler default — data-race safety is enforced, not optional. **SwiftUI** as the baseline UI layer for new apps; UIKit only where SwiftUI has a real gap or for existing screens.
 - **Xcode 16+** (Xcode 26 line) and the current iOS SDK. New App Store submissions must build with a current Xcode/SDK — track Apple's submission deadline.
 - **Swift Package Manager** for dependencies (avoid CocoaPods for new work). **Swift Testing** (`@Test`/`#expect`) for new test suites; XCTest only for legacy/UI tests.

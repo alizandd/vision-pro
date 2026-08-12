@@ -36,6 +36,14 @@ Security is not a one-time gate. It runs through every stage so problems don't a
 - Keep TLS/config hardened; review access and secrets periodically.
 - Re-evaluate when the threat landscape or dependencies change — the goal is that security does not degrade over time.
 
+## Registry supply chain (npm / Packagist) — the live threat of 2026
+Package registries are now a primary attack path, not a theoretical one: 2026 saw the self-propagating **Shai-Hulud** worm (~796 npm packages, stealing developer credentials and republishing itself), a compromised **axios** maintainer account, the **jscrambler** packages backdoored with native binaries that run on install, and on Packagist the **laravel-lang** namespace republished with a credential stealer under historical tags.
+- **Install with lockfiles and no scripts.** Use `npm ci` (never a bare `npm install`) in CI and images; run with install scripts disabled (`--ignore-scripts`, the default in **npm v12**) and allow-list the few packages that genuinely need one. Same discipline for Composer.
+- **A tag is not immutable.** Both npm and Packagist have had *existing* versions republished maliciously — pin exact versions, commit the lockfile, and verify integrity hashes; don't let a rebuild silently pull a different artifact.
+- **Credentials are the target.** These payloads harvest `.npmrc`/`.composer/auth.json` tokens, cloud keys, and CI secrets from the build host. Keep publish tokens out of developer machines and general-purpose CI jobs; scope and rotate them.
+- **After any advisory naming a package you use**: treat every credential on the affected build hosts as compromised, rotate them, and check whether a malicious version ever reached a lockfile or an image layer — not just whether it's installed today.
+- Run SCA/audit in CI and act on it (`cicd-pipeline`), and prefer fewer, better-maintained dependencies — every added package is standing attack surface.
+
 ## AI / agent features (when the work uses an LLM or ships an agent)
 Non-deterministic systems add a distinct attack surface — apply these on top of the above whenever a feature calls an LLM, runs model-generated code, or exposes an agent. See `docs/references/agent-engineering/` (Day 4).
 - **Treat the prompt as source code.** System instructions and tool definitions are security-relevant; untrusted input (user text, retrieved docs, web pages, repos) can carry **prompt injection**. Don't let model output decide a privileged action unchecked.

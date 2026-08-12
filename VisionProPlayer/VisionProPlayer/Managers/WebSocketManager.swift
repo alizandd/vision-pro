@@ -417,14 +417,15 @@ class WebSocketManager: ObservableObject {
     }
 
     /// Sends a status update to the server
-    func sendStatus(state: String, currentVideo: String?, immersiveMode: Bool, currentTime: Double? = nil) {
+    func sendStatus(state: String, currentVideo: String?, immersiveMode: Bool, currentTime: Double? = nil, duration: Double? = nil) {
         let status = StatusMessage(
             deviceId: deviceId,
             deviceName: deviceName,
             state: state,
             currentVideo: currentVideo,
             immersiveMode: immersiveMode,
-            currentTime: currentTime
+            currentTime: currentTime,
+            duration: duration
         )
         send(status)
     }
@@ -540,7 +541,7 @@ extension RegistrationMessage {
 
 extension StatusMessage {
     enum CodingKeys: String, CodingKey {
-        case type, deviceId, deviceName, state, currentVideo, immersiveMode, currentTime
+        case type, deviceId, deviceName, state, currentVideo, immersiveMode, currentTime, duration
     }
 
     func encode(to encoder: Encoder) throws {
@@ -552,6 +553,7 @@ extension StatusMessage {
         try container.encode(currentVideo, forKey: .currentVideo)
         try container.encode(immersiveMode, forKey: .immersiveMode)
         try container.encode(currentTime, forKey: .currentTime)
+        try container.encode(duration, forKey: .duration)
     }
 }
 

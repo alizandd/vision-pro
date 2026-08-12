@@ -1,6 +1,6 @@
 ---
 name: taskmanager-api
-description: The team's external task-manager (TeamFlow) integration — read a project's board/backlog, create tasks, and move tasks through their states via the HTTPS+JSON API. Always use this skill whenever connecting to the task-manager, running Mode 5 (execute from external backlog) or Mode 7 (review sweep — verify the Review column and move tasks to Done or back to To Do), registering approved tasks into the external system, reading the task list for a project, or updating a task's status/comments externally.
+description: The team's external task-manager (TeamFlow) integration — read a project's board/backlog, create tasks, correct or delete a mis-registered task, and move tasks through their states via the HTTPS+JSON API. Always use this skill whenever connecting to the task-manager, running Mode 5 (execute from external backlog) or Mode 7 (review sweep — verify the Review column and move tasks to Done or back to To Do), registering approved tasks into the external system, fixing or removing a task that was entered wrong, reading the task list for a project, or updating a task's status/comments externally.
 ---
 
 # TeamFlow Task-Manager Integration
@@ -9,6 +9,7 @@ The concrete API behind the team's external task-manager. It powers these flows 
 - **Mode 5 (read/pull)** — read an existing backlog, work the tasks, drive their states.
 - **Mode 7 (review sweep)** — read the **Review** column, verify each task against its acceptance criteria, then **move pass → Done** and **fail → To Do with a comment** on what's wrong. Read/move/comment only — no task authoring.
 - **Registration gate (write/push)** — after the **user explicitly approves**, create produced tasks in the system.
+- **Correction (write)** — a ticket registered with the wrong content is edited in place, or (with the user's go-ahead) deleted and re-registered. See "Fix a wrongly registered task".
 
 Full endpoint reference lives in the TeamFlow repo doc: `../teamflow/docs/integration-api-for-claude-team.md` (sibling repo to `claude-team`). This skill is the operating playbook on top of it.
 
@@ -142,6 +143,22 @@ curl -s -X POST "$TEAMFLOW_BASE/tasks" \
 - **Dependencies (which tasks depend on which)**: the task-manager must capture each ticket's dependencies in the breakdown. Register in **dependency order** (upstream first), capture each returned task `id`, then pass the upstream ids as `dependency_ids` on the dependent task so the link is created at creation time. Each dependency must be a task on the **same project**; a task can't depend on itself or a cross-project task (→ `422`). Older TeamFlow boards that don't accept `dependency_ids` silently ignore it — fall back to recording the dependency in the description / a comment and ordering the registration.
 - **Checklist (things to verify)**: turn a ticket's acceptance criteria / sub-steps into a `checklist` — an array of label strings. Each becomes an **unchecked** item, ordered as given. Keep labels concise and verifiable (e.g. acceptance-criteria lines, security checks). Older boards that don't accept `checklist` ignore it — fall back to listing the items in the description.
 - **Branch + full description**: every task carries its `feature/<feature-slug>` branch (the **same** branch for all tasks of one feature — see `git-workflow`). TeamFlow has no dedicated branch field, so put the branch as the **first line of `description`** (e.g. `<p><strong>Branch:</strong> feature/login</p>`) and keep tasks of the same feature on the identical slug. The `description` itself must be the **complete, copy-paste-ready** spec the task-manager produced (behavior, service/API contract, states, edge cases) — send the full thing, don't truncate it to a one-liner.
+
+## Fix a wrongly registered task (update / delete)
+A ticket registered with the wrong content is **corrected in place** — never left standing next to a duplicate "correct" copy. Partial update; send only the fields that change (omitted fields are untouched, `tag_ids` replaces the whole set):
+```bash
+curl -s -X PATCH "$TEAMFLOW_BASE/tasks/<id>" \
+  -H "Authorization: Bearer $TEAMFLOW_TOKEN" -H "Accept: application/json" -H "Content-Type: application/json" \
+  -d '{ "title": "Corrected title", "priority": "high", "description": "<p>…</p>", "tag_ids": [<id>] }'
+```
+- Editable: `title`, `description`, `priority`, `assignee_id`, `reviewer_id`, `team_id`, `delivery_id`, `due_date`, `estimate_hours`, `started_at`, `completed_at`, `tag_ids`, `cover_file_id`. The ≤8h cap still applies to a corrected `estimate_hours`.
+- **A column change is still a `/move`**, not an update — the move is what records the timed transition the reports read.
+- Only when the ticket is the **wrong task altogether** (not fixable by editing), delete it and register a fresh one:
+```bash
+curl -s -X DELETE "$TEAMFLOW_BASE/tasks/<id>" -H "Authorization: Bearer $TEAMFLOW_TOKEN" -H "Accept: application/json"
+```
+- `204` on success; permanent, and it takes the card's comments/history with it. Lead+ only (Admin/Manager/team lead/project manager) — a member's token gets `403`.
+- **Deleting a task is destructive and outward-facing: ask the user first**, exactly like the registration gate. Editing an incorrect field needs no gate; wiping a ticket does. If the work is real but shouldn't clutter the board, archive it in the UI instead of deleting.
 
 ## Attach the task's files / images (after create)
 When the request that produced a task **came with attachments** — a mockup, screenshot, reference doc, or any file the scenario provided — upload each to the task so it travels with the ticket. Create the task first (to get its `id`), then upload each asset as a **multipart** request (field `file`, one per call):

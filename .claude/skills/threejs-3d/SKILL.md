@@ -8,6 +8,8 @@ description: The team's standards for building interactive 3D and WebGL experien
 Goal: 3D experiences that look great and run smoothly, on real devices and constrained networks.
 
 ## Project setup
+- **Renderer: `WebGPURenderer` is the default choice for new scenes** (production-ready since r171; WebGPU is now baseline across the major browsers). It falls back to a WebGL 2 backend automatically, so the swap from `WebGLRenderer` is close to one line. Keep `WebGLRenderer` only for an existing scene whose materials/shaders haven't been ported — hand-written GLSL doesn't carry over; use TSL/node materials on the WebGPU path.
+- Pin the Three.js revision per project and read the migration guide when bumping — Three.js ships breaking changes on a monthly `r<NNN>` cadence, and `three` + `@react-three/fiber` + `drei` must move together.
 - Prefer **react-three-fiber + drei** when the app is React; use vanilla Three.js for standalone/embedded scenes.
 - Keep the scene graph, controls, and resources modular and disposable (clean up geometries, materials, textures on unmount).
 - Centralize a render loop; avoid multiple uncoordinated `requestAnimationFrame` loops.

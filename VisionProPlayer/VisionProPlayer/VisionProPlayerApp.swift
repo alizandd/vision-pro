@@ -300,7 +300,8 @@ struct VisionProPlayerApp: App {
                     state: PlaybackState.playing.rawValue,
                     currentVideo: state.currentVideoURL,
                     immersiveMode: state.isImmersiveActive,
-                    currentTime: vidManager.currentTime
+                    currentTime: vidManager.currentTime,
+                    duration: vidManager.duration
                 )
             }
         }
@@ -322,7 +323,8 @@ struct VisionProPlayerApp: App {
                 state: playbackState.rawValue,
                 currentVideo: state.currentVideoURL,
                 immersiveMode: state.isImmersiveActive,
-                currentTime: vidManager.currentTime
+                currentTime: vidManager.currentTime,
+                duration: vidManager.duration
             )
         }
         

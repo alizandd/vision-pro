@@ -8,7 +8,8 @@ description: The team's standards for building games and real-time/interactive a
 Goal: Unity projects that run smoothly on the target hardware, stay maintainable as they grow, and build cleanly to every platform. Owned by the **game-developer**; lean on the shared `engineering-principles`, `security`, `testing-strategy`, and `git-workflow` skills. Pairs with `3d-modeling` and `blender` for assets.
 
 ## Stack (current baseline — verify with `tech-research`)
-- **Unity 6 LTS** (6000.x) with **C#**. Use the latest LTS for new projects — not tech-stream releases — for stability and support.
+- **Unity 6.3 LTS** with **C#** — the current LTS, supported to December 2027. **Unity 6.0 LTS support ends October 2026**, so move projects still on it. Use the latest LTS for new projects, not tech-stream releases. (Unity 7 is beta in Dec 2026 / release Q1 2027 — not a target yet.)
+- 6.3 adds **signed packages with trust indicators in the Package Manager**; unsigned packages warn. Treat an unsigned third-party package as a supply-chain decision, not a click-through.
 - **URP (Universal Render Pipeline)** is the default for new projects (mobile/XR/web/cross-platform); **HDRP** only for high-end PC/console with a stated reason. The Built-In pipeline is legacy — avoid for new work.
 - **Input System** package (not legacy `Input`). **Burst + Jobs/ECS (DOTS)** only where profiling justifies the complexity.
 

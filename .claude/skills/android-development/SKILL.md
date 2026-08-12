@@ -11,6 +11,7 @@ Goal: native Android apps that are idiomatic Kotlin, lifecycle-correct, accessib
 - **Kotlin** (2.x) as the only language for new code; **Jetpack Compose** as the baseline UI (Views/XML only for legacy screens). Compose BOM pins consistent versions.
 - **Android Studio** (current stable) with the Kotlin Compose compiler plugin. **Gradle with Kotlin DSL** (`build.gradle.kts`) and version catalogs (`libs.versions.toml`).
 - Target the **latest stable API level** for `targetSdk`/`compileSdk`; set a pragmatic `minSdk` (commonly 24+; 21+ if Compose-only and justified).
+- **Google Play deadline — 2026-08-31**: new apps and all updates must target **Android 16 (API 36)** or higher (Wear OS / Automotive: API 35+); existing apps must be on at least API 35 to stay discoverable to new users. An extension to 2026-11-01 can be requested in Play Console. Treat a below-36 `targetSdk` as a release blocker, and budget for the API 36 behavior changes rather than bumping the number blind.
 
 ## Architecture & structure
 - **MVVM / unidirectional data flow**: `ViewModel` exposes immutable UI state via `StateFlow`; Compose observes and renders; events flow up. No business logic in composables.

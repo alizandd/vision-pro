@@ -14,6 +14,8 @@ class DeviceManager: ObservableObject {
     let fileTransferServer = FileTransferServer()
     /// Flat companion videos used to preview what a headset viewer is watching.
     let companionLibrary = CompanionLibrary()
+    /// Which companion represents which headset video.
+    let pairingStore = CompanionPairingStore()
     let syncManager = SyncSessionManager()
     private var cancellables = Set<AnyCancellable>()
 
@@ -231,6 +233,12 @@ class DeviceManager: ObservableObject {
                 device.state.currentVideo = message.currentVideo
                 device.state.immersiveMode = message.immersiveMode
                 device.state.currentTime = message.currentTime ?? 0
+                // Keep the last reported duration when a message omits it, so a
+                // headset on an older build simply leaves it nil rather than
+                // clearing a value we already learned.
+                if let reported = message.duration, reported.isFinite, reported > 0 {
+                    device.state.duration = reported
+                }
 
                 // Let an active sync session react (e.g. end when all devices finish)
                 self.syncManager.handleDeviceStatus(deviceId: deviceId, state: device.state.playbackState)

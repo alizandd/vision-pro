@@ -8,7 +8,8 @@ description: The team's standards for modern PHP and Laravel — project structu
 Goal: Laravel apps that follow framework conventions, stay thin where it matters, and are secure and well-tested. Owned by the **backend** engineer; the architectural rules live in `backend-architecture`, the HTTP contract in `api-conventions`, schema in `database-migrations`.
 
 ## Stack (current baseline — verify with `tech-research`)
-- **Laravel 12.x** on **PHP 8.2–8.4** (8.4 supported; hold off on 8.5 until the ecosystem catches up). Use typed properties, enums, readonly, constructor promotion, and match expressions — modern PHP, not PHP-5-isms.
+- **Laravel 13.x** (current; Laravel 12 still maintained — upgrade when the runtime allows) on **PHP 8.4** as the production default. Laravel 13 requires **PHP 8.3+**, but some 13.x patches pull Symfony 8 components that hard-require **8.4** — on 8.3, stay on Laravel 12 until the runtime is upgraded. **PHP 8.5 is stable** and fine for new work; **PHP 8.2 leaves security support at the end of 2026** and 8.1 and below are EOL — treat those as upgrade tickets. Use typed properties, enums, readonly, constructor promotion, and match expressions — modern PHP, not PHP-5-isms.
+- Upgrading 12 → 13 is a small upgrade for most apps; the three high-impact areas are `PreventRequestForgery` origin config, cache `serializable_classes`, and the cache-prefix default. PHPUnit 12 / current Pest.
 - **Composer** for dependencies; follow **PSR-12** + Laravel conventions. Pint for formatting, PHPStan/Larastan for static analysis.
 - **Pest** as the default test framework for new work (PHPUnit where the team already standardized on it).
 

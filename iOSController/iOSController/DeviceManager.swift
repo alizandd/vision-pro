@@ -50,6 +50,9 @@ class DeviceManager: ObservableObject {
         syncManager.deviceCurrentTime = { [weak self] deviceId in
             self?.devices.first(where: { $0.deviceId == deviceId })?.state.currentTime
         }
+        syncManager.setDeviceFormat = { [weak self] deviceId, format in
+            self?.devices.first(where: { $0.deviceId == deviceId })?.state.currentFormat = format
+        }
         syncManager.log = { [weak self] message, type in
             self?.log(message, type: type)
         }

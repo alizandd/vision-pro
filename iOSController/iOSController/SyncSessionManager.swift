@@ -55,6 +55,10 @@ class SyncSessionManager: ObservableObject {
     /// Wiring provided by DeviceManager
     var sendToDevice: ((String, any Encodable) -> Void)?
     var deviceCurrentTime: ((String) -> Double?)?
+    /// Records the projection each device was told to use. The preview needs it
+    /// per-device to know whether a look direction is meaningful, and a group
+    /// session never goes through the single-device play path that sets it.
+    var setDeviceFormat: ((String, VideoFormat) -> Void)?
     var log: ((String, LogType) -> Void)?
 
     private var nowMs: Int64 { Int64(Date().timeIntervalSince1970 * 1000) }
@@ -140,6 +144,7 @@ class SyncSessionManager: ObservableObject {
         log?("🎬 Preparing '\(filename)' on all devices...", .info)
         for deviceId in deviceIds {
             deviceStatus[deviceId] = .preparing
+            setDeviceFormat?(deviceId, format)
             sendToDevice?(deviceId, SyncPrepareCommand(filename: filename, videoFormat: format))
         }
 

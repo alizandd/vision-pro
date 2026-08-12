@@ -25,6 +25,21 @@ class DeviceManager: ObservableObject {
         setupBindings()
         setupCallbacks()
         setupSyncManager()
+        setupPreviewRepublishing()
+    }
+
+    /// The companion library and pairing store are separate observable objects,
+    /// so views watching only the device manager would not redraw when a pairing
+    /// changes — the paired badge simply never appeared. Republish their changes
+    /// here rather than threading both objects through every view.
+    private func setupPreviewRepublishing() {
+        pairingStore.objectWillChange
+            .sink { [weak self] _ in self?.objectWillChange.send() }
+            .store(in: &cancellables)
+
+        companionLibrary.objectWillChange
+            .sink { [weak self] _ in self?.objectWillChange.send() }
+            .store(in: &cancellables)
     }
 
     /// Wires the sync session manager to the WebSocket server and device state

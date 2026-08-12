@@ -108,13 +108,26 @@ struct CompanionPreviewView: View {
         .onChange(of: device.state.playbackState) { _, _ in tick() }
     }
 
+    /// Where the wearer is in the video.
+    ///
+    /// Status updates only fire on state changes, so reading `currentTime` alone
+    /// left this frozen at the start. viewerState carries a live media time at
+    /// 10 Hz, so prefer it and fall back to status.
+    private var position: Double {
+        if let viewer = device.state.viewer, !viewer.isStale {
+            return viewer.mediaTime
+        }
+        return device.state.currentTime
+    }
+
     private var timeBadge: some View {
-        Text(formatDuration(device.state.currentTime))
+        let label = formatPosition(position) + (device.state.duration.map { " / \(formatPosition($0))" } ?? "")
+        return Text(label)
             .font(.caption2.monospacedDigit())
             .padding(.horizontal, 6)
             .padding(.vertical, 3)
             .background(.ultraThinMaterial, in: Capsule())
-            .accessibilityLabel("Position \(formatDuration(device.state.currentTime))")
+            .accessibilityLabel("Position \(formatPosition(position))")
     }
 
     private var unpairedNotice: some View {

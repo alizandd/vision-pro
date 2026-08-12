@@ -109,6 +109,17 @@ final class CompanionPairingStore: ObservableObject {
     }
 }
 
+/// Formats a playback position. Zero is a real position, not a missing value,
+/// so it renders as 0:00 rather than dashes.
+func formatPosition(_ seconds: Double) -> String {
+    guard seconds.isFinite, seconds >= 0 else { return "--:--" }
+    let total = Int(seconds.rounded())
+    let h = total / 3600, m = (total % 3600) / 60, s = total % 60
+    return h > 0
+        ? String(format: "%d:%02d:%02d", h, m, s)
+        : String(format: "%d:%02d", m, s)
+}
+
 /// Formats a duration for the operator.
 func formatDuration(_ seconds: Double) -> String {
     guard seconds.isFinite, seconds > 0 else { return "--:--" }

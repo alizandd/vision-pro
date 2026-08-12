@@ -210,6 +210,137 @@ Uses a Node.js server running on a computer:
 
 For detailed network setup instructions, see [NETWORK_SETUP.md](NETWORK_SETUP.md).
 
+---
+
+## Network Requirements (read this before any venue deployment)
+
+This is the section to read when the apps work perfectly in the office and then
+refuse to connect at a hotel, a mall, or a sales centre.
+
+### What actually goes over the wire
+
+Three separate protocols connect the iOS Controller and the Vision Pro Player.
+They fail independently, and knowing which one broke tells you what to fix.
+
+| Purpose | Protocol | Transport | Port | Direction |
+|---|---|---|---|---|
+| **Discovery** — headset finds the controller | Bonjour / mDNS-DNS-SD, service `_visionproctl._tcp` | **UDP multicast** (224.0.0.251, ff02::fb) | **5353** | Multicast, both ways |
+| **Control** — play/pause/stop, status, sync | **WebSocket** (RFC 6455) | TCP | **8080** | Vision Pro → Controller |
+| **File transfer** — sending videos to the headset | **HTTP/1.1** with Range requests | TCP | **8081** | Vision Pro → Controller |
+
+The iOS Controller is the **server** for all three. Every Vision Pro is a client
+that dials *out* to it. Nothing goes through the internet — no cloud, no relay,
+no account. The venue's internet connection is irrelevant; only the **local
+network path between the devices** matters.
+
+The controller publishes a TXT record with its name, both ports, the protocol
+version and a stable id, so the headset never has to be told an IP address.
+
+> ⚠️ **Security caveat.** The traffic is plaintext `ws://` and `http://` with no
+> TLS and no authentication. It is designed for a **trusted local network**.
+> Anyone on the same subnet who can reach port 8080 can control the headsets.
+> Use a dedicated SSID/VLAN for the system — never an open public network.
+
+### What the network must allow
+
+| # | Requirement | Why |
+|---|---|---|
+| 1 | All devices on the **same subnet and VLAN** (one L2 broadcast domain) | mDNS is link-local; it does not cross routers |
+| 2 | **UDP 5353 multicast allowed**, not filtered or suppressed | This is the discovery channel |
+| 3 | **Client isolation OFF** | This is the #1 cause of failure — see below |
+| 4 | **TCP 8080 and 8081 allowed device-to-device** | Control and file transfer |
+| 5 | **No captive portal** on the SSID the devices join | Portals hold clients in a walled state |
+| 6 | If multiple access points: all bridged to the **same VLAN**, forwarding multicast | Otherwise devices in the same room land in different segments |
+| 7 | DHCP handing out addresses **in one subnet** | Two subnets means two islands |
+
+Internet access is **not** a requirement. An access point with no WAN cable at
+all works perfectly.
+
+### Why hotel, mall, and sales-centre WiFi breaks it
+
+This is not a bug in the apps. Guest networks are **deliberately engineered to
+prevent exactly what this system does** — one guest device talking directly to
+another. That is a sensible security default for public WiFi, and it is fatal
+here.
+
+The specific features responsible, under the names different vendors use:
+
+| Feature | Also called | What it does to us |
+|---|---|---|
+| **Client isolation** | AP Isolation, Station Isolation, Guest Mode, Peer-to-Peer Blocking (Cisco), Client Device Isolation (UniFi), `deny-inter-user-traffic` (Aruba), Wireless Isolation (TP-Link/Netgear) | Blocks **all** device-to-device traffic. Discovery *and* WebSocket *and* file transfer all die. **Most common cause.** |
+| **Multicast / broadcast suppression** | mDNS filtering, Multicast Enhancement, Broadcast Filtering, IGMP snooping with no querier | Kills discovery only. The headset finds nothing, but a manually typed URL still works. |
+| **Per-client VLAN** | Private VLAN, Dynamic VLAN, per-user segmentation | Each device lands in its own segment — same room, different networks |
+| **Captive portal** | Guest portal, splash page, hotspot login | Traffic is held until each device logs in; the headset often cannot complete it |
+| **Roaming across subnets** | Multi-AP guest zones | Devices move APs and change subnet mid-session |
+
+This is why the workaround people discover on their own is an iPhone hotspot:
+a hotspot has none of these restrictions.
+
+### Diagnose it in under a minute
+
+Work down this list — the first failure tells you which feature is on.
+
+1. **Do both devices report the same subnet?** The controller shows its URL
+   (e.g. `ws://192.168.1.50:8080`). If the headset's address is in a different
+   range → **different VLAN/subnet** (requirement 1).
+2. **Discovery finds nothing, but the manually entered URL connects?**
+   → **multicast/mDNS is being filtered** (requirement 2). The system still
+   works; only auto-discovery is blocked.
+3. **The manually entered URL also fails to connect?**
+   → **client isolation is on** (requirement 3). Nothing will work on this SSID.
+4. **It connects, but video transfer fails?** → port **8081** is blocked while
+   8080 is open (requirement 4).
+5. **Everything works, then drops when someone walks to another room?**
+   → **roaming across APs on different segments** (requirement 6).
+
+### What to ask the venue's network administrator
+
+Copy this to them. It is short, specific, and asks for the minimum:
+
+> We need to run a small local system where an iPhone/iPad controls several
+> Apple Vision Pro headsets. All traffic stays inside your network — we need no
+> internet access and no inbound access from outside.
+>
+> Please provide **a dedicated SSID (or VLAN)** for our devices with:
+> 1. **Client isolation / AP isolation / peer-to-peer blocking — DISABLED**
+>    (this is the critical one)
+> 2. **mDNS / Bonjour multicast (UDP 5353) — allowed**, not filtered
+> 3. **All our devices on one subnet/VLAN**, one DHCP scope
+> 4. **TCP ports 8080 and 8081 allowed between devices on this SSID**
+> 5. **No captive portal** on this SSID
+> 6. Internet access on it: **not required**
+>
+> Roughly 2–10 devices. If a dedicated SSID is not possible, we can bring our
+> own access point instead — it needs no connection to your network at all,
+> only permission to operate.
+
+That last sentence usually ends the conversation quickly: most venues would
+rather let you plug in your own AP than reconfigure their guest network.
+
+### Deployment options, most to least reliable
+
+| Option | Reliability | Notes |
+|---|---|---|
+| **1. Your own travel router / AP** ⭐ | Highest | Bring a small battery-powered or USB-powered access point. **No internet needed.** Identical setup at every venue, nothing to negotiate, no venue IT dependency. This is the recommended way to run events. |
+| **2. Dedicated SSID/VLAN on the venue network** | High | Requires the admin to apply the list above. Good for permanent installations. |
+| **3. iPhone Personal Hotspot** | Good | The current field workaround, and it genuinely works — hotspots allow client-to-client traffic and Bonjour. Watch out for: the controller phone is also the router, battery drain, and the hotspot switching off when idle. Fine for a few headsets. |
+| **4. Venue guest WiFi + manual URL entry** | Partial | Only works if multicast is filtered but client isolation is **off**. Enter the controller's URL by hand in the Vision Pro settings. |
+| **5. Venue guest WiFi as-is** | Usually fails | Client isolation blocks everything. Expect this to fail. |
+
+For a permanent installation, option 2. For anything travelling between venues,
+**option 1 removes the problem instead of negotiating around it.**
+
+### Known limitation: no peer-to-peer fallback yet
+
+Apple's Network framework can carry this traffic over **AWDL peer-to-peer WiFi**,
+which needs no access point at all and would sidestep every restriction above.
+The Vision Pro's browser already opts in (`includePeerToPeer = true`), but the
+iOS Controller's listeners do not, so the path is not available end to end
+today. Enabling it on both sides is the cleanest long-term answer to venue
+networks and is tracked as future work.
+
+---
+
 ## Component Architecture
 
 ```
@@ -418,9 +549,15 @@ cd web-controller && npx serve .
 
 ### Vision Pro won't connect to iOS Controller
 1. Ensure Vision Pro and iOS device are on the **same WiFi network**
-2. Verify the WebSocket URL matches what's shown on iOS Controller
-3. Make sure the server is started (green indicator on iOS Controller)
+2. Make sure the server is started (green indicator on iOS Controller)
+3. Verify the WebSocket URL matches what's shown on iOS Controller
 4. Try restarting the server on iOS Controller
+
+**On a hotel, mall, or venue network, go straight to
+[Network Requirements](#network-requirements-read-this-before-any-venue-deployment).**
+Guest WiFi usually blocks device-to-device traffic by design, and no amount of
+restarting will fix it — that section tells you how to identify which
+restriction is on and what to ask the venue's network admin.
 
 ### Video transfer fails
 1. Check that both devices are on the same network

@@ -372,13 +372,54 @@ struct AppConfiguration {
         }
     }
 
+    /// Longest name the device card can show without truncating awkwardly.
+    static let deviceNameMaxLength = 40
+
+    /// Name this headset introduces itself with.
+    ///
+    /// Persisted in UserDefaults, so it survives quitting and relaunching the
+    /// app and is only cleared when the app itself is deleted. Nothing but the
+    /// user changes it — reconnects, controller restarts and network changes all
+    /// leave it alone.
+    ///
+    /// Setting an empty or whitespace-only name falls back to the default
+    /// rather than leaving a blank entry on the operator's device list.
     static var deviceName: String {
         get {
-            UserDefaults.standard.string(forKey: deviceNameKey) ?? "Vision Pro"
+            let stored = UserDefaults.standard.string(forKey: deviceNameKey)?
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            guard let stored, !stored.isEmpty else { return defaultDeviceName }
+            return stored
         }
         set {
-            UserDefaults.standard.set(newValue, forKey: deviceNameKey)
+            let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty else {
+                UserDefaults.standard.removeObject(forKey: deviceNameKey)
+                return
+            }
+            UserDefaults.standard.set(String(trimmed.prefix(deviceNameMaxLength)), forKey: deviceNameKey)
         }
+    }
+
+    /// Default name for a headset whose owner hasn't chosen one.
+    ///
+    /// Suffixed with part of this device's persistent id, because a room full of
+    /// headsets all called "Vision Pro" is exactly the problem the name exists
+    /// to solve. Any name the user sets replaces this entirely.
+    static var defaultDeviceName: String {
+        let suffix = deviceIdentifier.replacingOccurrences(of: "-", with: "").suffix(4).uppercased()
+        return suffix.isEmpty ? "Vision Pro" : "Vision Pro \(suffix)"
+    }
+
+    /// Stable per-install identifier, shared with `WebSocketManager`.
+    static var deviceIdentifier: String {
+        let key = "device_id"
+        if let stored = UserDefaults.standard.string(forKey: key) {
+            return stored
+        }
+        let created = UUID().uuidString
+        UserDefaults.standard.set(created, forKey: key)
+        return created
     }
 
     static var autoConnect: Bool {

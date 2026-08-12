@@ -250,8 +250,15 @@ class DeviceManager: ObservableObject {
                 
                 // Check if device already exists
                 if let existing = self.devices.first(where: { $0.deviceId == message.deviceId }) {
+                    // A headset also re-registers after being renamed, which is
+                    // not a reconnection — say which actually happened.
+                    if existing.deviceName != message.deviceName {
+                        self.log("Renamed: \(existing.deviceName) → \(message.deviceName)", type: .info)
+                    } else {
+                        self.log("Device reconnected: \(message.deviceName)", type: .info)
+                    }
                     existing.deviceName = message.deviceName
-                    self.log("Device reconnected: \(message.deviceName)", type: .info)
+                    self.objectWillChange.send()
                 } else {
                     let device = ConnectedDevice(
                         deviceId: message.deviceId,

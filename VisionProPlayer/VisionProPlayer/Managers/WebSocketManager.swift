@@ -66,14 +66,9 @@ class WebSocketManager: ObservableObject {
     }
 
     init() {
-        // Get or create device ID
-        if let storedId = UserDefaults.standard.string(forKey: "device_id") {
-            self.deviceId = storedId
-        } else {
-            let newId = UUID().uuidString
-            UserDefaults.standard.set(newId, forKey: "device_id")
-            self.deviceId = newId
-        }
+        // Stable per-install id, shared with AppConfiguration so the two can't
+        // drift apart (the default device name is derived from it).
+        self.deviceId = AppConfiguration.deviceIdentifier
 
         // Configure URL session
         let config = URLSessionConfiguration.default
@@ -426,6 +421,18 @@ class WebSocketManager: ObservableObject {
         print("[WebSocket] Registering device: \(deviceName) with ID: \(deviceId)")
         send(registration)
         print("[WebSocket] Sent registration message")
+    }
+
+    /// Re-announces this device's name to the controller.
+    ///
+    /// Called after a rename so the operator's device list updates at once
+    /// instead of waiting for the next reconnect. Re-registering on the live
+    /// connection is safe: the controller only replaces *other* connections
+    /// holding the same device id, never the one the message arrived on.
+    func announceIdentity() {
+        guard isConnected else { return }
+        print("[WebSocket] Re-announcing identity as '\(deviceName)'")
+        register()
     }
 
     /// Sends a status update to the server

@@ -12,9 +12,16 @@ struct ContentView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 24) {
+                // Which headset this is. Shown here because someone holding one
+                // of several identical devices otherwise has to open Settings
+                // to find out which one they picked up.
+                Label(AppConfiguration.deviceName, systemImage: "visionpro")
+                    .font(.headline)
+                    .accessibilityLabel("This device is \(AppConfiguration.deviceName)")
+
                 // Connection status
                 ConnectionStatusView(state: webSocketManager.connectionState)
-                
+
                 // Server URL display (tappable to open settings)
                 Button(action: { openWindow(id: "settings") }) {
                     HStack {

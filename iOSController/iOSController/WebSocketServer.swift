@@ -22,6 +22,10 @@ class WebSocketServer: ObservableObject {
     @Published var isRunning: Bool = false
     @Published var port: UInt16 = 8080
     @Published var connectionCount: Int = 0
+    /// True while the `_visionproctl._tcp` record is published. This listener is
+    /// the single advertiser for the controller — nothing else may publish the
+    /// service or bind this port.
+    @Published var isAdvertising: Bool = false
     
     private var listener: NWListener?
     private var connections: [String: ClientConnection] = [:]
@@ -82,10 +86,12 @@ class WebSocketServer: ObservableObject {
                 Task { @MainActor in
                     switch serviceChange {
                     case .add(let endpoint):
+                        self?.isAdvertising = true
                         if case .service(let name, let type, _, _) = endpoint {
                             print("[WebSocketServer] 📡 Bonjour service registered: \(name) (\(type))")
                         }
                     case .remove(let endpoint):
+                        self?.isAdvertising = false
                         if case .service(let name, _, _, _) = endpoint {
                             print("[WebSocketServer] Bonjour service removed: \(name)")
                         }
@@ -209,9 +215,11 @@ class WebSocketServer: ObservableObject {
             print("[WebSocketServer] 📡 Bonjour: advertising as '\(serviceName)' on \(bonjourServiceType)")
         case .failed(let error):
             isRunning = false
+            isAdvertising = false
             print("[WebSocketServer] ❌ Server failed: \(error)")
         case .cancelled:
             isRunning = false
+            isAdvertising = false
             print("[WebSocketServer] Server cancelled")
         default:
             break

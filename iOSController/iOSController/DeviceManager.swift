@@ -11,7 +11,6 @@ class DeviceManager: ObservableObject {
     @Published var logs: [LogEntry] = []
     
     private let webSocketServer = WebSocketServer()
-    private let bonjourService = BonjourService()
     let fileTransferServer = FileTransferServer()
     let syncManager = SyncSessionManager()
     private var cancellables = Set<AnyCancellable>()
@@ -49,23 +48,22 @@ class DeviceManager: ObservableObject {
     
     // MARK: - Server Control
     
-    /// Start the server and Bonjour advertising
+    /// Start the server.
+    ///
+    /// Bonjour advertising is owned by `WebSocketServer` and published on the
+    /// same listener that actually accepts the WebSocket connections — there is
+    /// deliberately no second advertiser here. A separate listener bound to the
+    /// same port would both publish a duplicate `_visionproctl._tcp` record and
+    /// steal (then drop) incoming connections.
     func startServer() {
         log("Starting server...", type: .info)
         webSocketServer.start()
         fileTransferServer.start()
-        
-        // Start Bonjour advertising after a small delay to ensure server is ready
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-            guard let self = self else { return }
-            self.bonjourService.startAdvertising(port: self.serverPort)
-        }
     }
-    
+
     /// Stop the server
     func stopServer() {
         log("Stopping server...", type: .info)
-        bonjourService.stopAdvertising()
         webSocketServer.stop()
         fileTransferServer.stop()
         devices.removeAll()

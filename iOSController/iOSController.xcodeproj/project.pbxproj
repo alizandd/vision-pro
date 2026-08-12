@@ -12,7 +12,6 @@
 		AA000003 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA100003 /* Assets.xcassets */; };
 		AA000004 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100004 /* Models.swift */; };
 		AA000005 /* WebSocketServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100005 /* WebSocketServer.swift */; };
-		AA000006 /* BonjourService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100006 /* BonjourService.swift */; };
 		AA000007 /* DeviceManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100007 /* DeviceManager.swift */; };
 		AA000008 /* DeviceCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100008 /* DeviceCardView.swift */; };
 		AA000009 /* FileTransferServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100010 /* FileTransferServer.swift */; };
@@ -29,7 +28,6 @@
 		AA100003 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		AA100004 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		AA100005 /* WebSocketServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSocketServer.swift; sourceTree = "<group>"; };
-		AA100006 /* BonjourService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BonjourService.swift; sourceTree = "<group>"; };
 		AA100007 /* DeviceManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceManager.swift; sourceTree = "<group>"; };
 		AA100008 /* DeviceCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceCardView.swift; sourceTree = "<group>"; };
 		AA100009 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -73,7 +71,6 @@
 				AA100004 /* Models.swift */,
 				AA100005 /* WebSocketServer.swift */,
 				AA100010 /* FileTransferServer.swift */,
-				AA100006 /* BonjourService.swift */,
 				AA100007 /* DeviceManager.swift */,
 				AA100099 /* SyncSessionManager.swift */,
 				AA100100 /* SyncControlPanel.swift */,
@@ -165,7 +162,6 @@
 				AA000004 /* Models.swift in Sources */,
 				AA000005 /* WebSocketServer.swift in Sources */,
 				AA000009 /* FileTransferServer.swift in Sources */,
-				AA000006 /* BonjourService.swift in Sources */,
 				AA000007 /* DeviceManager.swift in Sources */,
 				AA000099 /* SyncSessionManager.swift in Sources */,
 				AA000100 /* SyncControlPanel.swift in Sources */,

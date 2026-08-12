@@ -20,6 +20,7 @@ import ARKit
 struct NativeImmersiveView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var videoManager: NativeVideoPlayerManager
+    @EnvironmentObject var webSocketManager: WebSocketManager
 
     /// Debug/test settings (live UV override + diagnostics panel).
     @ObservedObject private var debug = StereoDebugSettings.shared
@@ -89,6 +90,9 @@ struct NativeImmersiveView: View {
                 
                 // Start ARKit session for head tracking
                 await startARKitSession()
+
+                // Report the wearer's look direction while a controller wants it.
+                Task { await publishViewerState() }
                 
                 // If video is already ready, create the screen with recentering
                 if videoManager.isPlayerReady {
@@ -386,6 +390,41 @@ struct NativeImmersiveView: View {
         }
     }
     
+    /// Publishes where the wearer is looking, for the controller's preview.
+    ///
+    /// Reuses the ARKit session already running for recentering rather than
+    /// starting a second one, and reports only while a controller is actually
+    /// subscribed — otherwise this loop costs nothing but a sleep.
+    private func publishViewerState() async {
+        let interval: UInt64 = 100_000_000 // 10 Hz
+
+        while !Task.isCancelled {
+            try? await Task.sleep(nanoseconds: interval)
+
+            guard isARKitReady, webSocketManager.isPreviewSubscribed else { continue }
+            guard let transform = worldTracking.queryDeviceAnchor(atTimestamp: CACurrentMediaTime())?
+                .originFromAnchorTransform else { continue }
+
+            // Forward is -Z of the head transform.
+            let forward = SIMD3<Float>(
+                -transform.columns.2.x,
+                -transform.columns.2.y,
+                -transform.columns.2.z
+            )
+
+            // Yaw measured in the same frame the video screen is aligned to, so
+            // 0 means "looking at the centre of the content".
+            let yaw = atan2(forward.x, forward.z)
+            let pitch = asin(max(-1, min(1, forward.y)))
+
+            webSocketManager.sendViewerState(
+                yaw: Double(yaw),
+                pitch: Double(pitch),
+                mediaTime: videoManager.currentTime
+            )
+        }
+    }
+
     /// Gets the current head (device) transform from ARKit
     private func getCurrentHeadTransform() async -> simd_float4x4? {
         guard let deviceAnchor = worldTracking.queryDeviceAnchor(atTimestamp: CACurrentMediaTime()) else {

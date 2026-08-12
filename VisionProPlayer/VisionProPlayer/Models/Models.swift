@@ -209,6 +209,47 @@ struct LocalVideo: Codable, Identifiable {
     }
 }
 
+/// Where the wearer is looking, plus exactly where playback is.
+///
+/// Sent only while an immersive space is open **and** a controller has asked
+/// for it, so a headset nobody is previewing adds no traffic at all.
+///
+/// Head pose only — visionOS does not expose eye/gaze tracking to apps, and
+/// this deliberately does not attempt to infer it.
+struct ViewerStateMessage: Codable {
+    let type: String = "viewerState"
+    let deviceId: String
+    /// Horizontal look direction in radians, 0 = the video's forward centre.
+    let yaw: Double
+    /// Vertical look direction in radians, positive is up.
+    let pitch: Double
+    /// Playback position at the moment the pose was sampled.
+    let mediaTime: Double
+    /// Headset epoch milliseconds, so the controller can age the sample.
+    let timestamp: Int64
+
+    enum CodingKeys: String, CodingKey {
+        case type, deviceId, yaw, pitch, mediaTime, timestamp
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(type, forKey: .type)
+        try container.encode(deviceId, forKey: .deviceId)
+        try container.encode(yaw, forKey: .yaw)
+        try container.encode(pitch, forKey: .pitch)
+        try container.encode(mediaTime, forKey: .mediaTime)
+        try container.encode(timestamp, forKey: .timestamp)
+    }
+}
+
+/// Controller asking this headset to start or stop reporting viewer state.
+struct PreviewSubscribeCommand: Codable {
+    let type: String
+    let action: String
+    let enabled: Bool
+}
+
 /// Message to send local video list to server
 struct LocalVideosMessage: Codable {
     let type: String = "localVideos"

@@ -6,6 +6,10 @@ import Network
 /// Handles connection, reconnection, and message parsing.
 @MainActor
 class WebSocketManager: ObservableObject {
+    /// True once a controller has asked for viewer-state updates. Until then
+    /// nothing is published, so headsets nobody is watching stay silent.
+    @Published var isPreviewSubscribed: Bool = false
+
     /// Connection state
     @Published var isConnected: Bool = false
     @Published var connectionState: ConnectionState = .disconnected
@@ -339,6 +343,10 @@ class WebSocketManager: ObservableObject {
                     let startCommand = try JSONDecoder().decode(SyncStartCommand.self, from: data)
                     print("[WebSocket] Sync start at: \(startCommand.startAt)")
                     onSyncStartCommand?(startCommand)
+                } else if let actionStr = json?["action"] as? String, actionStr == "previewSubscribe" {
+                    let subscribe = try JSONDecoder().decode(PreviewSubscribeCommand.self, from: data)
+                    isPreviewSubscribed = subscribe.enabled
+                    print("[WebSocket] Preview subscription: \(subscribe.enabled ? "on" : "off")")
                 } else if let actionStr = json?["action"] as? String, actionStr == "syncResume" {
                     let resumeCommand = try JSONDecoder().decode(SyncResumeCommand.self, from: data)
                     print("[WebSocket] Sync resume at media time: \(resumeCommand.mediaTime)")
@@ -379,9 +387,13 @@ class WebSocketManager: ObservableObject {
     // MARK: - Sending Messages
 
     /// Sends a message to the server
-    func send(_ message: Encodable) {
+    /// - Parameter logging: set false for high-rate telemetry so the log stays
+    ///   readable — viewer state alone would otherwise emit 10 lines a second.
+    func send(_ message: Encodable, logging: Bool = true) {
         guard let webSocketTask = webSocketTask, isConnected else {
-            print("[WebSocket] Cannot send - not connected (isConnected: \(isConnected))")
+            if logging {
+                print("[WebSocket] Cannot send - not connected (isConnected: \(isConnected))")
+            }
             return
         }
 
@@ -392,11 +404,11 @@ class WebSocketManager: ObservableObject {
                 return
             }
 
-            print("[WebSocket] Sending message: \(text)")
+            if logging { print("[WebSocket] Sending message: \(text)") }
             webSocketTask.send(.string(text)) { error in
                 if let error = error {
                     print("[WebSocket] Send error: \(error)")
-                } else {
+                } else if logging {
                     print("[WebSocket] Message sent successfully")
                 }
             }
@@ -453,6 +465,22 @@ class WebSocketManager: ObservableObject {
         send(message)
     }
     
+    /// Publishes where the wearer is looking and where playback is.
+    ///
+    /// Silently does nothing unless a controller subscribed, so this can be
+    /// called from the render loop without gating at every call site.
+    func sendViewerState(yaw: Double, pitch: Double, mediaTime: Double) {
+        guard isPreviewSubscribed, isConnected else { return }
+        let message = ViewerStateMessage(
+            deviceId: deviceId,
+            yaw: yaw,
+            pitch: pitch,
+            mediaTime: mediaTime,
+            timestamp: Int64(Date().timeIntervalSince1970 * 1000)
+        )
+        send(message, logging: false)
+    }
+
     /// Sends sync readiness report to the controller
     func sendSyncReady(filename: String, success: Bool, message: String? = nil) {
         let ready = SyncReadyMessage(

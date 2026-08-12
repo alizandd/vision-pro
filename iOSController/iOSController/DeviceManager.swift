@@ -18,6 +18,8 @@ class DeviceManager: ObservableObject {
     let pairingStore = CompanionPairingStore()
     let syncManager = SyncSessionManager()
     private var cancellables = Set<AnyCancellable>()
+    /// Devices currently asked to report viewer state.
+    private var previewSubscriptions: Set<String> = []
 
     init() {
         setupBindings()
@@ -155,6 +157,24 @@ class DeviceManager: ObservableObject {
         log("📤 Transfer command sent: \(command.filename)", type: .info)
     }
     
+    /// Asks a headset to start or stop reporting where its wearer is looking.
+    ///
+    /// Off by default: a headset nobody is previewing sends nothing, so the
+    /// control channel carries exactly the traffic it always did.
+    func setPreviewSubscription(deviceId: String, enabled: Bool) {
+        guard previewSubscriptions.contains(deviceId) != enabled else { return }
+
+        if enabled {
+            previewSubscriptions.insert(deviceId)
+        } else {
+            previewSubscriptions.remove(deviceId)
+            devices.first(where: { $0.deviceId == deviceId })?.state.viewer = nil
+        }
+
+        webSocketServer.send(to: deviceId, message: PreviewSubscribeCommand(enabled: enabled))
+        log("Preview \(enabled ? "started" : "stopped") for \(deviceName(for: deviceId))", type: .info)
+    }
+
     /// Send delete video command to device
     func deleteVideo(deviceId: String, filename: String) {
         let command = DeleteVideoCommand(filename: filename)
@@ -262,6 +282,22 @@ class DeviceManager: ObservableObject {
             }
         }
         
+        // Handle viewer look direction (only arrives while a preview is open)
+        webSocketServer.onViewerState = { [weak self] deviceId, message in
+            Task { @MainActor in
+                guard let self = self,
+                      let device = self.devices.first(where: { $0.deviceId == deviceId }) else { return }
+
+                device.state.viewer = ViewerLook(
+                    yaw: message.yaw,
+                    pitch: message.pitch,
+                    mediaTime: message.mediaTime,
+                    receivedAt: Date()
+                )
+                device.objectWillChange.send()
+            }
+        }
+
         // Handle disconnection
         webSocketServer.onDeviceDisconnected = { [weak self] deviceId in
             Task { @MainActor in

@@ -102,6 +102,9 @@ class WebSocketServer: ObservableObject {
     /// Callback when a device reports sync readiness
     var onSyncReady: ((String, SyncReadyMessage) -> Void)?
 
+    /// Callback when a device reports where its wearer is looking
+    var onViewerState: ((String, ViewerStateMessage) -> Void)?
+
     /// Callback when a device disconnects
     var onDeviceDisconnected: ((String) -> Void)?
     
@@ -408,6 +411,12 @@ class WebSocketServer: ObservableObject {
                 let ready = try JSONDecoder().decode(SyncReadyMessage.self, from: data)
                 if let deviceId = client.deviceId {
                     onSyncReady?(deviceId, ready)
+                }
+
+            case "viewerState":
+                let viewer = try JSONDecoder().decode(ViewerStateMessage.self, from: data)
+                if let deviceId = client.deviceId {
+                    onViewerState?(deviceId, viewer)
                 }
 
             case "ping":

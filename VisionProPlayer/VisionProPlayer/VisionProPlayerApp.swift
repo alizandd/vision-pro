@@ -83,6 +83,7 @@ struct VisionProPlayerApp: App {
             NativeImmersiveView()
                 .environmentObject(appState)
                 .environmentObject(nativeVideoManager)
+                .environmentObject(webSocketManager)
         }
         .immersionStyle(selection: .constant(.full), in: .full)
     }

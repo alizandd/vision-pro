@@ -30,11 +30,28 @@ struct DeviceState {
     /// Running time the headset reported for the loaded asset. Nil until it
     /// reports one (or if the headset runs an older build).
     var duration: Double? = nil
+    /// Latest look direction reported by the wearer's headset, if subscribed.
+    var viewer: ViewerLook? = nil
 
     /// File name of the video currently loaded, derived from its URL.
     var currentFilename: String? {
         guard let currentVideo, let url = URL(string: currentVideo) else { return nil }
         return url.lastPathComponent.removingPercentEncoding ?? url.lastPathComponent
+    }
+}
+
+/// A sampled look direction from a headset.
+struct ViewerLook {
+    let yaw: Double
+    let pitch: Double
+    let mediaTime: Double
+    /// When this controller received it — used to detect a stalled feed.
+    let receivedAt: Date
+
+    /// Updates stop arriving when the wearer leaves the immersive space or the
+    /// link degrades; past this the indicator should say so rather than lie.
+    var isStale: Bool {
+        Date().timeIntervalSince(receivedAt) > 2.0
     }
 }
 
@@ -133,6 +150,30 @@ struct StatusMessage: Codable {
     /// Running time of the asset on the headset. Optional — a headset running an
     /// older build simply omits it, and the preview stays unverified.
     let duration: Double?
+}
+
+/// Where a headset wearer is looking, plus exactly where playback is.
+struct ViewerStateMessage: Codable {
+    let type: String
+    let deviceId: String
+    /// Horizontal look direction in radians, 0 = the centre of the content.
+    let yaw: Double
+    /// Vertical look direction in radians, positive is up.
+    let pitch: Double
+    let mediaTime: Double
+    /// Headset epoch milliseconds.
+    let timestamp: Int64
+}
+
+/// Asks a headset to start or stop reporting viewer state.
+struct PreviewSubscribeCommand: Codable {
+    let type: String = "command"
+    let action: String = "previewSubscribe"
+    let enabled: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case type, action, enabled
+    }
 }
 
 /// Local videos message from device

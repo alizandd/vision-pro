@@ -9,6 +9,17 @@ struct SyncControlPanel: View {
 
     @State private var selectedFilename: String = ""
     @State private var selectedFormat: VideoFormat = .sphere360SBS
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
+    /// How many video rows to show before the list starts scrolling.
+    ///
+    /// A phone can only spare a few, and the half-row is a deliberate hint that
+    /// there is more below. A tablet has the height to show a realistic library
+    /// outright — clipping the 4th item there just hides content behind an
+    /// inner scroll that reads as the page scroll.
+    private var visibleVideoRows: CGFloat {
+        horizontalSizeClass == .regular ? 8.5 : 3.5
+    }
 
     /// Videos present on ALL connected devices (intersection by filename)
     private var commonVideos: [String] {
@@ -71,8 +82,13 @@ struct SyncControlPanel: View {
                             }
                         }
                     }
+                    // These rows put a small icon on the left and a selection
+                    // circle on the right. Across a tablet's full width the two
+                    // end up a screen apart and stop reading as one row, so hold
+                    // the list to a measure the eye can span. No-op on a phone.
+                    .frame(maxWidth: Layout.maxReadableWidth, alignment: .leading)
                 }
-                .frame(height: min(CGFloat(commonVideos.count), 3.5) * 64)
+                .frame(height: min(CGFloat(commonVideos.count), visibleVideoRows) * 64)
 
                 // Format picker, visually separated from the list
                 HStack(spacing: 8) {

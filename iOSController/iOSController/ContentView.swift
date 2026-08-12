@@ -30,6 +30,12 @@ struct ContentView: View {
                             SyncControlPanel(syncManager: deviceManager.syncManager)
                             DeviceListView()
                         }
+                        // On a tablet the page would otherwise stretch rows edge
+                        // to edge, leaving an icon and its control a screen-width
+                        // apart. Hold the content to a readable measure and
+                        // centre it; on a phone this is a no-op.
+                        .frame(maxWidth: Layout.maxContentWidth)
+                        .frame(maxWidth: .infinity)
                     }
                 }
             }
@@ -289,17 +295,37 @@ struct EmptyDevicesView: View {
 
 struct DeviceListView: View {
     @EnvironmentObject var deviceManager: DeviceManager
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
+    /// Two columns on a tablet so an operator can watch several headsets — and
+    /// their live previews — at once, which is the point of the preview feature.
+    /// A phone stays single-column.
+    private var columns: [GridItem] {
+        let count = horizontalSizeClass == .regular ? 2 : 1
+        return Array(repeating: GridItem(.flexible(), spacing: 16, alignment: .top), count: count)
+    }
 
     var body: some View {
         // No ScrollView of its own — the page-level scroll in ContentView
         // gives expanded cards unlimited room.
-        LazyVStack(spacing: 16) {
+        LazyVGrid(columns: columns, alignment: .leading, spacing: 16) {
             ForEach(deviceManager.devices) { device in
                 DeviceCardView(device: device)
             }
         }
         .padding()
     }
+}
+
+/// Shared layout constants for adapting between phone and tablet.
+enum Layout {
+    /// Widest the page content is allowed to get. Beyond this, even a two-column
+    /// device grid starts to feel adrift on a 13-inch tablet.
+    static let maxContentWidth: CGFloat = 1100
+
+    /// Widest a single-column list of choices should get. Past this the leading
+    /// icon and the trailing control are too far apart to read as one row.
+    static let maxReadableWidth: CGFloat = 680
 }
 
 // MARK: - Logs View

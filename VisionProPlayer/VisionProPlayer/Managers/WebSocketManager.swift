@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import Network
 
 /// Manages WebSocket connection to the relay server.
 /// Handles connection, reconnection, and message parsing.
@@ -28,10 +29,22 @@ class WebSocketManager: ObservableObject {
     nonisolated(unsafe) private var webSocketTask: URLSessionWebSocketTask?
     private var urlSession: URLSession?
 
+    /// Asks the app to re-run Bonjour discovery because the stored address looks
+    /// stale. Set by the app; the manager itself knows nothing about Bonjour.
+    var onRediscoveryNeeded: (() -> Void)?
+
     /// Reconnection settings
     private var reconnectAttempts: Int = 0
-    private let maxReconnectAttempts: Int = 10
+    /// After this many consecutive failures the address is treated as suspect
+    /// and discovery is asked for a fresh one. There is deliberately no attempt
+    /// ceiling: giving up permanently is what left headsets dead until relaunch.
+    private let attemptsBeforeRediscovery: Int = 3
     private var isManuallyDisconnected: Bool = false
+
+    /// Watches for the headset rejoining WiFi so a reconnect can be immediate
+    /// rather than waiting out the backoff.
+    private let pathMonitor = NWPathMonitor()
+    private var isNetworkAvailable: Bool = true
     nonisolated(unsafe) private var reconnectTask: Task<Void, Never>?
     nonisolated(unsafe) private var receiveTask: Task<Void, Never>?
     nonisolated(unsafe) private var heartbeatTask: Task<Void, Never>?
@@ -62,6 +75,8 @@ class WebSocketManager: ObservableObject {
         let config = URLSessionConfiguration.default
         config.waitsForConnectivity = true
         self.urlSession = URLSession(configuration: config)
+
+        startPathMonitoring()
     }
 
     deinit {
@@ -164,20 +179,32 @@ class WebSocketManager: ObservableObject {
         scheduleReconnect()
     }
 
-    /// Schedules a reconnection attempt with exponential backoff
+    /// Schedules a reconnection attempt with exponential backoff.
+    ///
+    /// Retrying forever against a cached address is what broke reconnection when
+    /// the controller came back on a different DHCP lease, so once a few
+    /// attempts have failed this asks discovery for a fresh address instead of
+    /// continuing to dial a dead one — and it never stops trying while the
+    /// network is up.
     private func scheduleReconnect() {
         guard !isManuallyDisconnected else { return }
-        guard reconnectAttempts < maxReconnectAttempts else {
-            print("[WebSocket] Max reconnection attempts reached")
+        guard isNetworkAvailable else {
+            print("[WebSocket] Network unavailable — waiting for it to come back")
+            connectionState = .disconnected
             return
         }
 
         connectionState = .reconnecting
         reconnectAttempts += 1
 
-        // Exponential backoff: 1s, 2s, 4s, 8s, 16s, etc., max 30s
+        if reconnectAttempts >= attemptsBeforeRediscovery {
+            print("[WebSocket] \(reconnectAttempts) failed attempts — asking Bonjour for a fresh address")
+            onRediscoveryNeeded?()
+        }
+
+        // Exponential backoff: 1s, 2s, 4s, 8s, 16s, capped at 30s.
         let delay = min(pow(2.0, Double(reconnectAttempts - 1)), 30.0)
-        print("[WebSocket] Reconnecting in \(delay)s (attempt \(reconnectAttempts)/\(maxReconnectAttempts))...")
+        print("[WebSocket] Reconnecting in \(delay)s (attempt \(reconnectAttempts))...")
 
         reconnectTask = Task {
             try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
@@ -185,6 +212,55 @@ class WebSocketManager: ObservableObject {
                 connect()
             }
         }
+    }
+
+    /// Points the connection at a freshly discovered address and connects,
+    /// cancelling any pending backoff. Called when Bonjour resolves the
+    /// controller — including when it has moved to a new address.
+    func retarget(to url: String) {
+        let addressChanged = url != AppConfiguration.serverURL
+        AppConfiguration.serverURL = url
+
+        guard addressChanged || !isConnected else { return }
+
+        print("[WebSocket] Retargeting to \(url)")
+
+        // Tear the old socket down without going through disconnect(), whose
+        // manual-disconnect flag would suppress the reconnect we want here.
+        reconnectTask?.cancel()
+        receiveTask?.cancel()
+        heartbeatTask?.cancel()
+        webSocketTask?.cancel(with: .goingAway, reason: nil)
+        webSocketTask = nil
+
+        isConnected = false
+        connectionState = .disconnected
+        isManuallyDisconnected = false
+        reconnectAttempts = 0
+
+        connect()
+    }
+
+    /// Starts watching network availability so a WiFi rejoin reconnects at once.
+    private func startPathMonitoring() {
+        pathMonitor.pathUpdateHandler = { [weak self] path in
+            Task { @MainActor in
+                guard let self = self else { return }
+                let available = path.status == .satisfied
+                let regained = available && !self.isNetworkAvailable
+                self.isNetworkAvailable = available
+
+                guard regained else { return }
+                print("[WebSocket] 🌐 Network available again — re-discovering and reconnecting")
+                self.reconnectAttempts = 0
+                self.onRediscoveryNeeded?()
+                if !self.isConnected && !self.isManuallyDisconnected {
+                    self.reconnectTask?.cancel()
+                    self.connect()
+                }
+            }
+        }
+        pathMonitor.start(queue: .main)
     }
 
     // MARK: - Message Handling

@@ -105,17 +105,17 @@ struct VisionProPlayerApp: App {
                 // Remember *who*, not *where*.
                 AppConfiguration.preferredControllerId = controller.controllerId
 
-                let url = controller.webSocketURL
-                if url != AppConfiguration.serverURL {
-                    print("[App] 📡 Controller '\(controller.name)' resolved to \(url) — retargeting")
-                    AppConfiguration.serverURL = url
-                    webSocketManager.updateServerURL(url)
-                }
+                print("[App] 📡 Controller '\(controller.name)' resolved to \(controller.webSocketURL)")
+                webSocketManager.retarget(to: controller.webSocketURL)
+            }
+        }
 
-                if !webSocketManager.isConnected {
-                    print("[App] Auto-connecting to \(controller.name)")
-                    webSocketManager.connect()
-                }
+        // When the socket keeps failing, the cached address is the prime
+        // suspect — re-resolve it rather than dialling it forever.
+        webSocketManager.onRediscoveryNeeded = {
+            Task { @MainActor in
+                bonjourDiscovery.allowReconnect()
+                bonjourDiscovery.refresh()
             }
         }
 

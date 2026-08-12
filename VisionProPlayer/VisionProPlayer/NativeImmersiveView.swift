@@ -49,6 +49,12 @@ struct NativeImmersiveView: View {
     @State private var arkitSession = ARKitSession()
     @State private var worldTracking = WorldTrackingProvider()
     @State private var isARKitReady = false
+
+    /// Heading the video was recentred to, in the same frame `getYawRotation`
+    /// reports. Look direction is published *relative to this*: the sphere is
+    /// oriented to wherever the wearer was facing when playback began, so the
+    /// centre of the content is not world-forward.
+    @State private var contentYaw: Float = .pi
     
     // MARK: - Constants
     
@@ -405,20 +411,25 @@ struct NativeImmersiveView: View {
             guard let transform = worldTracking.queryDeviceAnchor(atTimestamp: CACurrentMediaTime())?
                 .originFromAnchorTransform else { continue }
 
-            // Forward is -Z of the head transform.
-            let forward = SIMD3<Float>(
-                -transform.columns.2.x,
-                -transform.columns.2.y,
-                -transform.columns.2.z
-            )
+            // Head yaw, using the SAME convention the recentring path uses, so
+            // the frame's own offset cancels in the subtraction below rather
+            // than leaking through as a constant error.
+            let headYaw = getYawRotation(from: transform)
 
-            // Yaw measured in the same frame the video screen is aligned to, so
-            // 0 means "looking at the centre of the content".
-            let yaw = atan2(forward.x, forward.z)
-            let pitch = asin(max(-1, min(1, forward.y)))
+            // Positive = looking right of the content's centre. Both angles are
+            // in the same frame, so `contentYaw − headYaw` is the signed offset
+            // from whatever direction the video was recentred to; at the moment
+            // playback starts the two are equal and this is exactly 0.
+            var relativeYaw = contentYaw - headYaw
+            while relativeYaw > .pi { relativeYaw -= 2 * .pi }
+            while relativeYaw < -.pi { relativeYaw += 2 * .pi }
+
+            // Pitch is unaffected by recentring, which is yaw-only.
+            let forwardY = -transform.columns.2.y
+            let pitch = asin(max(-1, min(1, forwardY)))
 
             webSocketManager.sendViewerState(
-                yaw: Double(yaw),
+                yaw: Double(relativeYaw),
                 pitch: Double(pitch),
                 mediaTime: videoManager.currentTime
             )
@@ -479,6 +490,10 @@ struct NativeImmersiveView: View {
             
             // Orient video to face user's gaze direction
             videoEntity.orientation = simd_quatf(angle: -yaw + meshAlignmentOffset, axis: .init(0, 1, 0))
+
+            // Remember where the content now faces, so the controller's viewer
+            // direction can be reported relative to it rather than to the world.
+            contentYaw = yaw
             
             print("[NativeImmersiveView] Recentered: pos=(\(headPosition.x), \(headPosition.y), \(headPosition.z)), yaw=\(yaw * 180 / .pi)°")
         } else {

@@ -11,13 +11,6 @@
 		AA000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100002 /* ContentView.swift */; };
 		AA000003 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA100003 /* Assets.xcassets */; };
 		AA000004 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100004 /* Models.swift */; };
-		AA0000A1 /* CompanionLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1000A1 /* CompanionLibrary.swift */; };
-		AA0000A2 /* CompanionLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1000A2 /* CompanionLibraryView.swift */; };
-		AA0000A3 /* CompanionPairing.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1000A3 /* CompanionPairing.swift */; };
-		AA0000A4 /* CompanionPairingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1000A4 /* CompanionPairingView.swift */; };
-		AA0000A5 /* CompanionPreviewPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1000A5 /* CompanionPreviewPlayer.swift */; };
-		AA0000A6 /* CompanionPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1000A6 /* CompanionPreviewView.swift */; };
-		AA0000A7 /* ViewerDirectionIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1000A7 /* ViewerDirectionIndicator.swift */; };
 		AA000005 /* WebSocketServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100005 /* WebSocketServer.swift */; };
 		AA000007 /* DeviceManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100007 /* DeviceManager.swift */; };
 		AA000008 /* DeviceCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100008 /* DeviceCardView.swift */; };
@@ -26,6 +19,13 @@
 		AA000011 /* SampleVideoHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100012 /* SampleVideoHelper.swift */; };
 		AA000012 /* SampleVideosView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100013 /* SampleVideosView.swift */; };
 		AA000099 /* SyncSessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100099 /* SyncSessionManager.swift */; };
+		AA0000A1 /* CompanionLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1000A1 /* CompanionLibrary.swift */; };
+		AA0000A2 /* CompanionLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1000A2 /* CompanionLibraryView.swift */; };
+		AA0000A3 /* CompanionPairing.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1000A3 /* CompanionPairing.swift */; };
+		AA0000A4 /* CompanionPairingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1000A4 /* CompanionPairingView.swift */; };
+		AA0000A5 /* CompanionPreviewPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1000A5 /* CompanionPreviewPlayer.swift */; };
+		AA0000A6 /* CompanionPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1000A6 /* CompanionPreviewView.swift */; };
+		AA0000A7 /* ViewerDirectionIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1000A7 /* ViewerDirectionIndicator.swift */; };
 		AA000100 /* SyncControlPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100100 /* SyncControlPanel.swift */; };
 /* End PBXBuildFile section */
 
@@ -34,13 +34,6 @@
 		AA100002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		AA100003 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		AA100004 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
-		AA1000A1 /* CompanionLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionLibrary.swift; sourceTree = "<group>"; };
-		AA1000A2 /* CompanionLibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionLibraryView.swift; sourceTree = "<group>"; };
-		AA1000A3 /* CompanionPairing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionPairing.swift; sourceTree = "<group>"; };
-		AA1000A4 /* CompanionPairingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionPairingView.swift; sourceTree = "<group>"; };
-		AA1000A5 /* CompanionPreviewPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionPreviewPlayer.swift; sourceTree = "<group>"; };
-		AA1000A6 /* CompanionPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionPreviewView.swift; sourceTree = "<group>"; };
-		AA1000A7 /* ViewerDirectionIndicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewerDirectionIndicator.swift; sourceTree = "<group>"; };
 		AA100005 /* WebSocketServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSocketServer.swift; sourceTree = "<group>"; };
 		AA100007 /* DeviceManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceManager.swift; sourceTree = "<group>"; };
 		AA100008 /* DeviceCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceCardView.swift; sourceTree = "<group>"; };
@@ -50,6 +43,13 @@
 		AA100012 /* SampleVideoHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleVideoHelper.swift; sourceTree = "<group>"; };
 		AA100013 /* SampleVideosView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleVideosView.swift; sourceTree = "<group>"; };
 		AA100099 /* SyncSessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncSessionManager.swift; sourceTree = "<group>"; };
+		AA1000A1 /* CompanionLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionLibrary.swift; sourceTree = "<group>"; };
+		AA1000A2 /* CompanionLibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionLibraryView.swift; sourceTree = "<group>"; };
+		AA1000A3 /* CompanionPairing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionPairing.swift; sourceTree = "<group>"; };
+		AA1000A4 /* CompanionPairingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionPairingView.swift; sourceTree = "<group>"; };
+		AA1000A5 /* CompanionPreviewPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionPreviewPlayer.swift; sourceTree = "<group>"; };
+		AA1000A6 /* CompanionPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionPreviewView.swift; sourceTree = "<group>"; };
+		AA1000A7 /* ViewerDirectionIndicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewerDirectionIndicator.swift; sourceTree = "<group>"; };
 		AA100100 /* SyncControlPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncControlPanel.swift; sourceTree = "<group>"; };
 		AA200001 /* iOSController.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iOSController.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -344,7 +344,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.5;
+				MARKETING_VERSION = 1.6;
 				PRODUCT_BUNDLE_IDENTIFIER = com.qoostudio.vpc;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -375,7 +375,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.5;
+				MARKETING_VERSION = 1.6;
 				PRODUCT_BUNDLE_IDENTIFIER = com.qoostudio.vpc;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;

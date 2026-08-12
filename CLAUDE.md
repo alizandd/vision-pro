@@ -395,6 +395,16 @@ curl http://localhost:8080/api/videos
 
 ## Changelog
 
+### 2026-08-12
+- **[Zero-Config Auto-Discovery]** A Vision Pro joining the local network now finds its controller and connects with no manually entered IP
+  - **iOS Controller**: removed `BonjourService.swift`, which opened a *second* `NWListener` on the same port 8080 advertising `_visionproctl._tcp` a second time and cancelled every connection it received. `WebSocketServer` — the listener that actually accepts connections — is now the single advertiser.
+  - **iOS Controller**: the advertisement carries a TXT record (`name`, `ws`, `http`, `v`, `id`) with a stable controller id persisted in UserDefaults, so the file-transfer port is no longer assumed to be 8081.
+  - **Vision Pro**: `BonjourDiscovery` is owned by the app and browses for the whole session (previously it only ran while Settings was open). It auto-connects to the previously-used controller as soon as it reappears, or to the only controller on the network when none was ever chosen.
+  - **Vision Pro**: the preference is stored as the controller **id**, never an IP — the address is re-resolved from Bonjour every time, so a new DHCP lease is not a stranding. `autoConnect` now defaults to `true` and the `ws://localhost:8080` default URL is gone.
+  - **Vision Pro**: reconnection asks Bonjour for a fresh address after 3 consecutive failures instead of dialling a dead IP, no longer gives up permanently after 10 attempts, and reconnects immediately on WiFi rejoin via `NWPathMonitor`.
+  - Browsing uses `.bonjourWithTXTRecord` — plain `.bonjour` never delivers TXT metadata.
+  - Verified on iOS 26 + visionOS 26.1 simulators: fresh install connects unattended; controller restart reconnects unattended.
+
 ### 2026-07-22
 - **[Synchronized Multi-Device Playback]** Play the same video on all connected Vision Pros at the same moment
   - **ADR**: `docs/adr/2026-07-22-synchronized-multi-device-playback.md`

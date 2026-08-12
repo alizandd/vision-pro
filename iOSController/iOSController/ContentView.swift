@@ -6,7 +6,8 @@ struct ContentView: View {
     @EnvironmentObject var deviceManager: DeviceManager
     @State private var showingLogs = false
     @State private var showingVideoTransfer = false
-    
+    @State private var showingCompanionLibrary = false
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
@@ -48,13 +49,22 @@ struct ContentView: View {
                             Image(systemName: "square.and.arrow.up")
                         }
                         .disabled(!deviceManager.isServerRunning || deviceManager.devices.isEmpty)
-                        
+
+                        // Preview (companion) videos
+                        Button {
+                            showingCompanionLibrary.toggle()
+                        } label: {
+                            Image(systemName: "rectangle.on.rectangle.angled")
+                        }
+                        .accessibilityLabel("Preview videos")
+
                         // Logs Button
                         Button {
                             showingLogs.toggle()
                         } label: {
                             Image(systemName: "list.bullet.rectangle")
                         }
+                        .accessibilityLabel("Activity log")
                     }
                 }
             }
@@ -63,6 +73,9 @@ struct ContentView: View {
             }
             .sheet(isPresented: $showingVideoTransfer) {
                 VideoTransferView(transferServer: deviceManager.fileTransferServer)
+            }
+            .sheet(isPresented: $showingCompanionLibrary) {
+                CompanionLibraryView(library: deviceManager.companionLibrary)
             }
         }
     }

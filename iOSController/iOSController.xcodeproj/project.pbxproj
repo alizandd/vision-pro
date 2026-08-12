@@ -11,6 +11,8 @@
 		AA000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100002 /* ContentView.swift */; };
 		AA000003 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA100003 /* Assets.xcassets */; };
 		AA000004 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100004 /* Models.swift */; };
+		AA0000A1 /* CompanionLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1000A1 /* CompanionLibrary.swift */; };
+		AA0000A2 /* CompanionLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1000A2 /* CompanionLibraryView.swift */; };
 		AA000005 /* WebSocketServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100005 /* WebSocketServer.swift */; };
 		AA000007 /* DeviceManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100007 /* DeviceManager.swift */; };
 		AA000008 /* DeviceCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100008 /* DeviceCardView.swift */; };
@@ -27,6 +29,8 @@
 		AA100002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		AA100003 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		AA100004 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		AA1000A1 /* CompanionLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionLibrary.swift; sourceTree = "<group>"; };
+		AA1000A2 /* CompanionLibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionLibraryView.swift; sourceTree = "<group>"; };
 		AA100005 /* WebSocketServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSocketServer.swift; sourceTree = "<group>"; };
 		AA100007 /* DeviceManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceManager.swift; sourceTree = "<group>"; };
 		AA100008 /* DeviceCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceCardView.swift; sourceTree = "<group>"; };
@@ -69,6 +73,8 @@
 				AA100013 /* SampleVideosView.swift */,
 				AA100012 /* SampleVideoHelper.swift */,
 				AA100004 /* Models.swift */,
+				AA1000A1 /* CompanionLibrary.swift */,
+				AA1000A2 /* CompanionLibraryView.swift */,
 				AA100005 /* WebSocketServer.swift */,
 				AA100010 /* FileTransferServer.swift */,
 				AA100007 /* DeviceManager.swift */,
@@ -160,6 +166,8 @@
 				AA000002 /* ContentView.swift in Sources */,
 				AA000001 /* iOSControllerApp.swift in Sources */,
 				AA000004 /* Models.swift in Sources */,
+				AA0000A1 /* CompanionLibrary.swift in Sources */,
+				AA0000A2 /* CompanionLibraryView.swift in Sources */,
 				AA000005 /* WebSocketServer.swift in Sources */,
 				AA000009 /* FileTransferServer.swift in Sources */,
 				AA000007 /* DeviceManager.swift in Sources */,

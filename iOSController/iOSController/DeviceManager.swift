@@ -12,6 +12,8 @@ class DeviceManager: ObservableObject {
     
     private let webSocketServer = WebSocketServer()
     let fileTransferServer = FileTransferServer()
+    /// Flat companion videos used to preview what a headset viewer is watching.
+    let companionLibrary = CompanionLibrary()
     let syncManager = SyncSessionManager()
     private var cancellables = Set<AnyCancellable>()
 

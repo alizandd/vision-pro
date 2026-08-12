@@ -81,6 +81,13 @@ class WebSocketManager: ObservableObject {
         connectionState = .connecting
 
         let serverURL = AppConfiguration.serverURL
+        guard !serverURL.isEmpty else {
+            // Nothing to connect to yet — Bonjour discovery will supply the
+            // controller and drive the connection.
+            print("[WebSocket] No controller known yet — waiting for Bonjour discovery")
+            connectionState = .disconnected
+            return
+        }
         guard let url = URL(string: serverURL) else {
             print("[WebSocket] Invalid server URL: \(serverURL)")
             connectionState = .disconnected

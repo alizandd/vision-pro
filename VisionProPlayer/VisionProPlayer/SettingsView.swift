@@ -5,12 +5,16 @@ import SwiftUI
 struct SettingsView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var webSocketManager: WebSocketManager
-    @StateObject private var bonjourDiscovery = BonjourDiscovery()
+    /// Shared with the app — discovery runs for the whole session, Settings is
+    /// only a window onto it.
+    @EnvironmentObject var bonjourDiscovery: BonjourDiscovery
     @ObservedObject private var debug = StereoDebugSettings.shared
 
     @State private var serverURL: String = AppConfiguration.serverURL
     @State private var deviceName: String = AppConfiguration.deviceName
     @State private var autoConnect: Bool = AppConfiguration.autoConnect
+    /// Controller picked in this screen, remembered by id rather than address.
+    @State private var selectedControllerId: String? = AppConfiguration.preferredControllerId
     @State private var showingSaveConfirmation: Bool = false
 
     @Environment(\.dismiss) private var dismiss
@@ -43,6 +47,7 @@ struct SettingsView: View {
                     ForEach(bonjourDiscovery.discoveredControllers) { controller in
                         Button {
                             serverURL = controller.webSocketURL
+                            selectedControllerId = controller.controllerId
                         } label: {
                             HStack {
                                 Image(systemName: "iphone")
@@ -97,6 +102,12 @@ struct SettingsView: View {
                 // Server Configuration
                 Section {
                     TextField("WebSocket Server URL", text: $serverURL)
+                        .onChange(of: serverURL) { _, newValue in
+                            // Typing an address by hand overrides discovery.
+                            if bonjourDiscovery.discoveredControllers.first(where: { $0.webSocketURL == newValue }) == nil {
+                                selectedControllerId = nil
+                            }
+                        }
                         .textContentType(.URL)
                         .autocapitalization(.none)
                         .disableAutocorrection(true)
@@ -270,6 +281,9 @@ struct SettingsView: View {
         AppConfiguration.serverURL = serverURL
         AppConfiguration.deviceName = deviceName
         AppConfiguration.autoConnect = autoConnect
+        // A hand-typed URL is deliberately not tied to a discovered controller,
+        // so clear the preference rather than leaving a stale one behind.
+        AppConfiguration.preferredControllerId = selectedControllerId
 
         if urlChanged && webSocketManager.isConnected {
             // Reconnect with new URL

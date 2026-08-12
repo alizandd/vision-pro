@@ -288,13 +288,43 @@ struct AppConfiguration {
     static let serverURLKey = "websocket_server_url"
     static let deviceNameKey = "device_name"
     static let autoConnectKey = "auto_connect"
+    static let preferredControllerIdKey = "preferred_controller_id"
 
+    /// Registers the shipped defaults. Call once at launch, before anything
+    /// reads configuration.
+    ///
+    /// `autoConnect` defaults to **true**: the headset is meant to find its
+    /// controller by itself, and `UserDefaults.bool` would otherwise silently
+    /// return `false` on a fresh install and leave it sitting idle.
+    static func registerDefaults() {
+        UserDefaults.standard.register(defaults: [
+            autoConnectKey: true
+        ])
+    }
+
+    /// WebSocket URL of the controller.
+    ///
+    /// Empty on a fresh install — deliberately **not** `ws://localhost:8080`,
+    /// which made the headset connect to itself and masked discovery failures.
+    /// It is filled in by Bonjour discovery, or by hand for non-Bonjour setups.
     static var serverURL: String {
         get {
-            UserDefaults.standard.string(forKey: serverURLKey) ?? "ws://localhost:8080"
+            UserDefaults.standard.string(forKey: serverURLKey) ?? ""
         }
         set {
             UserDefaults.standard.set(newValue, forKey: serverURLKey)
+        }
+    }
+
+    /// Stable id of the controller this headset should follow, as published in
+    /// the Bonjour TXT record. Stored instead of an IP address so a controller
+    /// that moves to a new DHCP lease is still recognised.
+    static var preferredControllerId: String? {
+        get {
+            UserDefaults.standard.string(forKey: preferredControllerIdKey)
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: preferredControllerIdKey)
         }
     }
 

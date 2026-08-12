@@ -363,12 +363,15 @@ struct VisionProPlayerApp: App {
             print("[App] Native video player ready, starting playback")
             vidManager.startPlayback()
 
-            // Update status
+            // Update status. The asset is loaded by now, so this is the first
+            // point the real running time is known — and the controller needs it
+            // to decide whether a paired preview may be shown.
             wsManager.sendStatus(
                 state: PlaybackState.playing.rawValue,
                 currentVideo: state.currentVideoURL,
                 immersiveMode: state.isImmersiveActive,
-                currentTime: 0
+                currentTime: 0,
+                duration: vidManager.duration
             )
         }
     }

@@ -9,6 +9,10 @@ struct CompanionLibraryView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var photosSelection: [PhotosPickerItem] = []
+    /// PhotosPicker will not present when nested inside a Menu or a
+    /// ContentUnavailableView action, so both entry points flip this instead and
+    /// the picker is attached to the screen itself.
+    @State private var showPhotosPicker = false
     @State private var showFileImporter = false
     @State private var pendingDeletion: CompanionVideo?
 
@@ -31,6 +35,12 @@ struct CompanionLibraryView: View {
                     addMenu
                 }
             }
+            .photosPicker(
+                isPresented: $showPhotosPicker,
+                selection: $photosSelection,
+                maxSelectionCount: 5,
+                matching: .videos
+            )
             .fileImporter(
                 isPresented: $showFileImporter,
                 allowedContentTypes: [.movie, .video, .mpeg4Movie, .quickTimeMovie],
@@ -75,7 +85,9 @@ struct CompanionLibraryView: View {
 
     private var addMenu: some View {
         Menu {
-            PhotosPicker(selection: $photosSelection, maxSelectionCount: 5, matching: .videos) {
+            Button {
+                showPhotosPicker = true
+            } label: {
                 Label("From Photos", systemImage: "photo.on.rectangle")
             }
             Button {
@@ -147,20 +159,25 @@ struct CompanionLibraryView: View {
         } description: {
             Text("Add a flat version of an immersive video and the controller can show you what the headset viewer is watching, in step with them.\n\nIt must be the same length as the immersive original.")
         } actions: {
-            Menu {
-                PhotosPicker(selection: $photosSelection, maxSelectionCount: 5, matching: .videos) {
-                    Label("From Photos", systemImage: "photo.on.rectangle")
+            // Two plain buttons rather than a menu: a Menu here does not open at
+            // all, and showing both routes costs nothing and saves a tap.
+            VStack(spacing: 10) {
+                Button {
+                    showPhotosPicker = true
+                } label: {
+                    Label("Choose from Photos", systemImage: "photo.on.rectangle")
+                        .frame(maxWidth: 260)
                 }
+                .buttonStyle(.borderedProminent)
+
                 Button {
                     showFileImporter = true
                 } label: {
-                    Label("From Files or a Drive", systemImage: "folder")
+                    Label("Choose from Files or a Drive", systemImage: "folder")
+                        .frame(maxWidth: 260)
                 }
-            } label: {
-                Text("Add a Preview Video")
-                    .font(.headline)
+                .buttonStyle(.bordered)
             }
-            .buttonStyle(.borderedProminent)
         }
     }
 }

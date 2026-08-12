@@ -124,7 +124,8 @@ final class CompanionLibrary: ObservableObject {
                 return
             }
             await ingest(from: movie.url, displayName: movie.url.lastPathComponent)
-            try? fileManager.removeItem(at: movie.url)
+            // Clean up the whole staging directory, not just the file.
+            try? fileManager.removeItem(at: movie.url.deletingLastPathComponent())
         } catch {
             importState = .failed(message: "Could not import from Photos: \(error.localizedDescription)")
         }
@@ -277,9 +278,13 @@ struct CompanionTransferable: Transferable {
         FileRepresentation(contentType: .movie) { movie in
             SentTransferredFile(movie.url)
         } importing: { received in
-            let temp = FileManager.default.temporaryDirectory
-                .appendingPathComponent("companion-\(UUID().uuidString)-\(received.file.lastPathComponent)")
-            try? FileManager.default.removeItem(at: temp)
+            // Unique *directory*, original *filename* — the name is what the
+            // operator sees and what name-based pairing suggestions match on, so
+            // it must survive the round trip intact.
+            let directory = FileManager.default.temporaryDirectory
+                .appendingPathComponent("companion-\(UUID().uuidString)", isDirectory: true)
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            let temp = directory.appendingPathComponent(received.file.lastPathComponent)
             try FileManager.default.copyItem(at: received.file, to: temp)
             return CompanionTransferable(url: temp)
         }

@@ -44,6 +44,12 @@ struct NativeImmersiveView: View {
     /// so a working per-eye pipeline is never torn down and rebuilt while the same
     /// video keeps playing.
     @State private var activeStereoKey: String?
+
+    /// Video+format key whose per-eye (APMP) pipeline delivered no frames and was
+    /// abandoned in favour of the legacy path. Prevents rebuilding a renderer we
+    /// already know produces a black view for this content. Cleared when the
+    /// immersive session ends, so the next session tries per-eye stereo again.
+    @State private var apmpDisabledForKey: String?
     
     /// ARKit session for head tracking
     @State private var arkitSession = ARKitSession()
@@ -202,6 +208,7 @@ struct NativeImmersiveView: View {
             print("[NativeImmersiveView] View disappeared")
             isViewReady = false
             isARKitReady = false
+            apmpDisabledForKey = nil
             teardownStereoRenderer()
             cleanupVideoScreen()
             // Stop ARKit session
@@ -241,7 +248,11 @@ struct NativeImmersiveView: View {
     /// Builds a `VideoPlayerComponent`-backed entity driven by an APMP stereo
     /// renderer, when the opt-in true-stereo mode is on and the format is a
     /// frame-packed stereo type. Returns nil to fall back to the legacy path.
-    private func makeStereoScreenIfEnabled(format: VideoFormat, player: AVPlayer) -> ModelEntity? {
+    private func makeStereoScreenIfEnabled(format: VideoFormat, player: AVPlayer, key: String) -> ModelEntity? {
+        guard apmpDisabledForKey != key else {
+            RemoteLog("APMP", "Skipped: per-eye rendering already produced no frames for this video — staying on the legacy path so the picture stays visible.")
+            return nil
+        }
         guard debug.trueStereoEnabled else {
             RemoteLog("APMP", "Skipped: True 3D toggle is OFF → using legacy single-view (NO depth). Format=\(format.displayName)")
             return nil
@@ -278,10 +289,37 @@ struct NativeImmersiveView: View {
         let component = VideoPlayerComponent(videoRenderer: renderer.videoRenderer)
         entity.components.set(component)
 
+        // If the frame pump never delivers, abandon per-eye rendering and show the
+        // picture on the legacy path rather than leaving the wearer with audio
+        // over a black view.
+        renderer.onRenderFailure = { reason in
+            Task { @MainActor in fallBackFromStereo(key: key, reason: reason) }
+        }
         renderer.start(player: player)
         stereoRenderer = renderer
         return entity
         #endif
+    }
+
+    /// Abandons the per-eye pipeline for `key` and rebuilds the screen on the
+    /// legacy `VideoMaterial` path.
+    @MainActor
+    private func fallBackFromStereo(key: String, reason: String) {
+        // A newer video may already have replaced this renderer — ignore a late
+        // starvation report from a pipeline that is no longer the active one.
+        guard activeStereoKey == key else { return }
+
+        print("[NativeImmersiveView] Per-eye rendering failed (\(reason)) — falling back to the legacy video screen")
+        RemoteLog("APMP", "FALLBACK: \(reason) — switching this video to the legacy single-texture path (picture visible, no depth).")
+        apmpDisabledForKey = key
+        teardownStereoRenderer()
+        if let existing = screenEntity {
+            existing.removeFromParent()
+            screenEntity = nil
+        }
+        lastVideoURL = nil
+        lastVideoFormat = nil
+        updateVideoScreen()
     }
 
     // MARK: - Debug: Eye Comparison (simulator)
@@ -586,7 +624,9 @@ struct NativeImmersiveView: View {
         // Injects APMP metadata so the system renders each eye from the
         // correct half of the frame. Falls through to the legacy path below
         // if unavailable or not applicable.
-        if let stereoScreen = makeStereoScreenIfEnabled(format: format, player: player) {
+        if let stereoScreen = makeStereoScreenIfEnabled(format: format,
+                                                       player: player,
+                                                       key: stereoKey(url: currentURL, format: format)) {
             stereoScreen.name = "VideoScreen"
             videoEntity.addChild(stereoScreen)
             screenEntity = stereoScreen

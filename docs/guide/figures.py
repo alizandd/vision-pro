@@ -13,7 +13,7 @@ SIZES = {
     "ios-04-log.png":          (1206, 2622),
     "vp-01-main.png":          (2000, 1125),
     "vp-02-settings.png":      (2000, 1125),
-    "vp-03-immersive.png":     (2000, 1125),
+    "vp-03-immersive.png":     (2000, 1073),
 }
 
 # pad helpers
@@ -250,6 +250,6 @@ FIGURES = {
 
 "immersive": dict(
     src="vp-03-immersive.png", crop=(0.0, 0.0, 1.0, 1.0),
-    caption="What the wearer sees during immersive playback. The app window is hidden while this is on screen.",
+    caption="A frame from inside immersive playback \u2014 one eye's view of a 360\u00b0 scene wrapped around the wearer. The app window is hidden while this is on screen, and the wearer can look anywhere in the sphere.",
     callouts=[], legend=[]),
 }

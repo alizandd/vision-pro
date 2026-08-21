@@ -91,6 +91,36 @@ Both were reverted; no test flags remain in the source.
 hardware, and per-eye stereo depth — the simulator renders a single eye and
 cannot run the APMP display path at all. Both need a device pass.
 
+## Depth / per-eye rendering: confirmed unchanged
+
+Checked explicitly, because the fallback is the one thing that could silently cost
+stereo depth:
+
+- **The eye-split mechanism is byte-for-byte unchanged.** `configuration(for:)`, the
+  `ViewPackingKind` / `ProjectionKind` / `HorizontalFieldOfView` extensions,
+  `CMVideoFormatDescriptionCreate`, `VideoPlayerComponent(videoRenderer:)` and the
+  output's pixel-buffer attributes are all untouched — the only line that differs in
+  that area is a log string.
+- **No geometry, UV, mesh, scale or radius line changed** in `NativeImmersiveView`,
+  so the legacy path's mapping is identical too.
+- **`DisplayImmediately` does not affect depth.** It changes *when* a sample is
+  presented, not how it is split. Each sample carries one frame-packed image (both
+  eyes in a single buffer), so there is no left/right ordering to disturb, and the
+  attachment does not alter the format description the renderer reads to split eyes.
+- **The fallback cannot downgrade a working pipeline.** Starvation is guarded by
+  `didReportFirstFrame`, so it can only fire before a single frame has ever been
+  enqueued. `status == .failed` is terminal per Apple's contract. A decode-failure
+  notification only escalates once frames have actually stopped arriving — while
+  they are still flowing it is logged and cleared and the per-eye path keeps running
+  (tightened after review; treating any decode error as fatal would have cost depth
+  for a whole video over one bad frame).
+- **A fallback is not sticky across sessions.** `apmpDisabledForKey` is cleared in
+  `onDisappear`, so the next immersive session attempts per-eye stereo again.
+
+Net effect: when the per-eye path works it behaves exactly as before. The only
+behavioural change is that a pipeline which would previously have shown a black
+view now shows the picture in mono instead.
+
 ## Related
 
 The same run surfaced a separate, pre-existing defect: `updateVideoScreen()` calls

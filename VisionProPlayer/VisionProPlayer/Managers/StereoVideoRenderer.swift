@@ -99,6 +99,11 @@ final class APMPStereoRenderer: NSObject {
     /// Guards against reporting failure more than once.
     private var didReportFailure = false
 
+    /// Host time of the most recent frame successfully enqueued to the renderer.
+    /// Used to tell a transient decode hiccup (frames still flowing — keep the
+    /// per-eye path and its depth) from a pipeline that has actually died.
+    private var lastFrameEnqueuedAt: CFTimeInterval?
+
     /// Token for the block-based decode-failure observer. Block observers are
     /// only removable by their token — `removeObserver(self,…)` does not touch
     /// them — so it has to be kept to deregister cleanly in `stop()`.
@@ -187,6 +192,7 @@ final class APMPStereoRenderer: NSObject {
         dryTickCount = 0
         playbackObservedAt = nil
         decodeFailure = nil
+        lastFrameEnqueuedAt = nil
         print("[APMPStereo] Started — packing=\(packing), projection=\(projection)")
         RemoteLog("APMP", "Renderer started — packing=\(packing), projection=\(projection). Waiting for the video output to report media data.")
 
@@ -271,7 +277,24 @@ final class APMPStereoRenderer: NSObject {
                 }
 
                 if let decodeFailure = self.decodeFailure {
-                    self.reportFailure("decode failed: \(decodeFailure)")
+                    // A decode error does NOT by itself mean the pipeline is
+                    // dead — a single bad frame can be reported while the rest
+                    // keeps rendering correctly. Downgrading to the legacy path
+                    // here would throw away working per-eye depth for the whole
+                    // video, so only escalate once frames have actually stopped
+                    // arriving.
+                    let framesStillFlowing = self.lastFrameEnqueuedAt.map {
+                        CACurrentMediaTime() - $0 < self.starvationTimeout
+                    } ?? false
+
+                    if framesStillFlowing {
+                        print("[APMPStereo] Transient decode error (frames still flowing) — keeping per-eye rendering: \(decodeFailure)")
+                        RemoteLog("APMP", "Transient decode error, frames still flowing — staying on the per-eye path so stereo depth is preserved: \(decodeFailure)")
+                        self.decodeFailure = nil
+                        continue
+                    }
+
+                    self.reportFailure("decode failed and frames stopped: \(decodeFailure)")
                     return
                 }
 
@@ -317,6 +340,7 @@ final class APMPStereoRenderer: NSObject {
         dryTickCount = 0
         decodeFailure = nil
         didReportFailure = false
+        lastFrameEnqueuedAt = nil
         synchronizer.setRate(0, time: .zero)
         videoRenderer.flush()
         cachedFormatDescription = nil
@@ -363,6 +387,7 @@ final class APMPStereoRenderer: NSObject {
                                                     formatDescription: formatDescription,
                                                     time: presentationTime)
             videoRenderer.enqueue(sampleBuffer)
+            lastFrameEnqueuedAt = CACurrentMediaTime()
             if !didReportFirstFrame {
                 didReportFirstFrame = true
                 print("[APMPStereo] First stereo frame enqueued")

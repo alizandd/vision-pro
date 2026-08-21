@@ -395,6 +395,16 @@ curl http://localhost:8080/api/videos
 
 ## Changelog
 
+### 2026-08-21
+- **[Fix]** First playback showed no picture (audio only) until the user stopped and replayed — ~70-80% of first plays
+  - **Bug log**: `docs/bugs/2026-08-21-first-play-no-picture.md` · TeamFlow #2445 · branch `feature/first-play-no-picture`
+  - **Root cause**: `APMPStereoRenderer` (the default per-eye path on device) attached its `AVPlayerItemVideoOutput` and began polling it the instant `AVPlayerItem.status` became `.readyToPlay` — which only means playback *can* begin, not that a frame has been decoded. An output polled before the decoder produces output can stay dry for the whole session, so the `AVPlayer` kept playing audio while the renderer never received a frame. A cold first play hits that window; the warm second play does not — hence "stop and play again fixes it".
+  - **Fix**: pull frames the documented way — `AVPlayerItemOutputPullDelegate` + `requestNotificationOfMediaDataChange`, display link started only from `outputMediaDataWillChange`, re-armed when the pump goes dry or the sequence is flushed.
+  - Every sample is now tagged `DisplayImmediately`; the pull side already asks for exactly the frame due at this refresh, so the renderer no longer races a "now" timestamp against the synchronizer clock and drops early frames as late.
+  - The log-only watchdog became a **health monitor that recovers**: no frame after 3 s of real playback, or a renderer/decode failure, abandons the per-eye path and rebuilds the screen on the legacy `VideoMaterial` path — the wearer sees the picture instead of nothing. `requiresFlushToResumeDecoding` is recovered in place. The timer is armed from the monitor, not `tick()` (which never runs when starved), and only once the player is genuinely playing, so a synchronised prepare never trips it.
+  - Also: detach the video output from the item it was actually added to, and remove the block-based notification observer by its token.
+  - **Verified** on the visionOS 26.1 simulator against the real iOS Controller: pull-delegate handshake reaches "First stereo frame enqueued"; induced starvation falls back at 3.0 s with the picture restored and audio uninterrupted; legacy path and `Play on All` unregressed. **Still needs a device pass** — the simulator cannot run the APMP display path or show per-eye depth.
+
 ### 2026-08-12 (Update 2)
 - **[Controller Live Preview]** The operator can see what the headset wearer is watching, and where they are looking
   - **ADR**: `docs/adr/2026-08-12-controller-live-preview.md`

@@ -7,6 +7,10 @@
 		<key>CFBundlePrimaryIcon</key>
 		<string>AppIcon</string>
 	</dict>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>
@@ -14,23 +18,17 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
-	<key>UIBackgroundModes</key>
-	<array>
-		<string>audio</string>
-	</array>
-	<key>UILaunchScreen</key>
-	<dict/>
-	<key>NSWorldSensingUsageDescription</key>
-	<string>VisionProPlayer needs world tracking to properly position immersive video content in front of you.</string>
-	<key>UIFileSharingEnabled</key>
-	<true/>
-	<key>LSSupportsOpeningDocumentsInPlace</key>
-	<true/>
-	<key>NSLocalNetworkUsageDescription</key>
-	<string>VisionProPlayer uses local network to connect to iOS Controller apps and receive playback commands.</string>
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_visionproctl._tcp</string>
 	</array>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>VisionProPlayer uses local network to connect to iOS Controller apps and receive playback commands.</string>
+	<key>NSWorldSensingUsageDescription</key>
+	<string>VisionProPlayer needs world tracking to properly position immersive video content in front of you.</string>
+	<key>UIFileSharingEnabled</key>
+	<true/>
+	<key>UILaunchScreen</key>
+	<dict/>
 </dict>
 </plist>

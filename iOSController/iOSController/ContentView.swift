@@ -39,7 +39,7 @@ struct ContentView: View {
                     }
                 }
             }
-            .navigationTitle("Vision Pro Controller")
+            .navigationTitle("VPC Remote")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -98,7 +98,7 @@ struct ConnectionInfoCard: View {
             HStack {
                 Image(systemName: "link")
                     .foregroundColor(.blue)
-                Text("Vision Pro Connection URL:")
+                Text("Headset Connection URL:")
                     .font(.caption)
                     .foregroundColor(.secondary)
                 Spacer()
@@ -259,12 +259,12 @@ struct EmptyDevicesView: View {
                     .fontWeight(.semibold)
                 
                 if deviceManager.isServerRunning {
-                    Text("Waiting for Vision Pro devices to connect...")
+                    Text("Waiting for headsets to connect...")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
                     
-                    Text("Use the connection URL above in Vision Pro settings")
+                    Text("Use the connection URL above in VPC Player settings")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 } else {

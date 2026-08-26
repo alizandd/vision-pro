@@ -363,7 +363,7 @@ struct VideoThumbnailButton: View {
             }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("This will permanently remove the video from Vision Pro.")
+            Text("This will permanently remove the video from the headset.")
         }
     }
 }
@@ -488,7 +488,7 @@ struct PlaybackControlsView: View {
     private var hintText: String {
         switch (state, isSelectedVideoActive) {
         case (.loading, _):
-            return "Preparing video on Vision Pro…"
+            return "Preparing video on the headset…"
         case (.playing, true):
             return "Tap to pause playback"
         case (.paused, true):
@@ -510,7 +510,7 @@ struct PlaybackControlsView: View {
         device: {
             let device = ConnectedDevice(
                 deviceId: "test-123",
-                deviceName: "Ali's Vision Pro",
+                deviceName: "Ali's Headset",
                 connection: ClientConnection(connection: NWConnection(host: "localhost", port: 8080, using: .tcp))
             )
             device.localVideos = [

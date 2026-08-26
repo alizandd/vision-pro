@@ -51,7 +51,7 @@
 		AA1000A6 /* CompanionPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionPreviewView.swift; sourceTree = "<group>"; };
 		AA1000A7 /* ViewerDirectionIndicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewerDirectionIndicator.swift; sourceTree = "<group>"; };
 		AA100100 /* SyncControlPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncControlPanel.swift; sourceTree = "<group>"; };
-		AA200001 /* iOSController.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iOSController.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA200001 /* VPC Remote.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "VPC Remote.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -104,7 +104,7 @@
 		AA400003 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				AA200001 /* iOSController.app */,
+				AA200001 /* VPC Remote.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -126,7 +126,7 @@
 			);
 			name = iOSController;
 			productName = iOSController;
-			productReference = AA200001 /* iOSController.app */;
+			productReference = AA200001 /* VPC Remote.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -328,7 +328,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = 29N2XT4U33;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -346,7 +346,7 @@
 				);
 				MARKETING_VERSION = 1.7;
 				PRODUCT_BUNDLE_IDENTIFIER = com.qoostudio.vpc;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = "VPC Remote";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -359,7 +359,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = 29N2XT4U33;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -377,7 +377,7 @@
 				);
 				MARKETING_VERSION = 1.7;
 				PRODUCT_BUNDLE_IDENTIFIER = com.qoostudio.vpc;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = "VPC Remote";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";

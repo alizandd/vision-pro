@@ -39,7 +39,7 @@ struct SampleVideosView: View {
                         Text("1. Download a sample video above")
                         Text("2. Tap the upload button in the toolbar")
                         Text("3. Select the downloaded video from Photos")
-                        Text("4. Choose a Vision Pro device")
+                        Text("4. Choose a headset")
                         Text("5. Tap Send to transfer")
                     }
                     .font(.caption)

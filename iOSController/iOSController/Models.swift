@@ -224,7 +224,7 @@ enum CommandAction: String, Codable {
     case resume
     case change
     case stop
-    case deleteVideo  // Delete a video from Vision Pro
+    case deleteVideo  // Delete a video from the headset
     case syncPrepare  // Prepare a local video for synchronized playback
     case syncStart    // Start prepared video at a scheduled wall-clock time
     case syncPause    // Pause synchronized playback
@@ -310,7 +310,7 @@ struct SyncReadyMessage: Codable {
 /// Welcome message sent to new connections
 struct WelcomeMessage: Codable {
     let type: String = "welcome"
-    let message: String = "Connected to iOS Vision Pro Controller"
+    let message: String = "Connected to VPC Remote"
     let serverVersion: String = "1.0.0"
 }
 

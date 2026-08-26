@@ -266,7 +266,7 @@ struct VideoSelectionSection: View {
                 .buttonStyle(.plain)
             }
             
-            Text("Use Files to send Vision Pro / spatial videos that don't appear in Photos.")
+            Text("Use Files to send spatial or immersive videos that don't appear in Photos.")
                 .font(.caption2)
                 .foregroundColor(.secondary)
             

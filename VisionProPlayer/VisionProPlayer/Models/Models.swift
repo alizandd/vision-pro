@@ -404,11 +404,11 @@ struct AppConfiguration {
     /// Default name for a headset whose owner hasn't chosen one.
     ///
     /// Suffixed with part of this device's persistent id, because a room full of
-    /// headsets all called "Vision Pro" is exactly the problem the name exists
+    /// headsets all called "VPC Player" is exactly the problem the name exists
     /// to solve. Any name the user sets replaces this entirely.
     static var defaultDeviceName: String {
         let suffix = deviceIdentifier.replacingOccurrences(of: "-", with: "").suffix(4).uppercased()
-        return suffix.isEmpty ? "Vision Pro" : "Vision Pro \(suffix)"
+        return suffix.isEmpty ? "VPC Player" : "VPC Player \(suffix)"
     }
 
     /// Stable per-install identifier, shared with `WebSocketManager`.

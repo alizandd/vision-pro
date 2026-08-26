@@ -55,7 +55,7 @@ struct SyncControlPanel: View {
                         .font(.caption)
                         .fontWeight(.medium)
                         .foregroundColor(.secondary)
-                    Text("Transfer the same video to every Vision Pro first using the share button above.")
+                    Text("Transfer the same video to every headset first using the share button above.")
                         .font(.caption2)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)

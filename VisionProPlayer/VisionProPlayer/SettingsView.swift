@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Settings view for configuring the Vision Pro Player app.
+/// Settings view for configuring the VPC Player app.
 /// Allows users to set the WebSocket server URL and device name.
 struct SettingsView: View {
     @EnvironmentObject var appState: AppState
@@ -190,7 +190,7 @@ struct SettingsView: View {
                         Text("Stereoscopic Depth")
                     }
                 } footer: {
-                    Text("Renders each eye from its own half of Side-by-Side / Over-Under video using APMP metadata (visionOS 26+). Turn OFF to use the legacy single-view rendering. Depth is only visible on a real Vision Pro.")
+                    Text("Renders each eye from its own half of Side-by-Side / Over-Under video using APMP metadata (visionOS 26+). Turn OFF to use the legacy single-view rendering. Depth is only visible on a real headset.")
                 }
 
                 // Stereo / 3D Debug & Test Mode
@@ -229,7 +229,7 @@ struct SettingsView: View {
                         Text("3D / Stereo Test Mode")
                     }
                 } footer: {
-                    Text("'Eye Compare' shows the Left and Right eye crops side-by-side on flat panels — this works in the SIMULATOR to verify each eye gets a different, correctly-cropped image. Final depth fusion is only visible on a real Vision Pro.")
+                    Text("'Eye Compare' shows the Left and Right eye crops side-by-side on flat panels — this works in the SIMULATOR to verify each eye gets a different, correctly-cropped image. Final depth fusion is only visible on a real headset.")
                 }
 
                 // About
@@ -237,7 +237,7 @@ struct SettingsView: View {
                     HStack {
                         Text("Version")
                         Spacer()
-                        Text("1.0.0")
+                        Text(appVersion)
                             .foregroundColor(.secondary)
                     }
 
@@ -274,6 +274,15 @@ struct SettingsView: View {
                 Text("Your settings have been saved. The app will reconnect with the new settings.")
             }
         }
+    }
+
+    /// The shipping version, read from the bundle rather than typed in, so this
+    /// row cannot drift away from what was actually submitted.
+    private var appVersion: String {
+        let info = Bundle.main.infoDictionary
+        let short = info?["CFBundleShortVersionString"] as? String ?? "—"
+        let build = info?["CFBundleVersion"] as? String
+        return build.map { "\(short) (\($0))" } ?? short
     }
 
     /// A compact label/value row for the inline diagnostics readout.

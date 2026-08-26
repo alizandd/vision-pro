@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Main entry point for the Vision Pro Player application.
+/// Main entry point for the VPC Player application.
 /// This app acts as a remote-controlled video player that receives commands
 /// via WebSocket from the web controller.
 ///

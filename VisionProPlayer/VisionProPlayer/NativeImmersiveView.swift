@@ -952,7 +952,7 @@ struct StereoDiagnosticsPanel: View {
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
-            Label("Simulator shows ONE eye only — depth is only verifiable on a real Vision Pro.",
+            Label("Simulator shows ONE eye only — depth is only verifiable on a real headset.",
                   systemImage: "exclamationmark.triangle.fill")
                 .font(.footnote)
                 .foregroundStyle(.orange)

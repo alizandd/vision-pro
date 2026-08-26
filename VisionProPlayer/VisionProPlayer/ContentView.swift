@@ -75,7 +75,7 @@ struct ContentView: View {
                 Spacer()
             }
             .padding(32)
-            .navigationTitle("Vision Pro Player")
+            .navigationTitle("VPC Player")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button(action: { openWindow(id: "settings") }) {

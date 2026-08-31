@@ -41,7 +41,7 @@ FIGURES = {
     ]),
 
 "main-running": dict(
-    src="ipad-01-main.png", crop=(IPADC[0], 0.0, IPADC[1], 0.68),
+    src="ipad-01-main.png", crop=(IPADC[0], -0.09, IPADC[1], 0.68),
     caption="Controller app with the server running and one headset connected.",
     callouts=[
         dict(t=(0.063,0.046), b=(IL,0.030), n=1),

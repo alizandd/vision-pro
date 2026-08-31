@@ -3,14 +3,11 @@
 SIZES = {
     "ipad-00-stopped.png":     (1640, 2360),
     "ipad-01-main.png":        (1640, 2360),
-    "ipad-02-device-card.png": (1640, 2360),
     "ipad-03-controls.png":    (1640, 2360),
-    "ipad-04-playing.png":     (1640, 2360),
     "ipad-05-pause-stop.png":  (1640, 2360),
     "ipad-06-paused.png":      (1640, 2360),
-    "ios-02-transfer.png":     (1206, 2622),
-    "ios-03-transfer-send.png":(1206, 2622),
-    "ios-04-log.png":          (1206, 2622),
+    "ipad-07-transfer.png":    (1640, 2360),
+    "ipad-08-log.png":         (1640, 2360),
     "vp-01-main.png":          (2000, 1125),
     "vp-02-settings.png":      (2000, 1125),
     "vp-03-immersive.png":     (2000, 1073),
@@ -19,6 +16,11 @@ SIZES = {
 # pad helpers
 IPADC = (-0.115, 1.115)   # left/right crop for full-width tablet shots
 IL, IR = -0.072, 1.072    # badge lanes for those
+
+# Sheet figures (Send Videos, Activity Log): the sheet floats over a dimmed
+# backdrop, so the badges sit on that backdrop rather than outside the image.
+SHEETC = (-0.10, 1.10)
+SL, SR = -0.05, 1.05
 
 FIGURES = {
 
@@ -39,7 +41,7 @@ FIGURES = {
     ]),
 
 "main-running": dict(
-    src="ipad-01-main.png", crop=(IPADC[0], 0.0, IPADC[1], 0.66),
+    src="ipad-01-main.png", crop=(IPADC[0], 0.0, IPADC[1], 0.68),
     caption="Controller app with the server running and one headset connected.",
     callouts=[
         dict(t=(0.063,0.046), b=(IL,0.030), n=1),
@@ -53,11 +55,11 @@ FIGURES = {
         dict(t=(0.936,0.168), b=(IR,0.210), n=9),
         dict(t=(0.122,0.251), b=(IL,0.250), n=10),
         dict(t=(0.842,0.292), b=(IR,0.290), n=11),
-        dict(t=(0.182,0.616), b=(IL,0.600), n=12),
-        dict(t=(0.109,0.652), b=(IL,0.660), n=13),
-        dict(t=(0.180,0.717), b=(IL,0.720), n=14),
-        dict(t=(0.135,0.740), b=(IL,0.780), n=15),
-        dict(t=(0.427,0.729), b=(IR,0.729), n=16),
+        dict(t=(0.182,0.507), b=(IL,0.500), n=12),
+        dict(t=(0.109,0.544), b=(IL,0.552), n=13),
+        dict(t=(0.180,0.609), b=(IL,0.600), n=14),
+        dict(t=(0.135,0.632), b=(IL,0.648), n=15),
+        dict(t=(0.427,0.621), b=(IR,0.621), n=16),
     ],
     legend=[
         "<b>Stop</b> — stops the server. Every headset disconnects immediately.",
@@ -67,7 +69,7 @@ FIGURES = {
         "<b>Send Videos</b> <span class=\"gl\">&#61;</span> (the box with an arrow leaving it) — opens the transfer sheet used to copy a video onto a headset.",
         "<b>Preview Library</b> (two stacked rectangles) — the library of <b>flat companion videos</b> kept on the tablet. These are never sent to a headset; they exist so the operator can watch along on the tablet. Import them here, then pair one to a headset video by long-pressing its tile.",
         "<b>Activity Log</b> (lines in a box) — the timestamped record of everything the controller did. The first place to look when something behaves unexpectedly.",
-        "<b>Vision Pro Connection URL</b> — the address of this controller. Headsets normally find it automatically; this is what you would type by hand if they do not.",
+        "<b>Headset Connection URL</b> — the address of this controller. Headsets normally find it automatically; this is what you would type by hand if they do not.",
         "<b>Copy</b> — copies that URL to the clipboard.",
         "<b>VIDEOS ON ALL DEVICES</b> — only videos whose <b>filename is identical on every connected headset</b> appear here.",
         "<b>Selection tick</b> — the video that <b>Play on All</b> will use.",
@@ -80,7 +82,7 @@ FIGURES = {
 
 "vp-main": dict(
     src="vp-01-main.png", crop=(0.345, 0.375, 0.655, 0.715),
-    caption="The Vision Pro Player window as the wearer sees it. The app must be open on this window for the headset to be controllable.",
+    caption="The VPC Player window as the wearer sees it. The app must be open on this window for the headset to be controllable.",
     callouts=[
         dict(t=(0.500,0.443), b=(0.368,0.415), n=1),
         dict(t=(0.560,0.448), b=(0.632,0.408), n=2),
@@ -102,7 +104,7 @@ FIGURES = {
 
 "vp-settings": dict(
     src="vp-02-settings.png", crop=(0.345, 0.035, 0.735, 0.735),
-    caption="Vision Pro Player → Settings. Everything the headset needs in order to be found and identified.",
+    caption="VPC Player → Settings. Everything the headset needs in order to be found and identified.",
     callouts=[
         dict(t=(0.439,0.093), b=(0.368,0.070), n=1),
         dict(t=(0.643,0.093), b=(0.712,0.070), n=2),
@@ -129,19 +131,19 @@ FIGURES = {
     ]),
 
 "transfer": dict(
-    src="ios-03-transfer-send.png", crop=(-0.155, 0.05, 1.155, 0.75),
+    src="ipad-07-transfer.png", crop=(SHEETC[0], 0.205, SHEETC[1], 0.795),
     caption="Send Videos — copying a video from the controller onto one headset.",
     callouts=[
-        dict(t=(0.145,0.115), b=(-0.095,0.100), n=1),
-        dict(t=(0.284,0.200), b=(-0.095,0.190), n=2),
-        dict(t=(0.282,0.274), b=(-0.095,0.272), n=3),
-        dict(t=(0.716,0.274), b=(1.095,0.272), n=4),
-        dict(t=(0.478,0.349), b=(1.095,0.345), n=5),
-        dict(t=(0.511,0.403), b=(-0.095,0.400), n=6),
-        dict(t=(0.864,0.413), b=(1.095,0.420), n=7),
-        dict(t=(0.283,0.521), b=(-0.095,0.520), n=8),
-        dict(t=(0.370,0.583), b=(1.095,0.583), n=9),
-        dict(t=(0.535,0.911), b=(-0.095,0.905), n=10),
+        dict(t=(0.209,0.247), b=(SL,0.243), n=1),
+        dict(t=(0.286,0.311), b=(SL,0.300), n=2),
+        dict(t=(0.339,0.366), b=(SL,0.360), n=3),
+        dict(t=(0.660,0.366), b=(SR,0.360), n=4),
+        dict(t=(0.419,0.417), b=(SR,0.415), n=5),
+        dict(t=(0.329,0.449), b=(SL,0.450), n=6),
+        dict(t=(0.786,0.457), b=(SR,0.470), n=7),
+        dict(t=(0.286,0.537), b=(SL,0.535), n=8),
+        dict(t=(0.327,0.578), b=(SL,0.590), n=9),
+        dict(t=(0.499,0.734), b=(SR,0.730), n=10),
     ],
     legend=[
         "<b>Cancel</b> — closes the sheet. Nothing is sent.",
@@ -149,7 +151,7 @@ FIGURES = {
         "<b>Photos</b> — pick from the tablet's photo library. <b>Warning:</b> Photos does not preserve the original filename — see callout 6.",
         "<b>Files</b> — pick from the Files app, iCloud Drive or a connected drive. <b>This preserves the real filename and is the recommended route.</b>",
         "<b>Hint</b> — Vision Pro / spatial videos often do not appear in Photos at all; use Files for those.",
-        "<b>The filename that will be used.</b> Here the video came from Photos and arrived as <code>E736F8EA-2264-47A3-AC24-3F7B…</code> — a meaningless identifier. That exact string becomes the filename on the headset.",
+        "<b>The filename that will be used.</b> Whatever is shown here becomes the filename on the headset — check it before sending. A video taken from <b>Photos</b> can arrive as a meaningless identifier such as <code>E736F8EA-2264-47A3-AC24-3F7B…</code> instead of its real name, which is exactly what breaks group playback. Via <b>Files</b> it keeps the name it already had, as here.",
         "<b>Remove</b> — takes this file out of the selection.",
         "<b>Step 2 — Select Device</b> — which headset receives the file. <b>One headset per send</b>; repeat for each.",
         "<b>A headset</b> — its name and how many videos it already holds. Tap to select.",
@@ -157,24 +159,24 @@ FIGURES = {
     ]),
 
 "device-card": dict(
-    src="ipad-03-controls.png", crop=(-0.145, 0.48, 0.60, 1.0),
+    src="ipad-03-controls.png", crop=(-0.145, 0.575, 0.60, 0.975),
     caption="An expanded headset card, with no video selected yet.",
     callouts=[
-        dict(t=(0.180,0.630), b=(-0.095,0.560), n=1),
-        dict(t=(0.135,0.652), b=(-0.095,0.630), n=2),
-        dict(t=(0.130,0.698), b=(-0.095,0.700), n=3),
-        dict(t=(0.432,0.698), b=(0.552,0.690), n=4),
-        dict(t=(0.238,0.745), b=(0.552,0.750), n=5),
-        dict(t=(0.155,0.797), b=(-0.095,0.790), n=6),
-        dict(t=(0.146,0.861), b=(-0.095,0.860), n=7),
-        dict(t=(0.142,0.924), b=(-0.095,0.930), n=8),
-        dict(t=(0.365,0.924), b=(0.552,0.930), n=9),
+        dict(t=(0.180,0.609), b=(-0.095,0.598), n=1),
+        dict(t=(0.135,0.632), b=(-0.095,0.640), n=2),
+        dict(t=(0.130,0.678), b=(-0.095,0.682), n=3),
+        dict(t=(0.432,0.678), b=(0.552,0.678), n=4),
+        dict(t=(0.238,0.726), b=(0.552,0.726), n=5),
+        dict(t=(0.155,0.778), b=(-0.095,0.778), n=6),
+        dict(t=(0.147,0.831), b=(-0.095,0.831), n=7),
+        dict(t=(0.143,0.895), b=(-0.095,0.895), n=8),
+        dict(t=(0.365,0.895), b=(0.552,0.895), n=9),
     ],
     legend=[
         "<b>Headset name</b> — as set on that headset.",
         "<b>Status badge</b> — Idle here: connected but not playing anything.",
         "<b>Local Videos</b> — what is actually stored on <i>this</i> headset.",
-        "<b>6 available</b> — the count. If a video you sent is missing, it never arrived; check the Activity Log.",
+        "<b>4 available</b> — the count. If a video you sent is missing, it never arrived; check the Activity Log.",
         "<b>Video tile</b> — tap to select it for this headset. It gets a blue outline when selected.",
         "<b>Delete</b> (trash) — permanently removes that video from the headset. You are asked to confirm first.",
         "<b>Video Format</b> — the per-headset format used by this card's Play button. Set it to match the video you are about to play.",
@@ -223,29 +225,29 @@ FIGURES = {
     ]),
 
 "log": dict(
-    src="ios-04-log.png", crop=(-0.155, 0.05, 1.155, 0.85),
+    src="ipad-08-log.png", crop=(SHEETC[0], 0.205, SHEETC[1], 0.795),
     caption="The Activity Log during a synchronised start. Read it bottom-to-top: it is the sequence the system actually followed.",
     callouts=[
-        dict(t=(0.128,0.115), b=(-0.095,0.100), n=1),
-        dict(t=(0.868,0.115), b=(1.095,0.100), n=2),
-        dict(t=(0.084,0.181), b=(-0.095,0.185), n=3),
-        dict(t=(0.543,0.774), b=(1.095,0.790), n=4),
-        dict(t=(0.620,0.680), b=(1.095,0.690), n=5),
-        dict(t=(0.609,0.588), b=(1.095,0.595), n=6),
-        dict(t=(0.543,0.493), b=(1.095,0.500), n=7),
-        dict(t=(0.636,0.395), b=(1.095,0.400), n=8),
-        dict(t=(0.400,0.302), b=(-0.095,0.300), n=9),
+        dict(t=(0.201,0.247), b=(SL,0.243), n=1),
+        dict(t=(0.796,0.247), b=(SR,0.243), n=2),
+        dict(t=(0.202,0.296), b=(SL,0.300), n=3),
+        dict(t=(0.520,0.511), b=(SR,0.515), n=4),
+        dict(t=(0.554,0.457), b=(SR,0.455), n=5),
+        dict(t=(0.486,0.404), b=(SR,0.400), n=6),
+        dict(t=(0.429,0.350), b=(SR,0.345), n=7),
+        dict(t=(0.509,0.297), b=(SR,0.290), n=8),
+        dict(t=(0.440,0.739), b=(SL,0.740), n=9),
     ],
     legend=[
         "<b>Clear</b> — empties the log. Do this before reproducing a problem so the log holds only the relevant run.",
         "<b>Done</b> — closes the log.",
         "<b>Timestamp</b> — every line is stamped, so you can see how long each step took.",
         "<b>Measuring clock offsets…</b> — before anything plays, the controller measures each headset's clock against its own.",
-        "<b>offset 0ms (rtt 2ms, 5 samples)</b> — the result for one headset. A small round-trip time means a healthy network; a large or wildly varying one is the signature of congested or badly-configured Wi-Fi.",
+        "<b>offset 1ms (rtt 1ms, 5 samples)</b> — the result for one headset. A small round-trip time means a healthy network; a large or wildly varying one is the signature of congested or badly-configured Wi-Fi.",
         "<b>Preparing '…' on all devices</b> — each headset is told to open its immersive view and pre-load the file, but <i>not</i> to start.",
         "<b>Ready for sync</b> — that headset reported it is loaded and waiting. Every headset must report this before anything starts.",
         "<b>Sync start scheduled (+1000ms)</b> — the controller picks a moment one second ahead and tells every headset to begin exactly then, each in its own corrected clock.",
-        "<b>Playback ended on all devices</b> — the session finished normally.",
+        "<b>Single-headset commands</b> — Play / Pause / Stop sent to one named headset appear here too, so a card's buttons and the synchronised sequence above can be told apart when reading back what happened.",
     ]),
 
 "immersive": dict(

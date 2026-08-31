@@ -113,12 +113,12 @@ BODY = r"""
 
 <section class="cover">
   <div class="kick">Operator Guide</div>
-  <h1>Vision Pro Player<br>&amp; Controller</h1>
+  <h1>VPC Player<br>&amp; VPC Remote</h1>
   <div class="sub">Loading video onto headsets, naming it so a group can play together, running single and synchronised playback, and diagnosing a headset that will not connect.</div>
   <dl>
-    <dt>Applies to</dt><dd>Vision Pro Player 3.5 (visionOS) · VP Controller 1.5 (iPadOS / iOS)</dd>
+    <dt>Applies to</dt><dd>VPC Player 3.6 (visionOS) · VPC Remote 1.7 (iPadOS / iOS)</dd>
     <dt>Audience</dt><dd>Operators running one or more Vision Pro headsets from a tablet</dd>
-    <dt>Screenshots</dt><dd>Captured from the running apps: VP Controller on iPad, Vision Pro Player on visionOS 26.1</dd>
+    <dt>Screenshots</dt><dd>Captured from the running apps: VPC Remote on iPad, VPC Player on visionOS 26.1</dd>
     <dt>Document date</dt><dd>21 August 2026</dd>
   </dl>
 </section>
@@ -126,6 +126,7 @@ BODY = r"""
 <section class="toc">
   <h2 style="margin-top:0">Contents</h2>
   <ol>
+    <li>Installing the two apps</li>
     <li>How the system fits together</li>
     <li>What the network has to allow</li>
     <li>Naming each headset</li>
@@ -144,12 +145,35 @@ BODY = r"""
   </ol>
 </section>
 
-<h2>1. How the system fits together</h2>
+<h2>1. Installing the two apps</h2>
+<p>Nothing in this guide works until both apps are installed. They are separate downloads from the App Store, and each goes on a different kind of device.</p>
+
+<table>
+  <tr><th style="width:38mm">App</th><th style="width:40mm">Install it on</th><th>Where to get it</th></tr>
+  <tr>
+    <td><b>VPC Player</b></td>
+    <td><b>Apple Vision Pro</b><br>one copy per headset</td>
+    <td><a href="https://apps.apple.com/us/app/vpc-player/id6757492041">apps.apple.com/us/app/vpc-player/id6757492041</a></td>
+  </tr>
+  <tr>
+    <td><b>VPC Remote</b></td>
+    <td><b>iPad or iPhone</b><br>the operator's device</td>
+    <td><a href="https://apps.apple.com/us/app/vpc-remote/id6758781320">apps.apple.com/us/app/vpc-remote/id6758781320</a></td>
+  </tr>
+</table>
+
+<p>Install <b>VPC Player</b> on <i>every</i> headset you intend to run — each one plays from its own storage, so each one needs the app. Install <b>VPC Remote</b> on the single tablet or phone you will operate from.</p>
+
+<div class="note"><b>Which device gets which app</b>VPC Player is a visionOS app and will only install on a Vision Pro. VPC Remote is an iPadOS / iOS app and will only install on an iPad or iPhone. Neither one does the other's job, and the system needs both.</div>
+
+<div class="tip"><b>Do this before the day</b>Install, open each app once, and name every headset (section 4) while you still have time and a network you control. An App Store download on venue Wi-Fi, on the morning of an event, is not a plan.</div>
+
+<h2>2. How the system fits together</h2>
 <p>There are two apps, and they have different jobs.</p>
 <table>
   <tr><th style="width:38mm">App</th><th>Runs on</th><th>Role</th></tr>
-  <tr><td><b>VP Controller</b></td><td>iPad or iPhone</td><td>The operator's app. It <b>is</b> the server: it hands out commands, stores nothing permanently, and copies video files to the headsets.</td></tr>
-  <tr><td><b>Vision Pro Player</b></td><td>Each Vision Pro</td><td>Plays the video. It stores its own copy of every video locally and connects <i>out</i> to the controller.</td></tr>
+  <tr><td><b>VPC Remote</b></td><td>iPad or iPhone</td><td>The operator's app. It <b>is</b> the server: it hands out commands, stores nothing permanently, and copies video files to the headsets.</td></tr>
+  <tr><td><b>VPC Player</b></td><td>Each Vision Pro</td><td>Plays the video. It stores its own copy of every video locally and connects <i>out</i> to the controller.</td></tr>
 </table>
 
 <div class="flow">
@@ -166,13 +190,13 @@ BODY = r"""
   <li><b>The controller is the server.</b> If the controller app is closed or its server is stopped, every headset loses its link. The headsets keep whatever they were doing but can no longer be commanded.</li>
 </ul>
 
-<h2>2. What the network has to allow</h2>
+<h2>3. What the network has to allow</h2>
 <p>The two apps find each other automatically, but only if the network permits it. In order of how often each one causes trouble:</p>
 <table>
   <tr><th style="width:52mm">Requirement</th><th>Why, and what breaks without it</th></tr>
   <tr><td><b>Same Wi-Fi network, same subnet</b></td><td>The headsets look for the controller on the local network only. A headset on a guest network, a different SSID, or a different VLAN will never see it — even if both have internet.</td></tr>
   <tr><td><b>Client isolation OFF</b><br>(also called AP isolation, client separation, or guest mode)</td><td>This setting stops devices on the same Wi-Fi from talking to each other. It is <b>on by default on most guest and hotel networks</b> and it blocks this system completely. This is the single most common cause of "the headset never appears".</td></tr>
-  <tr><td><b>mDNS / Bonjour allowed</b></td><td>Auto-discovery uses multicast DNS. Some managed and enterprise networks filter it. If it is blocked, discovery fails but the manual address (section 5) still works.</td></tr>
+  <tr><td><b>mDNS / Bonjour allowed</b></td><td>Auto-discovery uses multicast DNS. Some managed and enterprise networks filter it. If it is blocked, discovery fails but the manual address (section 6) still works.</td></tr>
   <tr><td><b>TCP ports 8080 and 8081 open between devices</b></td><td>8080 carries commands and status; 8081 carries the video file during a transfer. A firewall between the devices will break one or both.</td></tr>
   <tr><td><b>All devices on one band, or a single merged SSID</b></td><td>Some routers keep 2.4 GHz and 5 GHz as separate isolated networks. If the tablet is on one and a headset on the other, they may not see each other.</td></tr>
 </table>
@@ -181,16 +205,16 @@ BODY = r"""
 
 <div class="warn"><b>Do not rely on a venue's public Wi-Fi</b>Public, guest and conference networks almost always have client isolation enabled, and you usually cannot turn it off. Test on the actual network before the event, not on the day.</div>
 
-<h2>3. Naming each headset</h2>
+<h2>4. Naming each headset</h2>
 <p>With more than one headset in the room, every one of them is called "Vision Pro" until you name it. Do this once per headset, before anything else — it is what you will see on the controller and in the log for the rest of the event.</p>
-<p>On the headset: open <b>Vision Pro Player</b> → the gear icon (or tap the address line) → <b>Device</b> → type a name → <b>Save</b>.</p>
+<p>On the headset: open <b>VPC Player</b> → the gear icon (or tap the address line) → <b>Device</b> → type a name → <b>Save</b>.</p>
 
 {{FIG:vp-settings}}
 
 <div class="tip"><b>Name them after the physical world, not the hardware</b>Use "Seat 1", "Seat 2", "Lobby Headset" — something a person holding the device can verify at a glance. Serial numbers and user names are useless when you are trying to work out which of five identical headsets has frozen. The name is kept until you change it or delete the app.</div>
 
-<h2>4. Starting the controller</h2>
-<p>Open <b>VP Controller</b> on the tablet. On first launch the server is not running.</p>
+<h2>5. Starting the controller</h2>
+<p>Open <b>VPC Remote</b> on the tablet. On first launch the server is not running.</p>
 
 {{FIG:server-stopped}}
 
@@ -200,7 +224,7 @@ BODY = r"""
 
 <div class="note"><b>Order does not matter</b>You can start the controller before or after opening the app on the headsets. Whichever comes second will find the other within a few seconds. What <i>is</i> required is that both are running at the same time — a headset with the app closed is invisible.</div>
 
-<h2>5. How a headset finds its controller</h2>
+<h2>6. How a headset finds its controller</h2>
 <p>The headset does this by itself. The controller announces its presence on the local network; each headset watches for that announcement and connects.</p>
 
 {{FIG:vp-main}}
@@ -208,7 +232,7 @@ BODY = r"""
 <h3>What the addresses mean</h3>
 <table>
   <tr><th style="width:56mm">Where you see it</th><th>What it is</th></tr>
-  <tr><td>Controller, <b>Vision Pro Connection URL</b><br><code>ws://192.168.88.247:8080</code></td><td>The tablet's own address on this Wi-Fi network, and the control port. This is what the headsets connect to. <b>It changes when the tablet joins a different network</b>, which is normal.</td></tr>
+  <tr><td>Controller, <b>Headset Connection URL</b><br><code>ws://192.168.88.247:8080</code></td><td>The tablet's own address on this Wi-Fi network, and the control port. This is what the headsets connect to. <b>It changes when the tablet joins a different network</b>, which is normal.</td></tr>
   <tr><td>Headset Settings, under a discovered controller</td><td>The same address, as the headset resolved it. If it matches the tablet, discovery is working.</td></tr>
   <tr><td>Headset main window, the address line</td><td>The controller this headset is actually connected to right now.</td></tr>
 </table>
@@ -216,9 +240,9 @@ BODY = r"""
 <div class="note"><b>The headset remembers the controller, not the address</b>It stores <i>which</i> controller it was paired with and re-resolves the address every time. So a new address from the router after a restart does not strand a headset — it will find the same controller again on its own.</div>
 
 <h3>If it does not connect on its own</h3>
-<p>Use the manual route: read the address from the controller (figure {{REF:main-running}}, callout 8), then on the headset open <b>Settings → Manual Server Connection</b> and type it exactly, including <code>ws://</code> and <code>:8080</code>. If the manual address works but discovery does not, the network is filtering mDNS — see section 13.</p>
+<p>Use the manual route: read the address from the controller (figure {{REF:main-running}}, callout 8), then on the headset open <b>Settings → Manual Server Connection</b> and type it exactly, including <code>ws://</code> and <code>:8080</code>. If the manual address works but discovery does not, the network is filtering mDNS — see section 14.</p>
 
-<h2>6. Getting video onto a headset</h2>
+<h2>7. Getting video onto a headset</h2>
 <p>Every headset plays from its own local copy, so the file has to physically be on each headset that will play it. There are two ways to put it there.</p>
 
 <h3>Route A — send it from the controller (normal)</h3>
@@ -228,19 +252,19 @@ BODY = r"""
 
 <p>The copy runs over Wi-Fi on port 8081. Progress appears in the Activity Log, and the headset's video list refreshes by itself when it lands.</p>
 
-<div class="warn"><b>One headset at a time</b>Step 2 takes a single device. To put the same video on five headsets you repeat the send five times — and every copy must end up with the <b>same filename</b>, which is what section 7 is about.</div>
+<div class="warn"><b>One headset at a time</b>Step 2 takes a single device. To put the same video on five headsets you repeat the send five times — and every copy must end up with the <b>same filename</b>, which is what section 8 is about.</div>
 
 <h3>Route B — put the file on the headset directly</h3>
 <p>The player reads from its own <b>Documents/Videos</b> folder. Anything placed there appears in the headset's local video list after the app rescans (it rescans on launch and whenever the app comes back to the foreground).</p>
 <p>Use this when you have very large files and access to the headset directly — copying a 20 GB immersive file over Wi-Fi is slow, and putting it in place with a cable or via the Files app is much faster.</p>
 <ul>
-  <li><b>Files app on the headset:</b> Files → On My Vision Pro → <b>Vision Pro Player</b> → <b>Videos</b> → paste the file there.</li>
-  <li><b>From a Mac (Xcode):</b> Devices and Simulators → select the headset → Installed Apps → Vision Pro Player → download the container, drop the file into <code>Documents/Videos</code>, then replace the container.</li>
+  <li><b>Files app on the headset:</b> Files → On My Vision Pro → <b>VPC Player</b> → <b>Videos</b> → paste the file there.</li>
+  <li><b>From a Mac (Xcode):</b> Devices and Simulators → select the headset → Installed Apps → VPC Player → download the container, drop the file into <code>Documents/Videos</code>, then replace the container.</li>
 </ul>
 
-<div class="note"><b>Both routes end in the same place</b><code>Documents/Videos</code> inside the Vision Pro Player app. A video that is in that folder will play; one that is anywhere else will not be seen.</div>
+<div class="note"><b>Both routes end in the same place</b><code>Documents/Videos</code> inside the VPC Player app. A video that is in that folder will play; one that is anywhere else will not be seen.</div>
 
-<h2>7. Naming videos — the rule that makes group playback work</h2>
+<h2>8. Naming videos — the rule that makes group playback work</h2>
 <p>This is the part that most often goes wrong, so it is worth being precise.</p>
 
 <div class="warn"><b>The rule</b>A video appears under <b>VIDEOS ON ALL DEVICES</b> only if a file with <b>exactly the same filename</b> exists on <b>every connected headset</b>. The comparison is on the whole filename including the extension, and it is <b>case sensitive</b>.</div>
@@ -265,7 +289,7 @@ BODY = r"""
 
 <div class="tip"><b>Verify before the audience arrives</b>After loading every headset, look at <b>VIDEOS ON ALL DEVICES</b>. If a video is in that list, every connected headset has it under that exact name and group playback will work. If it is missing, it is missing from at least one headset — expand each card and compare the local lists to find which.</div>
 
-<h2>8. Playing on one headset</h2>
+<h2>9. Playing on one headset</h2>
 <p>Expand a headset's card with the chevron (figure {{REF:main-running}}, callout 16).</p>
 
 {{FIG:device-card}}
@@ -300,13 +324,13 @@ BODY = r"""
 
 {{FIG:immersive}}
 
-<h2>9. Playing on every headset at once</h2>
+<h2>10. Playing on every headset at once</h2>
 <p>The <b>Synchronized Playback</b> panel at the top of the controller plays one video on every connected headset, starting at the same instant.</p>
 
 <h3>Before you press it</h3>
 <ol>
   <li>Every headset that should take part is <b>connected</b> — check the device count in the header.</li>
-  <li>The video appears under <b>VIDEOS ON ALL DEVICES</b> — which, per section 7, means every headset holds it under that exact filename.</li>
+  <li>The video appears under <b>VIDEOS ON ALL DEVICES</b> — which, per section 8, means every headset holds it under that exact filename.</li>
   <li>The <b>Format</b> is set correctly. It applies to all headsets.</li>
 </ol>
 
@@ -327,12 +351,12 @@ BODY = r"""
 <table>
   <tr><th style="width:52mm">What you see</th><th>Cause</th></tr>
   <tr><td><b>"No videos available on all devices"</b></td><td>There is no single filename common to every connected headset. Expand each card and compare the local lists.</td></tr>
-  <tr><td>A video is on the headsets but not in the list</td><td>The filename differs somewhere — a <code>_1</code> suffix from a repeated transfer, a different extension case, or a Photos-generated identifier on one device. See section 7.</td></tr>
+  <tr><td>A video is on the headsets but not in the list</td><td>The filename differs somewhere — a <code>_1</code> suffix from a repeated transfer, a different extension case, or a Photos-generated identifier on one device. See section 8.</td></tr>
   <tr><td>The list shrinks when a headset joins</td><td>Correct and expected. The newly joined headset does not have those videos, so they are no longer common to all.</td></tr>
   <tr><td>A headset is playing but was not in the group</td><td>It was dropped at step 3 because it did not report ready in time — usually a very large file on a slow network. The Activity Log names it.</td></tr>
 </table>
 
-<h2>10. Status badges at a glance</h2>
+<h2>11. Status badges at a glance</h2>
 <table>
   <tr><th style="width:34mm">Badge</th><th>Meaning</th></tr>
   <tr><td><b>Idle</b> (grey)</td><td>Connected, nothing loaded. The normal resting state.</td></tr>
@@ -340,10 +364,10 @@ BODY = r"""
   <tr><td><b>Paused</b> (orange)</td><td>Held on a frame, immersive view still open.</td></tr>
   <tr><td><b>Stopped</b> (grey)</td><td>Playback ended or was stopped.</td></tr>
   <tr><td><b>Immersive</b> (purple)</td><td>The immersive view is open — the wearer is inside the content, not looking at a window. Appears alongside the state badge.</td></tr>
-  <tr><td>Headset missing entirely</td><td>Not connected. It is not a playback problem — see section 13.</td></tr>
+  <tr><td>Headset missing entirely</td><td>Not connected. It is not a playback problem — see section 14.</td></tr>
 </table>
 
-<h2>11. Icons you will see</h2>
+<h2>12. Icons you will see</h2>
 <p>Two of these carry meaning that is easy to miss, so they are worth learning: the <b>Preview Library</b> in the toolbar, and the small <b>badge in the corner of a video tile</b>.</p>
 <table class="icontbl">
   <tr><th style="width:20mm">Icon</th><th style="width:44mm">Name</th><th>What it means and why it is there</th></tr>
@@ -377,7 +401,7 @@ BODY = r"""
     <td><b>This is the one that is most often missed.</b> It marks a headset video that already has a flat companion paired to it. Tiles <i>without</i> the badge have no companion, so selecting them gives you playback but no watch-along preview. The badge appears only after you pair one — see the next section.</td>
   </tr>
   <tr>
-    <td>{ICON:ipad-03-controls.png:0.155:0.800:48}</td><td><b>Delete</b><br>(red trash, under a tile)</td>
+    <td>{ICON:ipad-03-controls.png:0.155:0.778:48}</td><td><b>Delete</b><br>(red trash, under a tile)</td>
     <td>Permanently removes that video from that headset. Asks for confirmation first.</td>
   </tr>
   <tr>
@@ -385,14 +409,14 @@ BODY = r"""
     <td>In the synchronised list, an empty circle is an unselected video and a filled purple tick is the one <b>Play on All</b> will use. On a headset's own tiles, selection is shown as a <b>blue outline</b> instead.</td>
   </tr>
   <tr>
-    <td>{ICON:ipad-01-main.png:0.460:0.729:60}</td><td><b>Chevron</b><br>(right of a headset card)</td>
+    <td>{ICON:ipad-01-main.png:0.459:0.6205:60}</td><td><b>Chevron</b><br>(right of a headset card)</td>
     <td>Expands or collapses that headset's card. Collapsed cards still show name and status.</td>
   </tr>
 </table>
 
 <div class="tip"><b>Reading the badge at a glance</b>The two-stacked-rectangles glyph always means "flat companion video". In the toolbar it opens the library of them; on a video tile it means "this one has one".</div>
 
-<h2>12. Seeing what the wearer sees</h2>
+<h2>13. Seeing what the wearer sees</h2>
 <p>The operator cannot see the headset's picture directly — an immersive file is far too large to stream to a tablet, and a 360° stereo frame would be unreadable on a flat screen anyway. Instead the controller can play a <b>flat companion copy</b> of the same film, in step with the headset.</p>
 
 <h3>Pairing a companion video</h3>
@@ -409,11 +433,11 @@ BODY = r"""
 <p>While a companion preview is running, the card also shows a <b>direction indicator</b>: a bar with a marker showing where in the content the wearer's head is pointed, captioned in plain words — <i>"Facing the centre"</i>, <i>"Looking 43° right of centre"</i>. It is measured relative to where the content was placed when playback started, not to the room.</p>
 <div class="note"><b>Head direction, not eye gaze</b>This is where the headset is pointed. visionOS does not make eye-tracking available to apps, by design, so true gaze cannot be shown. The indicator dims if the readings stop arriving.</div>
 
-<h2>13. Removing a video from a headset</h2>
+<h2>14. Removing a video from a headset</h2>
 <p>Expand the headset's card and tap the <b>trash icon</b> under a video tile (figure {{REF:device-card}}, callout 6). You are asked to confirm; the file is then permanently deleted from that headset and the list refreshes.</p>
 <div class="warn"><b>Per headset, and permanent</b>Deleting removes the file from that one headset only. There is no undo and no copy left behind — the file has to be transferred again if you need it back.</div>
 
-<h2>14. When something does not work</h2>
+<h2>15. When something does not work</h2>
 <p>Open the <b>Activity Log</b> first. It is timestamped and it records what actually happened, which is almost always faster than guessing.</p>
 
 {{FIG:log}}
@@ -421,7 +445,7 @@ BODY = r"""
 <h3>A headset never appears on the controller</h3>
 <p>Work down this list in order — it is ordered by how often each one is the answer.</p>
 <ol>
-  <li><b>Is the app open on the headset, on the Vision Pro Player window?</b> A headset with the app closed cannot be seen. This is the most common cause by a wide margin.</li>
+  <li><b>Is the app open on the headset, on the VPC Player window?</b> A headset with the app closed cannot be seen. This is the most common cause by a wide margin.</li>
   <li><b>Is the server running?</b> The controller header must be green and say <b>Server Running</b>.</li>
   <li><b>Same Wi-Fi network?</b> Check the actual network name on both devices, not just that both say "connected". Guest networks are a frequent trap.</li>
   <li><b>Client isolation.</b> If both are on the same network and still cannot see each other, this is almost certainly it. Test by moving both to a phone hotspot — if they connect there, the venue network is isolating clients.</li>
@@ -434,7 +458,7 @@ BODY = r"""
   <tr><th style="width:50mm">Symptom</th><th>Where to look</th></tr>
   <tr><td>Headset connects, then drops out repeatedly</td><td>Wi-Fi coverage at the headset's position, or two devices holding the same IP address. Check the log for repeated connect/disconnect pairs.</td></tr>
   <tr><td>A transfer never finishes</td><td>The log shows the percentage. If it stalls, the headset moved out of range or port 8081 is blocked. Delete the partial file from the headset before retrying so you do not end up with a <code>_1</code> copy.</td></tr>
-  <tr><td>Video plays but the picture looks wrong</td><td>Format setting — section 8.</td></tr>
+  <tr><td>Video plays but the picture looks wrong</td><td>Format setting — section 9.</td></tr>
   <tr><td>Sound plays but there is no picture</td><td>Give it about three seconds: the player detects this and falls back automatically, and the picture appears. If it persists, note the file and the format and report it.</td></tr>
   <tr><td>Headsets start at visibly different moments</td><td>Check the measured round-trip times in the log (figure {{REF:log}}, callout 5). Values of a few milliseconds are healthy; tens or hundreds of milliseconds mean a congested network.</td></tr>
   <tr><td>One headset did not join a group start</td><td>It failed to report ready in time. The log names it. Usually a very large file; try again, or start that headset on its own.</td></tr>
@@ -442,13 +466,13 @@ BODY = r"""
 
 <div class="tip"><b>Reproducing a problem cleanly</b>Tap <b>Clear</b> in the log, do the thing that fails, then read the log from the bottom up. The sequence in figure {{REF:log}} is what a healthy run looks like — compare against it.</div>
 
-<h2>15. Quick reference</h2>
+<h2>16. Quick reference</h2>
 <table>
   <tr><th style="width:52mm">Item</th><th>Value</th></tr>
   <tr><td>Control port (WebSocket)</td><td><code>8080</code></td></tr>
   <tr><td>File transfer port (HTTP)</td><td><code>8081</code></td></tr>
   <tr><td>Controller address form</td><td><code>ws://&lt;tablet-ip&gt;:8080</code></td></tr>
-  <tr><td>Video folder on the headset</td><td><code>Documents/Videos</code> inside Vision Pro Player</td></tr>
+  <tr><td>Video folder on the headset</td><td><code>Documents/Videos</code> inside VPC Player</td></tr>
   <tr><td>Container formats</td><td>MP4, MOV, M4V</td></tr>
   <tr><td>Group playback requires</td><td>Byte-identical filename on every connected headset, including extension and letter case</td></tr>
   <tr><td>Duplicate transfer produces</td><td><code>name_1.mp4</code>, <code>name_2.mp4</code> … — which breaks group playback</td></tr>
@@ -486,7 +510,7 @@ body = re.sub(r"\{ICON:([^:]+):([\d.]+):([\d.]+):(\d+)\}",
               lambda m: icon(m.group(1), float(m.group(2)), float(m.group(3)), int(m.group(4))), body)
 
 doc = f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
-<title>Vision Pro Player &amp; Controller — Operator Guide</title>
+<title>VPC Player &amp; VPC Remote — Operator Guide</title>
 <style>{CSS}</style></head><body>{body}</body></html>"""
 
 open(OUT, "w").write(doc)

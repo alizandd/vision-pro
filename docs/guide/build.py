@@ -136,6 +136,7 @@ BODY = r"""
     <li>How the system fits together</li>
     <li>What the network has to allow</li>
     <li>Naming each headset</li>
+    <li>Handing a headset to someone else</li>
     <li>Starting the controller</li>
     <li>How a headset finds its controller</li>
     <li>Getting video onto a headset</li>
@@ -202,7 +203,7 @@ BODY = r"""
   <tr><th style="width:52mm">Requirement</th><th>Why, and what breaks without it</th></tr>
   <tr><td><b>Same Wi-Fi network, same subnet</b></td><td>The headsets look for the controller on the local network only. A headset on a guest network, a different SSID, or a different VLAN will never see it — even if both have internet.</td></tr>
   <tr><td><b>Client isolation OFF</b><br>(also called AP isolation, client separation, or guest mode)</td><td>This setting stops devices on the same Wi-Fi from talking to each other. It is <b>on by default on most guest and hotel networks</b> and it blocks this system completely. This is the single most common cause of "the headset never appears".</td></tr>
-  <tr><td><b>mDNS / Bonjour allowed</b></td><td>Auto-discovery uses multicast DNS. Some managed and enterprise networks filter it. If it is blocked, discovery fails but the manual address (section 6) still works.</td></tr>
+  <tr><td><b>mDNS / Bonjour allowed</b></td><td>Auto-discovery uses multicast DNS. Some managed and enterprise networks filter it. If it is blocked, discovery fails but the manual address (section 7) still works.</td></tr>
   <tr><td><b>TCP ports 8080 and 8081 open between devices</b></td><td>8080 carries commands and status; 8081 carries the video file during a transfer. A firewall between the devices will break one or both.</td></tr>
   <tr><td><b>All devices on one band, or a single merged SSID</b></td><td>Some routers keep 2.4 GHz and 5 GHz as separate isolated networks. If the tablet is on one and a headset on the other, they may not see each other.</td></tr>
 </table>
@@ -219,7 +220,48 @@ BODY = r"""
 
 <div class="tip"><b>Name them after the physical world, not the hardware</b>Use "Seat 1", "Seat 2", "Lobby Headset" — something a person holding the device can verify at a glance. Serial numbers and user names are useless when you are trying to work out which of five identical headsets has frozen. The name is kept until you change it or delete the app.</div>
 
-<h2>5. Starting the controller</h2>
+<h2>5. Handing a headset to someone else</h2>
+<p>When a headset is passed to a visitor, nothing in this system requires them to do anything: VPC Player finds its controller by itself and reconnects on its own. The risk is the opposite one — that they touch something they should not. The app's own window carries a <b>Disconnect</b> button, a <b>settings</b> gear and a tappable address line, and outside the app the wearer can leave for the Home View entirely.</p>
+
+<p>visionOS has a built-in answer: <b>Guided Access</b>, which pins the device to one app until someone enters a passcode. Set it up once per headset, then start it before each handover.</p>
+
+<h3>One-time setup, on each headset</h3>
+<ol>
+  <li>Open <b>Settings</b> › <b>Accessibility</b> › <b>Guided Access</b> and turn it on.</li>
+  <li>Tap <b>Set Guided Access Passcode</b> and enter a passcode. <b>This is the passcode that ends the session</b> — choose one the visitor will not guess and that your staff will remember.</li>
+  <li>Go to <b>Settings</b> › <b>Accessibility</b> › <b>Accessibility Shortcut</b> and select <b>Guided Access</b>. This is what makes the triple-click work.</li>
+</ol>
+
+<div class="tip"><b>If the triple-click is hard to land</b><b>Settings</b> › <b>Accessibility</b> › <b>Digital Crown</b> lets you slow the required double- and triple-click speed. Worth doing if staff are handing over headsets quickly.</div>
+
+<h3>Before each handover</h3>
+<ol>
+  <li>Open <b>VPC Player</b> and check it says <b>Connected</b>.</li>
+  <li><b>Triple-click the Digital Crown.</b> The Guided Access session settings appear.</li>
+  <li>Set the session options as you want them — <b>Interface Interaction</b>, <b>App Repositioning</b>, <b>Keyboards</b> and <b>Time Limit</b>. Turning <b>Interface Interaction</b> off is the one that matters most here: it stops the visitor pressing anything in the app at all, including <b>Disconnect</b>.</li>
+  <li>Tap <b>Start Guided Access</b>.</li>
+  <li>Hand the headset over. The wearer can now only be in VPC Player.</li>
+</ol>
+
+<h3>Ending the session</h3>
+<p><b>Triple-click the Digital Crown</b>, then enter the Guided Access passcode.</p>
+
+<div class="warn"><b>It does not survive a restart</b>Guided Access is a session, not a device policy. If a headset is switched off or restarts, it comes back <b>unlocked</b> and someone has to start Guided Access again before the next handover. Build that into your routine: after any restart, re-arm it. There is no way around this today — the device-management payloads that lock iPhone and iPad into a single app permanently (<i>App Lock</i>, <i>Single App Mode</i>, <i>Autonomous Single App Mode</i>) are <b>not supported on visionOS</b>, even on a supervised headset.</div>
+
+<h3>The other option: Guest User</h3>
+<p>visionOS also has <b>Guest User</b>, meant for lending the device. Starting a session lets you tap <b>Select Apps</b> and allow only VPC Player, and the guest gets no access to your Persona, Optic ID or Apple Pay. On visionOS 2.4 or later you can authorise the guest from your iPhone or iPad instead of putting the headset on yourself.</p>
+
+<p>It is the better choice when the headset is personal and you care about the visitor not reaching your own data. It is the <b>worse</b> choice for a queue of visitors, for one reason:</p>
+
+<div class="note"><b>A guest session ends the moment the headset comes off</b>That is by design, but it means every new wearer needs the session set up again, and a guest who has never used it may be taken through eye and hand setup first. For a continuous run of visitors, Guided Access is far less work.</div>
+
+<h3>Two practical points</h3>
+<ul>
+  <li><b>The device passcode.</b> If the headset locks between wearers, the next person is stopped by Optic ID or a passcode they do not have. Either hand it over already unlocked, or decide deliberately whether that headset needs a device passcode at all.</li>
+  <li><b>Nothing else is needed from the wearer.</b> Naming, network and controller pairing are all set beforehand (sections 4 and 7). Once Guided Access is running, the visitor puts the headset on and waits — every play, pause and stop comes from the operator's tablet.</li>
+</ul>
+
+<h2>6. Starting the controller</h2>
 <p>Open <b>VPC Remote</b> on the tablet. On first launch the server is not running.</p>
 
 {{FIG:server-stopped}}
@@ -230,7 +272,7 @@ BODY = r"""
 
 <div class="note"><b>Order does not matter</b>You can start the controller before or after opening the app on the headsets. Whichever comes second will find the other within a few seconds. What <i>is</i> required is that both are running at the same time — a headset with the app closed is invisible.</div>
 
-<h2>6. How a headset finds its controller</h2>
+<h2>7. How a headset finds its controller</h2>
 <p>The headset does this by itself. The controller announces its presence on the local network; each headset watches for that announcement and connects.</p>
 
 {{FIG:vp-main}}
@@ -246,9 +288,9 @@ BODY = r"""
 <div class="note"><b>The headset remembers the controller, not the address</b>It stores <i>which</i> controller it was paired with and re-resolves the address every time. So a new address from the router after a restart does not strand a headset — it will find the same controller again on its own.</div>
 
 <h3>If it does not connect on its own</h3>
-<p>Use the manual route: read the address from the controller (figure {{REF:main-running}}, callout 8), then on the headset open <b>Settings → Manual Server Connection</b> and type it exactly, including <code>ws://</code> and <code>:8080</code>. If the manual address works but discovery does not, the network is filtering mDNS — see section 14.</p>
+<p>Use the manual route: read the address from the controller (figure {{REF:main-running}}, callout 8), then on the headset open <b>Settings → Manual Server Connection</b> and type it exactly, including <code>ws://</code> and <code>:8080</code>. If the manual address works but discovery does not, the network is filtering mDNS — see section 16.</p>
 
-<h2>7. Getting video onto a headset</h2>
+<h2>8. Getting video onto a headset</h2>
 <p>Every headset plays from its own local copy, so the file has to physically be on each headset that will play it. There are two ways to put it there.</p>
 
 <h3>Route A — send it from the controller (normal)</h3>
@@ -258,7 +300,7 @@ BODY = r"""
 
 <p>The copy runs over Wi-Fi on port 8081. Progress appears in the Activity Log, and the headset's video list refreshes by itself when it lands.</p>
 
-<div class="warn"><b>One headset at a time</b>Step 2 takes a single device. To put the same video on five headsets you repeat the send five times — and every copy must end up with the <b>same filename</b>, which is what section 8 is about.</div>
+<div class="warn"><b>One headset at a time</b>Step 2 takes a single device. To put the same video on five headsets you repeat the send five times — and every copy must end up with the <b>same filename</b>, which is what section 9 is about.</div>
 
 <h3>Route B — put the file on the headset directly</h3>
 <p>The player reads from its own <b>Documents/Videos</b> folder. Anything placed there appears in the headset's local video list after the app rescans (it rescans on launch and whenever the app comes back to the foreground).</p>
@@ -270,7 +312,7 @@ BODY = r"""
 
 <div class="note"><b>Both routes end in the same place</b><code>Documents/Videos</code> inside the VPC Player app. A video that is in that folder will play; one that is anywhere else will not be seen.</div>
 
-<h2>8. Naming videos — the rule that makes group playback work</h2>
+<h2>9. Naming videos — the rule that makes group playback work</h2>
 <p>This is the part that most often goes wrong, so it is worth being precise.</p>
 
 <div class="warn"><b>The rule</b>A video appears under <b>VIDEOS ON ALL DEVICES</b> only if a file with <b>exactly the same filename</b> exists on <b>every connected headset</b>. The comparison is on the whole filename including the extension, and it is <b>case sensitive</b>.</div>
@@ -295,7 +337,7 @@ BODY = r"""
 
 <div class="tip"><b>Verify before the audience arrives</b>After loading every headset, look at <b>VIDEOS ON ALL DEVICES</b>. If a video is in that list, every connected headset has it under that exact name and group playback will work. If it is missing, it is missing from at least one headset — expand each card and compare the local lists to find which.</div>
 
-<h2>9. Playing on one headset</h2>
+<h2>10. Playing on one headset</h2>
 <p>Expand a headset's card with the chevron (figure {{REF:main-running}}, callout 16).</p>
 
 {{FIG:device-card}}
@@ -330,13 +372,13 @@ BODY = r"""
 
 {{FIG:immersive}}
 
-<h2>10. Playing on every headset at once</h2>
+<h2>11. Playing on every headset at once</h2>
 <p>The <b>Synchronized Playback</b> panel at the top of the controller plays one video on every connected headset, starting at the same instant.</p>
 
 <h3>Before you press it</h3>
 <ol>
   <li>Every headset that should take part is <b>connected</b> — check the device count in the header.</li>
-  <li>The video appears under <b>VIDEOS ON ALL DEVICES</b> — which, per section 8, means every headset holds it under that exact filename.</li>
+  <li>The video appears under <b>VIDEOS ON ALL DEVICES</b> — which, per section 9, means every headset holds it under that exact filename.</li>
   <li>The <b>Format</b> is set correctly. It applies to all headsets.</li>
 </ol>
 
@@ -357,12 +399,12 @@ BODY = r"""
 <table>
   <tr><th style="width:52mm">What you see</th><th>Cause</th></tr>
   <tr><td><b>"No videos available on all devices"</b></td><td>There is no single filename common to every connected headset. Expand each card and compare the local lists.</td></tr>
-  <tr><td>A video is on the headsets but not in the list</td><td>The filename differs somewhere — a <code>_1</code> suffix from a repeated transfer, a different extension case, or a Photos-generated identifier on one device. See section 8.</td></tr>
+  <tr><td>A video is on the headsets but not in the list</td><td>The filename differs somewhere — a <code>_1</code> suffix from a repeated transfer, a different extension case, or a Photos-generated identifier on one device. See section 9.</td></tr>
   <tr><td>The list shrinks when a headset joins</td><td>Correct and expected. The newly joined headset does not have those videos, so they are no longer common to all.</td></tr>
   <tr><td>A headset is playing but was not in the group</td><td>It was dropped at step 3 because it did not report ready in time — usually a very large file on a slow network. The Activity Log names it.</td></tr>
 </table>
 
-<h2>11. Status badges at a glance</h2>
+<h2>12. Status badges at a glance</h2>
 <table>
   <tr><th style="width:34mm">Badge</th><th>Meaning</th></tr>
   <tr><td><b>Idle</b> (grey)</td><td>Connected, nothing loaded. The normal resting state.</td></tr>
@@ -370,10 +412,10 @@ BODY = r"""
   <tr><td><b>Paused</b> (orange)</td><td>Held on a frame, immersive view still open.</td></tr>
   <tr><td><b>Stopped</b> (grey)</td><td>Playback ended or was stopped.</td></tr>
   <tr><td><b>Immersive</b> (purple)</td><td>The immersive view is open — the wearer is inside the content, not looking at a window. Appears alongside the state badge.</td></tr>
-  <tr><td>Headset missing entirely</td><td>Not connected. It is not a playback problem — see section 14.</td></tr>
+  <tr><td>Headset missing entirely</td><td>Not connected. It is not a playback problem — see section 16.</td></tr>
 </table>
 
-<h2>12. Icons you will see</h2>
+<h2>13. Icons you will see</h2>
 <p>Two of these carry meaning that is easy to miss, so they are worth learning: the <b>Preview Library</b> in the toolbar, and the small <b>badge in the corner of a video tile</b>.</p>
 <table class="icontbl">
   <tr><th style="width:20mm">Icon</th><th style="width:44mm">Name</th><th>What it means and why it is there</th></tr>
@@ -422,7 +464,7 @@ BODY = r"""
 
 <div class="tip"><b>Reading the badge at a glance</b>The two-stacked-rectangles glyph always means "flat companion video". In the toolbar it opens the library of them; on a video tile it means "this one has one".</div>
 
-<h2>13. Seeing what the wearer sees</h2>
+<h2>14. Seeing what the wearer sees</h2>
 <p>The operator cannot see the headset's picture directly — an immersive file is far too large to stream to a tablet, and a 360° stereo frame would be unreadable on a flat screen anyway. Instead the controller can play a <b>flat companion copy</b> of the same film, in step with the headset.</p>
 
 <h3>Pairing a companion video</h3>
@@ -459,11 +501,11 @@ BODY = r"""
 
 <div class="note"><b>Head direction, not eye gaze</b>This is where the headset is pointed, not where the eyes are aimed inside it. visionOS deliberately does not make eye tracking available to apps, so true gaze cannot be shown by any app, including this one. In practice head direction is what you want anyway — it is what the wearer has turned their body towards.</div>
 
-<h2>14. Removing a video from a headset</h2>
+<h2>15. Removing a video from a headset</h2>
 <p>Expand the headset's card and tap the <b>trash icon</b> under a video tile (figure {{REF:device-card}}, callout 6). You are asked to confirm; the file is then permanently deleted from that headset and the list refreshes.</p>
 <div class="warn"><b>Per headset, and permanent</b>Deleting removes the file from that one headset only. There is no undo and no copy left behind — the file has to be transferred again if you need it back.</div>
 
-<h2>15. When something does not work</h2>
+<h2>16. When something does not work</h2>
 <p>Open the <b>Activity Log</b> first. It is timestamped and it records what actually happened, which is almost always faster than guessing.</p>
 
 {{FIG:log}}
@@ -484,7 +526,7 @@ BODY = r"""
   <tr><th style="width:50mm">Symptom</th><th>Where to look</th></tr>
   <tr><td>Headset connects, then drops out repeatedly</td><td>Wi-Fi coverage at the headset's position, or two devices holding the same IP address. Check the log for repeated connect/disconnect pairs.</td></tr>
   <tr><td>A transfer never finishes</td><td>The log shows the percentage. If it stalls, the headset moved out of range or port 8081 is blocked. Delete the partial file from the headset before retrying so you do not end up with a <code>_1</code> copy.</td></tr>
-  <tr><td>Video plays but the picture looks wrong</td><td>Format setting — section 9.</td></tr>
+  <tr><td>Video plays but the picture looks wrong</td><td>Format setting — section 10.</td></tr>
   <tr><td>Sound plays but there is no picture</td><td>Give it about three seconds: the player detects this and falls back automatically, and the picture appears. If it persists, note the file and the format and report it.</td></tr>
   <tr><td>Headsets start at visibly different moments</td><td>Check the measured round-trip times in the log (figure {{REF:log}}, callout 5). Values of a few milliseconds are healthy; tens or hundreds of milliseconds mean a congested network.</td></tr>
   <tr><td>One headset did not join a group start</td><td>It failed to report ready in time. The log names it. Usually a very large file; try again, or start that headset on its own.</td></tr>
@@ -492,7 +534,7 @@ BODY = r"""
 
 <div class="tip"><b>Reproducing a problem cleanly</b>Tap <b>Clear</b> in the log, do the thing that fails, then read the log from the bottom up. The sequence in figure {{REF:log}} is what a healthy run looks like — compare against it.</div>
 
-<h2>16. Quick reference</h2>
+<h2>17. Quick reference</h2>
 <table>
   <tr><th style="width:52mm">Item</th><th>Value</th></tr>
   <tr><td>Control port (WebSocket)</td><td><code>8080</code></td></tr>

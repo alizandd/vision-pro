@@ -261,7 +261,14 @@ class NativeVideoPlayerManager: ObservableObject {
         return ready
     }
     
-    /// Starts playback of prepared video
+    /// Starts playback of prepared video.
+    ///
+    /// A synchronised session prepares with `autoPlayOnReady == false` and must
+    /// not start until its scheduled `syncStart` arrives via
+    /// `startPlayback(atDeviceEpochMs:)`. The immersive view also calls this
+    /// whenever it (re)builds the screen, which happens as soon as the player is
+    /// ready — so the gate has to live here, not only in the app's ready handler,
+    /// or every headset in a group starts on its own a second or two early.
     func startPlayback() {
         guard let player = player else {
             print("[NativeVideoPlayer] Cannot start - no player prepared")
@@ -270,6 +277,11 @@ class NativeVideoPlayerManager: ObservableObject {
         
         guard isPlayerReady else {
             print("[NativeVideoPlayer] Cannot start - player not ready")
+            return
+        }
+
+        guard autoPlayOnReady else {
+            print("[NativeVideoPlayer] Start deferred - sync session waits for syncStart")
             return
         }
         
@@ -509,9 +521,13 @@ class NativeVideoPlayerManager: ObservableObject {
     private func createOptimizedPlayerItem(asset: AVURLAsset) -> AVPlayerItem {
         let playerItem = AVPlayerItem(asset: asset)
         
-        // Configure buffer for large files
-        // 30 second forward buffer balances memory and smooth playback
-        playerItem.preferredForwardBufferDuration = 30
+        // The forward buffer is measured in seconds, so its memory cost is
+        // bitrate × duration: 30 s of a 160 Mbps immersive master is ~600 MB of
+        // compressed data held on top of the decoder's frame pool. A local file
+        // reads from flash far faster than any playback bitrate, so that buffer
+        // buys nothing there and only pushes the app towards a memory kill.
+        // Keep it short for local files; the long buffer is for network streams.
+        playerItem.preferredForwardBufferDuration = asset.url.isFileURL ? 3 : 30
         playerItem.canUseNetworkResourcesForLiveStreamingWhilePaused = false
         
         return playerItem

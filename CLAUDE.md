@@ -1,6 +1,6 @@
 # CLAUDE.md - AI Assistant Guide for vision-pro
 
-**Last Updated**: 2026-02-05
+**Last Updated**: 2026-09-02
 **Repository**: vision-pro
 **Status**: Active Development
 
@@ -394,6 +394,18 @@ curl http://localhost:8080/api/videos
 ---
 
 ## Changelog
+
+### 2026-09-02
+- **[Investigation]** Client reported some headsets playing audio only, worse under "Play All"
+  - **Bug log**: `docs/bugs/2026-09-02-audio-only-422-master.md`
+  - **Root cause was the content, not the app**: the file in use was the vendor's 16384×4096 HEVC **4:2:2 10-bit (Rext)** master with an invalid HEVC level (255). The M2 hardware decoder does not support that profile, so VideoToolbox software-decodes at ~0.2× real time; audio (AAC) keeps playing while the picture never arrives. Re-encoding to Main 10 4:2:0 at the same size gave a 5.6× decode speed-up; a 12288×3072 delivery encode reaches ~1.85× real time on an M2 Pro.
+  - A converted file and a delivery spec (full 360° framing unchanged) went to the client and the render vendor. **Needs the client's device pass.**
+- **[Fix]** Synchronised sessions started early; local files held a 30 s forward buffer
+  - **Bug log**: `docs/bugs/2026-09-02-sync-start-not-gated.md` · branch `fix/sync-gate-and-local-buffer`
+  - `NativeImmersiveView.updateVideoScreen()` calls `startPlayback()` as soon as the player is ready, and `startPlayback()` had no sync gate — so under "Play All" every headset started on its own before `syncStart`, racing the preroll and opening the per-eye starvation window early. The gate now lives in `startPlayback()` itself.
+  - `preferredForwardBufferDuration` is 3 s for `file://` assets (was 30 s for everything — ~600 MB of compressed buffer on a 160 Mbps master, for a file that reads from flash).
+  - **Still needs a device pass.**
+- **[Review notes, not yet fixed]** The legacy `VideoMaterial` path has no picture-health detection, and the controller is told `playing` before any frame is presented, so a black view is invisible to the operator. `RemoteLogger.isEnabled` is a compile-time constant, and the controller's Activity Log does not record status transitions — both made the field log useless for this bug. The scene-phase handler sends `localVideos` once per scene transition with no coalescing (9× in one second in the field log).
 
 ### 2026-08-21
 - **[Fix]** First playback showed no picture (audio only) until the user stopped and replayed — ~70-80% of first plays

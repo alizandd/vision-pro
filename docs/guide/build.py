@@ -42,7 +42,7 @@ def figure(fid, num):
     legend_html = f'<ol class="legend">{legend}</ol>' if f["legend"] else ""
 
     return f"""
-<figure class="fig">
+<figure class="fig"{' style="max-width:' + f['width'] + ';margin-inline:auto"' if f.get('width') else ''}>
   <div class="shot" style="aspect-ratio:{ar:.4f};">
     <img src="images/{f['src']}" style="width:{img_w:.3f}%;height:{img_h:.3f}%;left:{img_l:.3f}%;top:{img_t:.3f}%;">
     <svg class="ovl" viewBox="0 0 100 100" preserveAspectRatio="none">{''.join(lines)}</svg>
@@ -467,15 +467,102 @@ BODY = r"""
 <h2>14. Seeing what the wearer sees</h2>
 <p>The operator cannot see the headset's picture directly — an immersive file is far too large to stream to a tablet, and a 360° stereo frame would be unreadable on a flat screen anyway. Instead the controller can play a <b>flat companion copy</b> of the same film, in step with the headset.</p>
 
-<h3>Pairing a companion video</h3>
-<ol>
-  <li>Put a flat, ordinary (mono, non-VR) version of the film on the tablet — <b>the same running time</b> as the immersive original.</li>
-  <li>Import it through the companion library (the middle toolbar icon).</li>
-  <li>In the headset's card, <b>long-press the video tile</b> and pair it with that companion.</li>
-</ol>
-<p>Once paired, two things change: the card shows the companion playing in step with the headset, and <b>a small badge appears in the top-left corner of that video's tile</b> (the two-stacked-rectangles glyph from the previous section). That badge is how you tell, at a glance, which videos already have a companion and which do not. Where no companion is paired, the card says so instead — visible in figure {{REF:playing}}, callout 5.</p>
+<p>Setting one up is three steps, done once per film. After that the preview appears by itself every time that film plays.</p>
+<div class="flow">
+  <div class="st"><b>1. Prepare</b>A flat copy of the film, same running time, on the tablet</div><div class="ar">&rarr;</div>
+  <div class="st"><b>2. Import</b>Add it to the Preview Library on the controller</div><div class="ar">&rarr;</div>
+  <div class="st"><b>3. Pair</b>Press and hold the headset's video tile and choose it</div>
+</div>
 
-<div class="note"><b>The running times must match</b>If the companion's duration does not match the file the headset actually loaded, the preview is withheld and both durations are shown instead. This is deliberate: a preview sitting convincingly on the wrong moment is worse than no preview.</div>
+<h3>Step 1 — Prepare the preview video</h3>
+<ul>
+  <li>It is an <b>ordinary flat video</b>: mono, not 360°/180°, not side-by-side. A small file is fine, and better — 1080p or 720p is plenty for a tablet.</li>
+  <li>It must have <b>the same running time</b> as the immersive video on the headset, to within half a second. Export it from the same edit; do not trim it.</li>
+  <li>Give it <b>the same file name</b> as the headset video (the extension may differ), e.g. <code>Lobby_Tour.mp4</code> on the headset and <code>Lobby_Tour.mov</code> on the tablet. The app then suggests the pairing for you in step 3.</li>
+  <li>Get it onto the tablet — into <b>Photos</b>, or into <b>Files</b> (iCloud Drive, On My iPad, or a USB drive plugged into the tablet).</li>
+</ul>
+
+<h3>Step 2 — Import it into the Preview Library</h3>
+<ol>
+  <li>On the controller's main screen, tap the <b>Preview Library</b> icon {ICON:ipad-01-main.png:0.903:0.046:60} in the top-right toolbar (the middle of the three icons). The <b>Preview Videos</b> screen opens.</li>
+  <li>If the library is empty, tap <b>Choose from Photos</b> or <b>Choose from Files or a Drive</b>. If it already holds videos, tap the <b>+</b> (Add) button in the top-right corner and pick <b>From Photos</b> or <b>From Files or a Drive</b>.</li>
+</ol>
+{{FIG:preview-empty}}
+<ol start="3">
+  <li>Select the video. From Photos you can pick up to five at once; from Files, as many as you like.</li>
+  <li>An <b>Importing &lt;name&gt;</b> bar counts up to 100%. <b>Keep this screen open until it finishes</b> — the <b>+</b> button stays greyed out while an import is running.</li>
+  <li>When it is done the video appears in the list with a thumbnail, its <b>running time</b> and its size. Check the running time against the headset video now — this is the number that has to match.</li>
+  <li>Tap <b>Done</b>.</li>
+</ol>
+{{FIG:preview-library}}
+<p>If <b>Import failed</b> appears with an orange triangle, read the reason, tap <b>Dismiss</b> and try again — most often the tablet is out of storage or the file is not a video.</p>
+<div class="note"><b>These videos stay on the tablet</b>Importing a preview video does <b>not</b> send anything to a headset, and it is not a way to put a film on a headset. For that, use <b>Send Videos</b> (section 8).</div>
+
+<h3>Step 3 — Pair it with the video on the headset</h3>
+<ol>
+  <li>The immersive video must already be on the headset (section 8). On the controller, find that headset's card and tap its <b>chevron</b> to expand it. The headset's videos appear under <b>Local Videos</b> as a row of tiles.</li>
+  <li><b>Press and hold</b> the tile of the video you want a preview for. Keep your finger down for about a second, until a small menu pops up. (A quick tap only selects the tile for playback.)</li>
+  <li>In the menu, tap <b>Set preview video</b>. The <b>Preview Video</b> sheet opens.</li>
+</ol>
+{{FIG:set-preview-menu}}
+<ol start="4">
+  <li>At the top, under <b>Headset video</b>, check that this is the right film. Its <b>running time</b> is shown here if the headset has it loaded; otherwise it says <i>"Running time not reported yet"</i>.</li>
+  <li>Choose the preview video:
+    <ul>
+      <li>If a <b>Suggested</b> entry is shown (<i>"Use Lobby_Tour.mov — Matches by name · 4:12"</i>), tap it — but only after confirming it really is the same film. A matching name is a hint, not proof.</li>
+      <li>Otherwise, tap the right video in the list <b>Preview videos on this device</b>. This list is exactly what you imported in step 2.</li>
+    </ul>
+  </li>
+  <li>The sheet closes by itself. The pairing is saved.</li>
+</ol>
+{{FIG:pairing-sheet}}
+<p>If a video in the list is marked <b style="color:var(--warn)">Length differs</b> in orange, it cannot be paired with this film. Tapping it anyway shows <b>Running times do not match</b> with both times, and nothing is paired. Export a preview of the correct length and import that.</p>
+{{FIG:mismatch-alert}}
+<div class="tip"><b>Pair while the film is loaded on the headset</b>The length check can only run against a running time the headset has reported, and a headset reports it for the video it currently has loaded. Start the film on that headset (it can be paused), then pair: a wrong-length preview is refused on the spot instead of being discovered in front of an audience.</div>
+
+<h3>How to tell a video has a preview</h3>
+{{FIG:viewer-preview}}
+<table>
+  <thead><tr><th style="width:56mm">Where to look</th><th>What you see when a preview is paired</th></tr></thead>
+  <tr><td><b>The video tile</b> in the headset's card</td><td>A <b>small round badge with the two-stacked-rectangles glyph</b> in the <b>top-left corner</b> of the tile (figure {{REF:viewer-preview}}, callout 1). Tiles without the badge have no preview.</td></tr>
+  <tr><td><b>The press-and-hold menu</b> on that tile</td><td>It says <b>Change preview video</b> instead of <b>Set preview video</b>.</td></tr>
+  <tr><td><b>The Preview Video sheet</b></td><td>A <b>green tick</b> next to the preview video that is currently paired (figure {{REF:change-sheet}}, callout 3).</td></tr>
+  <tr><td><b>The card, while the film plays</b></td><td>A <b>Viewer Preview</b> panel: the flat video playing in step with the headset, the position (e.g. <code>0:53 / 4:12</code>) in its corner, a red <b>LIVE</b> tag while the headset is reporting, the direction indicator underneath, and the preview's file name below that (figure {{REF:viewer-preview}}, callouts 2–6).</td></tr>
+</table>
+<p>Two other messages can take the place of the Viewer Preview panel while a film plays:</p>
+<table>
+  <thead><tr><th style="width:56mm">Message</th><th>Meaning and what to do</th></tr></thead>
+  <tr><td><b>No preview video for this one</b></td><td>This film has no preview paired. Pair one (step 3) if you want to watch along — it is also visible in figure {{REF:playing}}, callout 5.</td></tr>
+  <tr><td><b>Preview not shown</b> (orange triangle)</td><td>A preview is paired, but its running time does not match the file the headset actually loaded; both times are shown. The preview is held back on purpose, because a preview sitting convincingly on the wrong moment is worse than none. Pair a preview of the correct length.</td></tr>
+</table>
+
+<h3>Changing the preview video</h3>
+{{FIG:change-menu}}
+<ol>
+  <li>Press and hold the video tile until the menu appears.</li>
+  <li>Tap <b>Change preview video</b>.</li>
+  <li>Tap a different video in <b>Preview videos on this device</b>. It replaces the old pairing and the sheet closes. The old preview video stays in the library.</li>
+</ol>
+{{FIG:change-sheet}}
+
+<h3>Removing the preview from a video</h3>
+<ol>
+  <li>Press and hold the video tile and tap <b>Change preview video</b>.</li>
+  <li>At the bottom of the sheet tap <b>Remove pairing</b> (red) — figure {{REF:change-sheet}}, callout 4.</li>
+</ol>
+<p>The badge disappears from the tile, and when the film plays the card shows <i>"No preview video for this one"</i>. Nothing is deleted: the film on the headset and the preview video in the library are both untouched.</p>
+
+<h3>Deleting a preview video from the tablet</h3>
+<ol>
+  <li>Tap the <b>Preview Library</b> icon in the toolbar.</li>
+  <li>On the video you want to delete, <b>swipe left</b> and tap <b>Remove</b>.</li>
+  <li>Confirm with <b>Remove</b> in the <b>Remove preview video?</b> dialog.</li>
+</ol>
+{{FIG:remove-swipe}}
+<p>This deletes the preview file from the tablet only. The immersive film on the headset is not affected — to delete that, see section 15.</p>
+<div class="warn"><b>Remove the pairing first, then delete</b>In VPC Remote 1.7, deleting a preview video that is still paired leaves the <b>badge</b> on the tiles it was paired to, even though there is no preview behind it any more — the card then says <i>"No preview video for this one"</i> while the badge says otherwise. So remove the pairing (above) before deleting. If a stale badge has already been left behind, clear it by pairing that tile with any other preview video and then tapping <b>Remove pairing</b>.</div>
+
+<div class="note"><b>One pairing covers every headset</b>A pairing belongs to the <b>file name</b> of the headset video, not to one headset. Pair <code>Lobby_Tour.mp4</code> once and every headset holding a file with exactly that name uses the same preview. Pairings and preview videos are kept on this tablet and survive restarting the app; a second tablet has its own, and needs them set up separately.</div>
 
 <h3>Where the wearer is looking</h3>
 <p>The preview answers <i>what</i> is playing. It does not answer <i>where in it the wearer is looking</i> — and in 180° or 360° material those are different questions. So underneath the preview the card draws a <b>direction indicator</b>.</p>
@@ -553,6 +640,7 @@ BODY = r"""
   <li>Final video filenames decided and applied on the computer, before any transfer.</li>
   <li>The video is loaded on every headset and <b>appears under VIDEOS ON ALL DEVICES</b>.</li>
   <li>Format selected and verified by actually playing it on one headset.</li>
+  <li>If you will watch along: each film has its preview video paired (badge on the tile), checked by playing it once.</li>
   <li>A full <b>Play on All</b> rehearsal completed on the real network, in the real room.</li>
   <li>Every headset charged, and the tablet set not to sleep.</li>
 </ol>

@@ -28,6 +28,7 @@
 		AA0000A7 /* ViewerDirectionIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1000A7 /* ViewerDirectionIndicator.swift */; };
 		AA0000A8 /* ScrubberModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1000A8 /* ScrubberModel.swift */; };
 		AA0000A9 /* PlaybackScrubber.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1000A9 /* PlaybackScrubber.swift */; };
+		AA0000AA /* StopGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1000AA /* StopGate.swift */; };
 		AA000100 /* SyncControlPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100100 /* SyncControlPanel.swift */; };
 /* End PBXBuildFile section */
 
@@ -54,6 +55,7 @@
 		AA1000A7 /* ViewerDirectionIndicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewerDirectionIndicator.swift; sourceTree = "<group>"; };
 		AA1000A8 /* ScrubberModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrubberModel.swift; sourceTree = "<group>"; };
 		AA1000A9 /* PlaybackScrubber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackScrubber.swift; sourceTree = "<group>"; };
+		AA1000AA /* StopGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StopGate.swift; sourceTree = "<group>"; };
 		AA100100 /* SyncControlPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncControlPanel.swift; sourceTree = "<group>"; };
 		AA200001 /* VPC Remote.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "VPC Remote.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -96,6 +98,7 @@
 				AA1000A7 /* ViewerDirectionIndicator.swift */,
 				AA1000A8 /* ScrubberModel.swift */,
 				AA1000A9 /* PlaybackScrubber.swift */,
+				AA1000AA /* StopGate.swift */,
 				AA100005 /* WebSocketServer.swift */,
 				AA100010 /* FileTransferServer.swift */,
 				AA100007 /* DeviceManager.swift */,
@@ -196,6 +199,7 @@
 				AA0000A7 /* ViewerDirectionIndicator.swift in Sources */,
 				AA0000A8 /* ScrubberModel.swift in Sources */,
 				AA0000A9 /* PlaybackScrubber.swift in Sources */,
+				AA0000AA /* StopGate.swift in Sources */,
 				AA000005 /* WebSocketServer.swift in Sources */,
 				AA000009 /* FileTransferServer.swift in Sources */,
 				AA000007 /* DeviceManager.swift in Sources */,

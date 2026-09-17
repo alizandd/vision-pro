@@ -35,6 +35,15 @@ class SyncSessionManager: ObservableObject {
     @Published var currentFilename: String?
     @Published var currentFormat: VideoFormat = .sphere360SBS
 
+    /// Newest known media position per session device, fed by DeviceManager
+    /// from both status updates and the 10 Hz viewer feed. Published so the
+    /// group scrubber re-renders as positions arrive.
+    @Published private(set) var livePositions: [String: Double] = [:]
+
+    /// True for the lead time after a group seek while playing: the devices
+    /// are restarting on a schedule and a second seek must not overlap it.
+    @Published private(set) var isRestartPending = false
+
     /// Measured clock offsets: deviceClock − controllerClock, in ms
     private var clockOffsets: [String: Int64] = [:]
 
@@ -55,6 +64,11 @@ class SyncSessionManager: ObservableObject {
     /// Wiring provided by DeviceManager
     var sendToDevice: ((String, any Encodable) -> Void)?
     var deviceCurrentTime: ((String) -> Double?)?
+    /// Running time a device reported for the loaded file, if known.
+    var deviceDuration: ((String) -> Double?)?
+    /// Overwrites the stored position for a device — used after a seek while
+    /// paused, so the next resume starts from the seek target.
+    var setDeviceCurrentTime: ((String, Double) -> Void)?
     /// Records the projection each device was told to use. The preview needs it
     /// per-device to know whether a look direction is meaningful, and a group
     /// session never goes through the single-device play path that sets it.
@@ -193,6 +207,24 @@ class SyncSessionManager: ObservableObject {
         }
     }
 
+    /// The group's position: the furthest-ahead active device, the same rule
+    /// `resumeAll` uses to pick a common resume point.
+    var groupPosition: Double {
+        activeSessionDevices.compactMap { livePositions[$0] }.max() ?? 0
+    }
+
+    /// The session file's running time, from whichever active device has
+    /// reported it. Nil until one does.
+    var groupDuration: Double? {
+        activeSessionDevices.compactMap { deviceDuration?($0) }.max()
+    }
+
+    /// Records a device's newest position while a session is running.
+    func noteDevicePosition(_ deviceId: String, mediaTime: Double) {
+        guard state == .playing || state == .paused, sessionDevices.contains(deviceId) else { return }
+        livePositions[deviceId] = mediaTime
+    }
+
     /// Pause playback on the active session devices immediately.
     func pauseAll() {
         guard state == .playing else { return }
@@ -218,6 +250,48 @@ class SyncSessionManager: ObservableObject {
 
         scheduleStart(mediaTime: mediaTime)
         log?("▶️ Sync resume at \(String(format: "%.2f", mediaTime))s", .info)
+    }
+
+    /// Jump every active session device to the same media time.
+    ///
+    /// Playing: pause the group, then restart it at the new time on a shared
+    /// clock tick — exactly `resumeAll` with the operator's time instead of the
+    /// measured one, so the group stays in sync. Paused: seek each device in
+    /// place and remember the target, so the next `resumeAll` starts there.
+    func seekAll(to mediaTime: Double) {
+        let targets = activeSessionDevices
+        guard !targets.isEmpty else { return }
+
+        switch state {
+        case .playing:
+            guard !isRestartPending else { return }
+            let pause = CommandMessage(action: .syncPause)
+            for deviceId in targets {
+                sendToDevice?(deviceId, pause)
+                setDeviceCurrentTime?(deviceId, mediaTime)
+                livePositions[deviceId] = mediaTime
+            }
+            log?("⏩ Group seek → \(formatPosition(mediaTime)) (\(targets.count) devices)", .info)
+            scheduleStart(mediaTime: mediaTime)
+
+            isRestartPending = true
+            let lead = UInt64(startLeadTimeMs) * 1_000_000
+            Task { @MainActor [weak self] in
+                try? await Task.sleep(nanoseconds: lead)
+                self?.isRestartPending = false
+            }
+
+        case .paused:
+            for deviceId in targets {
+                sendToDevice?(deviceId, SeekCommand(mediaTime: mediaTime))
+                setDeviceCurrentTime?(deviceId, mediaTime)
+                livePositions[deviceId] = mediaTime
+            }
+            log?("⏩ Group seek → \(formatPosition(mediaTime)) (\(targets.count) devices, paused)", .info)
+
+        default:
+            return
+        }
     }
 
     /// Stop playback on all session devices and end the session.
@@ -306,5 +380,7 @@ class SyncSessionManager: ObservableObject {
         readyDevices = []
         deviceStatus = [:]
         currentFilename = nil
+        livePositions = [:]
+        isRestartPending = false
     }
 }

@@ -125,6 +125,19 @@ struct SyncControlPanel: View {
                     Spacer()
                 }
 
+                // Group seek bar — the whole session's position, only while it runs
+                if syncManager.state == .playing || syncManager.state == .paused {
+                    PlaybackScrubber(
+                        position: syncManager.groupPosition,
+                        duration: syncManager.groupDuration,
+                        isEnabled: !syncManager.isRestartPending,
+                        hint: "Restarting the group…"
+                    ) { target in
+                        syncManager.seekAll(to: target)
+                    }
+                    .padding(.vertical, 4)
+                }
+
                 // Group controls
                 HStack(spacing: 10) {
                     switch syncManager.state {

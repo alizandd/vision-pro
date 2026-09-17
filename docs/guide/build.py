@@ -122,10 +122,10 @@ BODY = r"""
   <h1>VPC Player<br>&amp; VPC Remote</h1>
   <div class="sub">Loading video onto headsets, naming it so a group can play together, running single and synchronised playback, and diagnosing a headset that will not connect.</div>
   <dl>
-    <dt>Applies to</dt><dd>VPC Player 3.6 (visionOS) · VPC Remote 1.7 (iPadOS / iOS)</dd>
+    <dt>Applies to</dt><dd>VPC Player 3.7 (visionOS) · VPC Remote 1.8 (iPadOS / iOS)</dd>
     <dt>Audience</dt><dd>Operators running one or more Vision Pro headsets from a tablet</dd>
     <dt>Screenshots</dt><dd>Captured from the running apps: VPC Remote on iPad, VPC Player on visionOS 26.1</dd>
-    <dt>Document date</dt><dd>21 August 2026</dd>
+    <dt>Document date</dt><dd>17 September 2026</dd>
   </dl>
 </section>
 

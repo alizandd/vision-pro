@@ -85,7 +85,9 @@ Activity Log lines:
 Call sites:
 
 - **`playSelected`** — replaces the 1.2 s sleep: `await stopAndWait([id])`,
-  then `play`. The optimistic "stopped" UI update stays.
+  then `play`. The old optimistic "stopped" UI update is removed: setting the
+  state early would make `stopAndWait` see a non-busy headset, and the real
+  `stopped` status arrives within a frame on the LAN anyway.
 - **`SyncSessionManager.playOnAll`** — a new first phase. `SessionState`
   gains `.stopping`; the manager calls a new hook
   `stopBusyDevices: (([String]) async -> Void)?` (wired by `DeviceManager` to

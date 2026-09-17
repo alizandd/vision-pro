@@ -494,15 +494,183 @@ figcaption{font-size:9.5pt;color:var(--mut);margin-top:2mm;break-before:avoid;br
 <h2>14. Seeing what the wearer sees</h2>
 <p>The operator cannot see the headset's picture directly — an immersive file is far too large to stream to a tablet, and a 360° stereo frame would be unreadable on a flat screen anyway. Instead the controller can play a <b>flat companion copy</b> of the same film, in step with the headset.</p>
 
-<h3>Pairing a companion video</h3>
-<ol>
-  <li>Put a flat, ordinary (mono, non-VR) version of the film on the tablet — <b>the same running time</b> as the immersive original.</li>
-  <li>Import it through the companion library (the middle toolbar icon).</li>
-  <li>In the headset's card, <b>long-press the video tile</b> and pair it with that companion.</li>
-</ol>
-<p>Once paired, two things change: the card shows the companion playing in step with the headset, and <b>a small badge appears in the top-left corner of that video's tile</b> (the two-stacked-rectangles glyph from the previous section). That badge is how you tell, at a glance, which videos already have a companion and which do not. Where no companion is paired, the card says so instead — visible in figure 7, callout 5.</p>
+<p>Setting one up is three steps, done once per film. After that the preview appears by itself every time that film plays.</p>
+<div class="flow">
+  <div class="st"><b>1. Prepare</b>A flat copy of the film, same running time, on the tablet</div><div class="ar">&rarr;</div>
+  <div class="st"><b>2. Import</b>Add it to the Preview Library on the controller</div><div class="ar">&rarr;</div>
+  <div class="st"><b>3. Pair</b>Press and hold the headset's video tile and choose it</div>
+</div>
 
-<div class="note"><b>The running times must match</b>If the companion's duration does not match the file the headset actually loaded, the preview is withheld and both durations are shown instead. This is deliberate: a preview sitting convincingly on the wrong moment is worse than no preview.</div>
+<h3>Step 1 — Prepare the preview video</h3>
+<ul>
+  <li>It is an <b>ordinary flat video</b>: mono, not 360°/180°, not side-by-side. A small file is fine, and better — 1080p or 720p is plenty for a tablet.</li>
+  <li>It must have <b>the same running time</b> as the immersive video on the headset, to within half a second. Export it from the same edit; do not trim it.</li>
+  <li>Give it <b>the same file name</b> as the headset video (the extension may differ), e.g. <code>Lobby_Tour.mp4</code> on the headset and <code>Lobby_Tour.mov</code> on the tablet. The app then suggests the pairing for you in step 3.</li>
+  <li>Get it onto the tablet — into <b>Photos</b>, or into <b>Files</b> (iCloud Drive, On My iPad, or a USB drive plugged into the tablet).</li>
+</ul>
+
+<h3>Step 2 — Import it into the Preview Library</h3>
+<ol>
+  <li>On the controller's main screen, tap the <b>Preview Library</b> icon <span class="ic"><img src="images/ipad-01-main.png" style="width:2733.3%;height:3933.3%;left:-2418.2%;top:-130.9%;"></span> in the top-right toolbar (the middle of the three icons). The <b>Preview Videos</b> screen opens.</li>
+  <li>If the library is empty, tap <b>Choose from Photos</b> or <b>Choose from Files or a Drive</b>. If it already holds videos, tap the <b>+</b> (Add) button in the top-right corner and pick <b>From Photos</b> or <b>From Files or a Drive</b>.</li>
+</ol>
+
+<figure class="fig">
+  <div class="shot" style="aspect-ratio:1.3450;">
+    <img src="images/ipad-10-preview-empty.png" style="width:111.111%;height:215.054%;left:-5.556%;top:-46.237%;">
+    <svg class="ovl" viewBox="0 0 100 100" preserveAspectRatio="none"><line x1="5.00" y1="6.99" x2="12.22" y2="6.99" vector-effect="non-scaling-stroke"/><line x1="95.00" y1="6.99" x2="87.78" y2="6.99" vector-effect="non-scaling-stroke"/><line x1="5.00" y1="56.34" x2="36.44" y2="56.34" vector-effect="non-scaling-stroke"/><line x1="5.00" y1="81.72" x2="33.56" y2="81.72" vector-effect="non-scaling-stroke"/><line x1="5.00" y1="91.40" x2="33.56" y2="88.82" vector-effect="non-scaling-stroke"/></svg>
+    <span class="dot" style="left:12.22%;top:6.99%"></span><span class="badge" style="left:5.00%;top:6.99%">1</span><span class="dot" style="left:87.78%;top:6.99%"></span><span class="badge" style="left:95.00%;top:6.99%">2</span><span class="dot" style="left:36.44%;top:56.34%"></span><span class="badge" style="left:5.00%;top:56.34%">3</span><span class="dot" style="left:33.56%;top:81.72%"></span><span class="badge" style="left:5.00%;top:81.72%">4</span><span class="dot" style="left:33.56%;top:88.82%"></span><span class="badge" style="left:5.00%;top:91.40%">5</span>
+  </div>
+  <figcaption><b>Figure 10.</b> The Preview Library the first time it is opened, before anything has been imported.</figcaption>
+  <ol class="legend"><li><span class="ln">1</span><div><b>Done</b> — closes the library.</div></li><li><span class="ln">2</span><div><b>+ (Add)</b> — the same two import routes as callouts 4 and 5, available once the library already holds something.</div></li><li><span class="ln">3</span><div><b>No preview videos</b> — nothing has been imported on this tablet yet.</div></li><li><span class="ln">4</span><div><b>Choose from Photos</b> — pick from the tablet's photo library, up to five at a time.</div></li><li><span class="ln">5</span><div><b>Choose from Files or a Drive</b> — pick from On My iPad, iCloud Drive or a USB drive. Keeps the real file name, which is what the pairing suggestion matches on.</div></li></ol>
+</figure>
+<ol start="3">
+  <li>Select the video. From Photos you can pick up to five at once; from Files, as many as you like.</li>
+  <li>An <b>Importing &lt;name&gt;</b> bar counts up to 100%. <b>Keep this screen open until it finishes</b> — the <b>+</b> button stays greyed out while an import is running.</li>
+  <li>When it is done the video appears in the list with a thumbnail, its <b>running time</b> and its size. Check the running time against the headset video now — this is the number that has to match.</li>
+  <li>Tap <b>Done</b>.</li>
+</ol>
+
+<figure class="fig">
+  <div class="shot" style="aspect-ratio:2.1945;">
+    <img src="images/ipad-11-preview-library.png" style="width:111.111%;height:350.877%;left:-5.556%;top:-75.439%;">
+    <svg class="ovl" viewBox="0 0 100 100" preserveAspectRatio="none"><line x1="95.00" y1="8.77" x2="83.33" y2="12.81" vector-effect="non-scaling-stroke"/><line x1="95.00" y1="28.07" x2="83.33" y2="24.04" vector-effect="non-scaling-stroke"/><line x1="5.00" y1="43.33" x2="16.11" y2="43.33" vector-effect="non-scaling-stroke"/><line x1="95.00" y1="71.40" x2="41.11" y2="71.40" vector-effect="non-scaling-stroke"/><line x1="5.00" y1="91.23" x2="16.11" y2="88.07" vector-effect="non-scaling-stroke"/></svg>
+    <span class="dot" style="left:83.33%;top:12.81%"></span><span class="badge" style="left:95.00%;top:8.77%">1</span><span class="dot" style="left:83.33%;top:24.04%"></span><span class="badge" style="left:95.00%;top:28.07%">2</span><span class="dot" style="left:16.11%;top:43.33%"></span><span class="badge" style="left:5.00%;top:43.33%">3</span><span class="dot" style="left:41.11%;top:71.40%"></span><span class="badge" style="left:95.00%;top:71.40%">4</span><span class="dot" style="left:16.11%;top:88.07%"></span><span class="badge" style="left:5.00%;top:91.23%">5</span>
+  </div>
+  <figcaption><b>Figure 11.</b> The Preview Library after two videos were imported, with the + menu open.</figcaption>
+  <ol class="legend"><li><span class="ln">1</span><div><b>From Photos</b> — import from the photo library.</div></li><li><span class="ln">2</span><div><b>From Files or a Drive</b> — import from the Files app or a connected drive.</div></li><li><span class="ln">3</span><div><b>An imported preview video</b> — thumbnail and file name. It lives on this tablet only.</div></li><li><span class="ln">4</span><div><b>Running time · size</b> — <b>4:12</b> is the number that must match the headset video.</div></li><li><span class="ln">5</span><div><b>The rule</b> — the app's own reminder that the running times have to match.</div></li></ol>
+</figure>
+<p>If <b>Import failed</b> appears with an orange triangle, read the reason, tap <b>Dismiss</b> and try again — most often the tablet is out of storage or the file is not a video.</p>
+<div class="note"><b>These videos stay on the tablet</b>Importing a preview video does <b>not</b> send anything to a headset, and it is not a way to put a film on a headset. For that, use <b>Send Videos</b> (section 8).</div>
+
+<h3>Step 3 — Pair it with the video on the headset</h3>
+<ol>
+  <li>The immersive video must already be on the headset (section 8). On the controller, find that headset's card and tap its <b>chevron</b> to expand it. The headset's videos appear under <b>Local Videos</b> as a row of tiles.</li>
+  <li><b>Press and hold</b> the tile of the video you want a preview for. Keep your finger down for about a second, until a small menu pops up. (A quick tap only selects the tile for playback.)</li>
+  <li>In the menu, tap <b>Set preview video</b>. The <b>Preview Video</b> sheet opens.</li>
+</ol>
+
+<figure class="fig">
+  <div class="shot" style="aspect-ratio:2.2625;">
+    <img src="images/ipad-12-set-preview-menu.png" style="width:142.857%;height:465.116%;left:-0.000%;top:-272.093%;">
+    <svg class="ovl" viewBox="0 0 100 100" preserveAspectRatio="none"><line x1="92.86" y1="64.19" x2="63.57" y2="64.19" vector-effect="non-scaling-stroke"/><line x1="92.86" y1="32.09" x2="82.57" y2="32.09" vector-effect="non-scaling-stroke"/></svg>
+    <span class="dot" style="left:63.57%;top:64.19%"></span><span class="badge" style="left:92.86%;top:64.19%">1</span><span class="dot" style="left:82.57%;top:32.09%"></span><span class="badge" style="left:92.86%;top:32.09%">2</span>
+  </div>
+  <figcaption><b>Figure 12.</b> Press and hold a video tile in the headset's card: the menu that appears.</figcaption>
+  <ol class="legend"><li><span class="ln">1</span><div><b>The tile being pressed</b> — it lifts slightly while your finger is down.</div></li><li><span class="ln">2</span><div><b>Set preview video</b> — opens the sheet in the next figure. On a tile that already has a preview this reads <b>Change preview video</b>.</div></li></ol>
+</figure>
+<ol start="4">
+  <li>At the top, under <b>Headset video</b>, check that this is the right film. Its <b>running time</b> is shown here if the headset has it loaded; otherwise it says <i>"Running time not reported yet"</i>.</li>
+  <li>Choose the preview video:
+    <ul>
+      <li>If a <b>Suggested</b> entry is shown (<i>"Use Lobby_Tour.mov — Matches by name · 4:12"</i>), tap it — but only after confirming it really is the same film. A matching name is a hint, not proof.</li>
+      <li>Otherwise, tap the right video in the list <b>Preview videos on this device</b>. This list is exactly what you imported in step 2.</li>
+    </ul>
+  </li>
+  <li>The sheet closes by itself. The pairing is saved.</li>
+</ol>
+
+<figure class="fig">
+  <div class="shot" style="aspect-ratio:1.2027;">
+    <img src="images/ipad-13-pairing-sheet.png" style="width:111.111%;height:192.308%;left:-5.556%;top:-41.346%;">
+    <svg class="ovl" viewBox="0 0 100 100" preserveAspectRatio="none"><line x1="95.00" y1="6.25" x2="87.78" y2="6.25" vector-effect="non-scaling-stroke"/><line x1="5.00" y1="29.71" x2="16.22" y2="29.71" vector-effect="non-scaling-stroke"/><line x1="5.00" y1="49.04" x2="15.78" y2="49.04" vector-effect="non-scaling-stroke"/><line x1="5.00" y1="67.02" x2="16.22" y2="67.02" vector-effect="non-scaling-stroke"/><line x1="95.00" y1="77.21" x2="83.78" y2="77.21" vector-effect="non-scaling-stroke"/><line x1="5.00" y1="90.58" x2="16.11" y2="90.58" vector-effect="non-scaling-stroke"/></svg>
+    <span class="dot" style="left:87.78%;top:6.25%"></span><span class="badge" style="left:95.00%;top:6.25%">1</span><span class="dot" style="left:16.22%;top:29.71%"></span><span class="badge" style="left:5.00%;top:29.71%">2</span><span class="dot" style="left:15.78%;top:49.04%"></span><span class="badge" style="left:5.00%;top:49.04%">3</span><span class="dot" style="left:16.22%;top:67.02%"></span><span class="badge" style="left:5.00%;top:67.02%">4</span><span class="dot" style="left:83.78%;top:77.21%"></span><span class="badge" style="left:95.00%;top:77.21%">5</span><span class="dot" style="left:16.11%;top:90.58%"></span><span class="badge" style="left:5.00%;top:90.58%">6</span>
+  </div>
+  <figcaption><b>Figure 13.</b> The Preview Video sheet, opened for a film the headset is currently playing.</figcaption>
+  <ol class="legend"><li><span class="ln">1</span><div><b>Done</b> — closes the sheet without changing anything.</div></li><li><span class="ln">2</span><div><b>Headset video</b> — the film on the headset you are pairing, with its <b>running time</b>. Shown because the headset has this film loaded.</div></li><li><span class="ln">3</span><div><b>Suggested</b> — a preview video with the same file name. Tap to pair, after confirming it is the same film.</div></li><li><span class="ln">4</span><div><b>Preview videos on this device</b> — everything imported into the Preview Library. Tap one to pair it.</div></li><li><span class="ln">5</span><div><b>Length differs</b> — this one is the wrong length and cannot be paired.</div></li><li><span class="ln">6</span><div><b>The matching preview</b> — same running time, so it can be paired.</div></li></ol>
+</figure>
+<p>If a video in the list is marked <b style="color:var(--warn)">Length differs</b> in orange, it cannot be paired with this film. Tapping it anyway shows <b>Running times do not match</b> with both times, and nothing is paired. Export a preview of the correct length and import that.</p>
+
+<figure class="fig" style="max-width:56%;margin-inline:auto">
+  <div class="shot" style="aspect-ratio:1.1073;">
+    <img src="images/ipad-17-mismatch-alert.png" style="width:255.102%;height:406.504%;left:-77.551%;top:-155.285%;">
+    <svg class="ovl" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
+    
+  </div>
+  <figcaption><b>Figure 14.</b> What tapping a <i>Length differs</i> video shows. Nothing is paired.</figcaption>
+  
+</figure>
+<div class="tip"><b>Pair while the film is loaded on the headset</b>The length check can only run against a running time the headset has reported, and a headset reports it for the video it currently has loaded. Start the film on that headset (it can be paused), then pair: a wrong-length preview is refused on the spot instead of being discovered in front of an audience.</div>
+
+<h3>How to tell a video has a preview</h3>
+
+<figure class="fig">
+  <div class="shot" style="aspect-ratio:0.9587;">
+    <img src="images/ipad-14-viewer-preview.png" style="width:134.228%;height:185.185%;left:19.463%;top:-53.704%;">
+    <svg class="ovl" viewBox="0 0 100 100" preserveAspectRatio="none"><line x1="64.70" y1="14.81" x2="64.70" y2="23.89" vector-effect="non-scaling-stroke"/><line x1="6.71" y1="53.15" x2="24.83" y2="53.15" vector-effect="non-scaling-stroke"/><line x1="93.56" y1="53.24" x2="82.55" y2="53.24" vector-effect="non-scaling-stroke"/><line x1="6.71" y1="84.26" x2="26.04" y2="84.26" vector-effect="non-scaling-stroke"/><line x1="93.56" y1="89.54" x2="82.28" y2="89.54" vector-effect="non-scaling-stroke"/><line x1="6.71" y1="96.02" x2="23.49" y2="96.02" vector-effect="non-scaling-stroke"/></svg>
+    <span class="dot" style="left:64.70%;top:23.89%"></span><span class="badge" style="left:64.70%;top:14.81%">1</span><span class="dot" style="left:24.83%;top:53.15%"></span><span class="badge" style="left:6.71%;top:53.15%">2</span><span class="dot" style="left:82.55%;top:53.24%"></span><span class="badge" style="left:93.56%;top:53.24%">3</span><span class="dot" style="left:26.04%;top:84.26%"></span><span class="badge" style="left:6.71%;top:84.26%">4</span><span class="dot" style="left:82.28%;top:89.54%"></span><span class="badge" style="left:93.56%;top:89.54%">5</span><span class="dot" style="left:23.49%;top:96.02%"></span><span class="badge" style="left:6.71%;top:96.02%">6</span>
+  </div>
+  <figcaption><b>Figure 15.</b> The headset card after pairing, while the film plays.</figcaption>
+  <ol class="legend"><li><span class="ln">1</span><div><b>Preview badge</b> — the round badge in the top-left corner of the tile. <u>This is how you tell a video has a preview.</u></div></li><li><span class="ln">2</span><div><b>Viewer Preview</b> — the paired flat video, playing in step with the headset.</div></li><li><span class="ln">3</span><div><b>LIVE</b> — the headset is sending its position and head direction right now.</div></li><li><span class="ln">4</span><div><b>Position</b> — where the wearer is in the film, out of its running time.</div></li><li><span class="ln">5</span><div><b>Direction indicator</b> — where the wearer's head is pointed (see <i>Where the wearer is looking</i>).</div></li><li><span class="ln">6</span><div><b>Preview file name</b> — which preview video is paired.</div></li></ol>
+</figure>
+<table>
+  <thead><tr><th style="width:56mm">Where to look</th><th>What you see when a preview is paired</th></tr></thead>
+  <tr><td><b>The video tile</b> in the headset's card</td><td>A <b>small round badge with the two-stacked-rectangles glyph</b> in the <b>top-left corner</b> of the tile (figure 15, callout 1). Tiles without the badge have no preview.</td></tr>
+  <tr><td><b>The press-and-hold menu</b> on that tile</td><td>It says <b>Change preview video</b> instead of <b>Set preview video</b>.</td></tr>
+  <tr><td><b>The Preview Video sheet</b></td><td>A <b>green tick</b> next to the preview video that is currently paired (figure 17, callout 3).</td></tr>
+  <tr><td><b>The card, while the film plays</b></td><td>A <b>Viewer Preview</b> panel: the flat video playing in step with the headset, the position (e.g. <code>0:53 / 4:12</code>) in its corner, a red <b>LIVE</b> tag while the headset is reporting, the direction indicator underneath, and the preview's file name below that (figure 15, callouts 2–6).</td></tr>
+</table>
+<p>Two other messages can take the place of the Viewer Preview panel while a film plays:</p>
+<table>
+  <thead><tr><th style="width:56mm">Message</th><th>Meaning and what to do</th></tr></thead>
+  <tr><td><b>No preview video for this one</b></td><td>This film has no preview paired. Pair one (step 3) if you want to watch along — it is also visible in figure 7, callout 5.</td></tr>
+  <tr><td><b>Preview not shown</b> (orange triangle)</td><td>A preview is paired, but its running time does not match the file the headset actually loaded; both times are shown. The preview is held back on purpose, because a preview sitting convincingly on the wrong moment is worse than none. Pair a preview of the correct length.</td></tr>
+</table>
+
+<h3>Changing the preview video</h3>
+
+<figure class="fig">
+  <div class="shot" style="aspect-ratio:1.6215;">
+    <img src="images/ipad-15-change-menu.png" style="width:142.857%;height:333.333%;left:-0.000%;top:-96.667%;">
+    <svg class="ovl" viewBox="0 0 100 100" preserveAspectRatio="none"><line x1="47.29" y1="26.67" x2="47.29" y2="42.00" vector-effect="non-scaling-stroke"/><line x1="92.86" y1="84.67" x2="82.57" y2="84.67" vector-effect="non-scaling-stroke"/></svg>
+    <span class="dot" style="left:47.29%;top:42.00%"></span><span class="badge" style="left:47.29%;top:26.67%">1</span><span class="dot" style="left:82.57%;top:84.67%"></span><span class="badge" style="left:92.86%;top:84.67%">2</span>
+  </div>
+  <figcaption><b>Figure 16.</b> Pressing and holding a tile that already has a preview.</figcaption>
+  <ol class="legend"><li><span class="ln">1</span><div><b>Preview badge</b> — this tile is already paired.</div></li><li><span class="ln">2</span><div><b>Change preview video</b> — opens the sheet in the next figure.</div></li></ol>
+</figure>
+<ol>
+  <li>Press and hold the video tile until the menu appears.</li>
+  <li>Tap <b>Change preview video</b>.</li>
+  <li>Tap a different video in <b>Preview videos on this device</b>. It replaces the old pairing and the sheet closes. The old preview video stays in the library.</li>
+</ol>
+
+<figure class="fig">
+  <div class="shot" style="aspect-ratio:1.2635;">
+    <img src="images/ipad-16-change-sheet.png" style="width:111.111%;height:202.020%;left:-5.556%;top:-43.434%;">
+    <svg class="ovl" viewBox="0 0 100 100" preserveAspectRatio="none"><line x1="95.00" y1="6.57" x2="87.78" y2="6.57" vector-effect="non-scaling-stroke"/><line x1="95.00" y1="52.83" x2="83.78" y2="52.83" vector-effect="non-scaling-stroke"/><line x1="95.00" y1="66.87" x2="83.33" y2="66.87" vector-effect="non-scaling-stroke"/><line x1="5.00" y1="84.55" x2="16.22" y2="84.55" vector-effect="non-scaling-stroke"/></svg>
+    <span class="dot" style="left:87.78%;top:6.57%"></span><span class="badge" style="left:95.00%;top:6.57%">1</span><span class="dot" style="left:83.78%;top:52.83%"></span><span class="badge" style="left:95.00%;top:52.83%">2</span><span class="dot" style="left:83.33%;top:66.87%"></span><span class="badge" style="left:95.00%;top:66.87%">3</span><span class="dot" style="left:16.22%;top:84.55%"></span><span class="badge" style="left:5.00%;top:84.55%">4</span>
+  </div>
+  <figcaption><b>Figure 17.</b> The Preview Video sheet for a film that is already paired.</figcaption>
+  <ol class="legend"><li><span class="ln">1</span><div><b>Done</b> — closes the sheet and keeps the current pairing.</div></li><li><span class="ln">2</span><div><b>Length differs</b> — cannot be chosen for this film.</div></li><li><span class="ln">3</span><div><b>Green tick</b> — the preview video paired right now. Tap a different row to change it.</div></li><li><span class="ln">4</span><div><b>Remove pairing</b> — removes the preview from this film. Neither video is deleted.</div></li></ol>
+</figure>
+
+<h3>Removing the preview from a video</h3>
+<ol>
+  <li>Press and hold the video tile and tap <b>Change preview video</b>.</li>
+  <li>At the bottom of the sheet tap <b>Remove pairing</b> (red) — figure 17, callout 4.</li>
+</ol>
+<p>The badge disappears from the tile, and when the film plays the card shows <i>"No preview video for this one"</i>. Nothing is deleted: the film on the headset and the preview video in the library are both untouched.</p>
+
+<h3>Deleting a preview video from the tablet</h3>
+<ol>
+  <li>Tap the <b>Preview Library</b> icon in the toolbar.</li>
+  <li>On the video you want to delete, <b>swipe left</b> and tap <b>Remove</b>.</li>
+  <li>Confirm with <b>Remove</b> in the <b>Remove preview video?</b> dialog.</li>
+</ol>
+
+<figure class="fig">
+  <div class="shot" style="aspect-ratio:2.1945;">
+    <img src="images/ipad-18-remove-swipe.png" style="width:111.111%;height:350.877%;left:-5.556%;top:-75.439%;">
+    <svg class="ovl" viewBox="0 0 100 100" preserveAspectRatio="none"><line x1="5.00" y1="43.33" x2="13.33" y2="43.33" vector-effect="non-scaling-stroke"/><line x1="95.00" y1="40.35" x2="85.22" y2="40.35" vector-effect="non-scaling-stroke"/></svg>
+    <span class="dot" style="left:13.33%;top:43.33%"></span><span class="badge" style="left:5.00%;top:43.33%">1</span><span class="dot" style="left:85.22%;top:40.35%"></span><span class="badge" style="left:95.00%;top:40.35%">2</span>
+  </div>
+  <figcaption><b>Figure 18.</b> Deleting a preview video from the tablet: swipe the row left.</figcaption>
+  <ol class="legend"><li><span class="ln">1</span><div><b>The swiped row</b> — slide it to the left to reveal the button.</div></li><li><span class="ln">2</span><div><b>Remove</b> — asks <i>Remove preview video?</i> first; confirm with <b>Remove</b>.</div></li></ol>
+</figure>
+<p>This deletes the preview file from the tablet only. The immersive film on the headset is not affected — to delete that, see section 15.</p>
+<div class="warn"><b>Remove the pairing first, then delete</b>In VPC Remote 1.7, deleting a preview video that is still paired leaves the <b>badge</b> on the tiles it was paired to, even though there is no preview behind it any more — the card then says <i>"No preview video for this one"</i> while the badge says otherwise. So remove the pairing (above) before deleting. If a stale badge has already been left behind, clear it by pairing that tile with any other preview video and then tapping <b>Remove pairing</b>.</div>
+
+<div class="note"><b>One pairing covers every headset</b>A pairing belongs to the <b>file name</b> of the headset video, not to one headset. Pair <code>Lobby_Tour.mp4</code> once and every headset holding a file with exactly that name uses the same preview. Pairings and preview videos are kept on this tablet and survive restarting the app; a second tablet has its own, and needs them set up separately.</div>
 
 <h3>Where the wearer is looking</h3>
 <p>The preview answers <i>what</i> is playing. It does not answer <i>where in it the wearer is looking</i> — and in 180° or 360° material those are different questions. So underneath the preview the card draws a <b>direction indicator</b>.</p>
@@ -542,7 +710,7 @@ figcaption{font-size:9.5pt;color:var(--mut);margin-top:2mm;break-before:avoid;br
     <svg class="ovl" viewBox="0 0 100 100" preserveAspectRatio="none"><line x1="4.17" y1="6.44" x2="25.08" y2="7.12" vector-effect="non-scaling-stroke"/><line x1="95.83" y1="6.44" x2="74.67" y2="7.12" vector-effect="non-scaling-stroke"/><line x1="4.17" y1="16.10" x2="25.17" y2="15.42" vector-effect="non-scaling-stroke"/><line x1="95.83" y1="52.54" x2="51.67" y2="51.86" vector-effect="non-scaling-stroke"/><line x1="95.83" y1="42.37" x2="54.50" y2="42.71" vector-effect="non-scaling-stroke"/><line x1="95.83" y1="33.05" x2="48.83" y2="33.73" vector-effect="non-scaling-stroke"/><line x1="95.83" y1="23.73" x2="44.08" y2="24.58" vector-effect="non-scaling-stroke"/><line x1="95.83" y1="14.41" x2="50.75" y2="15.59" vector-effect="non-scaling-stroke"/><line x1="4.17" y1="90.68" x2="45.00" y2="90.51" vector-effect="non-scaling-stroke"/></svg>
     <span class="dot" style="left:25.08%;top:7.12%"></span><span class="badge" style="left:4.17%;top:6.44%">1</span><span class="dot" style="left:74.67%;top:7.12%"></span><span class="badge" style="left:95.83%;top:6.44%">2</span><span class="dot" style="left:25.17%;top:15.42%"></span><span class="badge" style="left:4.17%;top:16.10%">3</span><span class="dot" style="left:51.67%;top:51.86%"></span><span class="badge" style="left:95.83%;top:52.54%">4</span><span class="dot" style="left:54.50%;top:42.71%"></span><span class="badge" style="left:95.83%;top:42.37%">5</span><span class="dot" style="left:48.83%;top:33.73%"></span><span class="badge" style="left:95.83%;top:33.05%">6</span><span class="dot" style="left:44.08%;top:24.58%"></span><span class="badge" style="left:95.83%;top:23.73%">7</span><span class="dot" style="left:50.75%;top:15.59%"></span><span class="badge" style="left:95.83%;top:14.41%">8</span><span class="dot" style="left:45.00%;top:90.51%"></span><span class="badge" style="left:4.17%;top:90.68%">9</span>
   </div>
-  <figcaption><b>Figure 10.</b> The Activity Log during a synchronised start. Read it bottom-to-top: it is the sequence the system actually followed.</figcaption>
+  <figcaption><b>Figure 19.</b> The Activity Log during a synchronised start. Read it bottom-to-top: it is the sequence the system actually followed.</figcaption>
   <ol class="legend"><li><span class="ln">1</span><div><b>Clear</b> — empties the log. Do this before reproducing a problem so the log holds only the relevant run.</div></li><li><span class="ln">2</span><div><b>Done</b> — closes the log.</div></li><li><span class="ln">3</span><div><b>Timestamp</b> — every line is stamped, so you can see how long each step took.</div></li><li><span class="ln">4</span><div><b>Measuring clock offsets…</b> — before anything plays, the controller measures each headset's clock against its own.</div></li><li><span class="ln">5</span><div><b>offset 1ms (rtt 1ms, 5 samples)</b> — the result for one headset. A small round-trip time means a healthy network; a large or wildly varying one is the signature of congested or badly-configured Wi-Fi.</div></li><li><span class="ln">6</span><div><b>Preparing '…' on all devices</b> — each headset is told to open its immersive view and pre-load the file, but <i>not</i> to start.</div></li><li><span class="ln">7</span><div><b>Ready for sync</b> — that headset reported it is loaded and waiting. Every headset must report this before anything starts.</div></li><li><span class="ln">8</span><div><b>Sync start scheduled (+1000ms)</b> — the controller picks a moment one second ahead and tells every headset to begin exactly then, each in its own corrected clock.</div></li><li><span class="ln">9</span><div><b>Single-headset commands</b> — Play / Pause / Stop sent to one named headset appear here too, so a card's buttons and the synchronised sequence above can be told apart when reading back what happened.</div></li></ol>
 </figure>
 
@@ -564,11 +732,11 @@ figcaption{font-size:9.5pt;color:var(--mut);margin-top:2mm;break-before:avoid;br
   <tr><td>A transfer never finishes</td><td>The log shows the percentage. If it stalls, the headset moved out of range or port 8081 is blocked. Delete the partial file from the headset before retrying so you do not end up with a <code>_1</code> copy.</td></tr>
   <tr><td>Video plays but the picture looks wrong</td><td>Format setting — section 10.</td></tr>
   <tr><td>Sound plays but there is no picture</td><td>Give it about three seconds: the player detects this and falls back automatically, and the picture appears. If it persists, note the file and the format and report it.</td></tr>
-  <tr><td>Headsets start at visibly different moments</td><td>Check the measured round-trip times in the log (figure 10, callout 5). Values of a few milliseconds are healthy; tens or hundreds of milliseconds mean a congested network.</td></tr>
+  <tr><td>Headsets start at visibly different moments</td><td>Check the measured round-trip times in the log (figure 19, callout 5). Values of a few milliseconds are healthy; tens or hundreds of milliseconds mean a congested network.</td></tr>
   <tr><td>One headset did not join a group start</td><td>It failed to report ready in time. The log names it. Usually a very large file; try again, or start that headset on its own.</td></tr>
 </table>
 
-<div class="tip"><b>Reproducing a problem cleanly</b>Tap <b>Clear</b> in the log, do the thing that fails, then read the log from the bottom up. The sequence in figure 10 is what a healthy run looks like — compare against it.</div>
+<div class="tip"><b>Reproducing a problem cleanly</b>Tap <b>Clear</b> in the log, do the thing that fails, then read the log from the bottom up. The sequence in figure 19 is what a healthy run looks like — compare against it.</div>
 
 <h2>17. Quick reference</h2>
 <table>
@@ -589,6 +757,7 @@ figcaption{font-size:9.5pt;color:var(--mut);margin-top:2mm;break-before:avoid;br
   <li>Final video filenames decided and applied on the computer, before any transfer.</li>
   <li>The video is loaded on every headset and <b>appears under VIDEOS ON ALL DEVICES</b>.</li>
   <li>Format selected and verified by actually playing it on one headset.</li>
+  <li>If you will watch along: each film has its preview video paired (badge on the tile), checked by playing it once.</li>
   <li>A full <b>Play on All</b> rehearsal completed on the real network, in the real room.</li>
   <li>Every headset charged, and the tablet set not to sleep.</li>
 </ol>

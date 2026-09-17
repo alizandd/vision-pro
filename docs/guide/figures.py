@@ -11,6 +11,15 @@ SIZES = {
     "vp-01-main.png":          (2000, 1125),
     "vp-02-settings.png":      (2000, 1125),
     "vp-03-immersive.png":     (2000, 1073),
+    "ipad-10-preview-empty.png":   (1640, 2360),
+    "ipad-11-preview-library.png": (1640, 2360),
+    "ipad-12-set-preview-menu.png":(1640, 2360),
+    "ipad-13-pairing-sheet.png":   (1640, 2360),
+    "ipad-14-viewer-preview.png":  (1640, 2360),
+    "ipad-15-change-menu.png":     (1640, 2360),
+    "ipad-16-change-sheet.png":    (1640, 2360),
+    "ipad-17-mismatch-alert.png":  (1640, 2360),
+    "ipad-18-remove-swipe.png":    (1640, 2360),
 }
 
 # pad helpers
@@ -21,6 +30,15 @@ IL, IR = -0.072, 1.072    # badge lanes for those
 # backdrop, so the badges sit on that backdrop rather than outside the image.
 SHEETC = (-0.10, 1.10)
 SL, SR = -0.05, 1.05
+
+# Form sheets (Preview Videos, Preview Video): a narrower centred card, so the
+# badge lanes sit on the dimmed backdrop either side of it.
+FORMC = (0.05, 0.95)
+FL, FR = 0.095, 0.905
+
+# Headset-card crops share the lanes used by figures "device-card"/"playing".
+CARDC = (-0.145, 0.60)
+CL, CR = -0.095, 0.552
 
 FIGURES = {
 
@@ -254,4 +272,137 @@ FIGURES = {
     src="vp-03-immersive.png", crop=(0.0, 0.0, 1.0, 1.0),
     caption="A frame from inside immersive playback \u2014 one eye's view of a 360\u00b0 scene wrapped around the wearer. The app window is hidden while this is on screen, and the wearer can look anywhere in the sphere.",
     callouts=[], legend=[]),
+
+"preview-empty": dict(
+    src="ipad-10-preview-empty.png", crop=(FORMC[0], 0.215, FORMC[1], 0.68),
+    caption="The Preview Library the first time it is opened, before anything has been imported.",
+    callouts=[
+        dict(t=(0.160,0.2475), b=(FL,0.2475), n=1),
+        dict(t=(0.840,0.2475), b=(FR,0.2475), n=2),
+        dict(t=(0.378,0.4770), b=(FL,0.4770), n=3),
+        dict(t=(0.352,0.5950), b=(FL,0.5950), n=4),
+        dict(t=(0.352,0.6280), b=(FL,0.6400), n=5),
+    ],
+    legend=[
+        "<b>Done</b> — closes the library.",
+        "<b>+ (Add)</b> — the same two import routes as callouts 4 and 5, available once the library already holds something.",
+        "<b>No preview videos</b> — nothing has been imported on this tablet yet.",
+        "<b>Choose from Photos</b> — pick from the tablet's photo library, up to five at a time.",
+        "<b>Choose from Files or a Drive</b> — pick from On My iPad, iCloud Drive or a USB drive. Keeps the real file name, which is what the pairing suggestion matches on.",
+    ]),
+
+"preview-library": dict(
+    src="ipad-11-preview-library.png", crop=(FORMC[0], 0.215, FORMC[1], 0.50),
+    caption="The Preview Library after two videos were imported, with the + menu open.",
+    callouts=[
+        dict(t=(0.800,0.2515), b=(FR,0.2400), n=1),
+        dict(t=(0.800,0.2835), b=(FR,0.2950), n=2),
+        dict(t=(0.195,0.3385), b=(FL,0.3385), n=3),
+        dict(t=(0.420,0.4185), b=(FR,0.4185), n=4),
+        dict(t=(0.195,0.4660), b=(FL,0.4750), n=5),
+    ],
+    legend=[
+        "<b>From Photos</b> — import from the photo library.",
+        "<b>From Files or a Drive</b> — import from the Files app or a connected drive.",
+        "<b>An imported preview video</b> — thumbnail and file name. It lives on this tablet only.",
+        "<b>Running time · size</b> — <b>4:12</b> is the number that must match the headset video.",
+        "<b>The rule</b> — the app's own reminder that the running times have to match.",
+    ]),
+
+"set-preview-menu": dict(
+    src="ipad-12-set-preview-menu.png", crop=(0.0, 0.585, 0.70, 0.80),
+    caption="Press and hold a video tile in the headset's card: the menu that appears.",
+    callouts=[
+        dict(t=(0.445,0.7230), b=(0.650,0.7230), n=1),
+        dict(t=(0.578,0.6540), b=(0.650,0.6540), n=2),
+    ],
+    legend=[
+        "<b>The tile being pressed</b> — it lifts slightly while your finger is down.",
+        "<b>Set preview video</b> — opens the sheet in the next figure. On a tile that already has a preview this reads <b>Change preview video</b>.",
+    ]),
+
+"pairing-sheet": dict(
+    src="ipad-13-pairing-sheet.png", crop=(FORMC[0], 0.215, FORMC[1], 0.735),
+    caption="The Preview Video sheet, opened for a film the headset is currently playing.",
+    callouts=[
+        dict(t=(0.840,0.2475), b=(FR,0.2475), n=1),
+        dict(t=(0.196,0.3695), b=(FL,0.3695), n=2),
+        dict(t=(0.192,0.4700), b=(FL,0.4700), n=3),
+        dict(t=(0.196,0.5635), b=(FL,0.5635), n=4),
+        dict(t=(0.804,0.6165), b=(FR,0.6165), n=5),
+        dict(t=(0.195,0.6860), b=(FL,0.6860), n=6),
+    ],
+    legend=[
+        "<b>Done</b> — closes the sheet without changing anything.",
+        "<b>Headset video</b> — the film on the headset you are pairing, with its <b>running time</b>. Shown because the headset has this film loaded.",
+        "<b>Suggested</b> — a preview video with the same file name. Tap to pair, after confirming it is the same film.",
+        "<b>Preview videos on this device</b> — everything imported into the Preview Library. Tap one to pair it.",
+        "<b>Length differs</b> — this one is the wrong length and cannot be paired.",
+        "<b>The matching preview</b> — same running time, so it can be paired.",
+    ]),
+
+"mismatch-alert": dict(
+    src="ipad-17-mismatch-alert.png", crop=(0.304, 0.382, 0.696, 0.628), width="56%",
+    caption="What tapping a <i>Length differs</i> video shows. Nothing is paired.",
+    callouts=[], legend=[]),
+
+"viewer-preview": dict(
+    src="ipad-14-viewer-preview.png", crop=(CARDC[0], 0.29, CARDC[1], 0.83),
+    caption="The headset card after pairing, while the film plays.",
+    callouts=[
+        dict(t=(0.337,0.4190), b=(0.337,0.3700), n=1),
+        dict(t=(0.040,0.5770), b=(CL,0.5770), n=2),
+        dict(t=(0.470,0.5775), b=(CR,0.5775), n=3),
+        dict(t=(0.049,0.7450), b=(CL,0.7450), n=4),
+        dict(t=(0.468,0.7735), b=(CR,0.7735), n=5),
+        dict(t=(0.030,0.8085), b=(CL,0.8085), n=6),
+    ],
+    legend=[
+        "<b>Preview badge</b> — the round badge in the top-left corner of the tile. <u>This is how you tell a video has a preview.</u>",
+        "<b>Viewer Preview</b> — the paired flat video, playing in step with the headset.",
+        "<b>LIVE</b> — the headset is sending its position and head direction right now.",
+        "<b>Position</b> — where the wearer is in the film, out of its running time.",
+        "<b>Direction indicator</b> — where the wearer's head is pointed (see <i>Where the wearer is looking</i>).",
+        "<b>Preview file name</b> — which preview video is paired.",
+    ]),
+
+"change-menu": dict(
+    src="ipad-15-change-menu.png", crop=(0.0, 0.29, 0.70, 0.59),
+    caption="Pressing and holding a tile that already has a preview.",
+    callouts=[
+        dict(t=(0.331,0.4160), b=(0.331,0.3700), n=1),
+        dict(t=(0.578,0.5440), b=(0.650,0.5440), n=2),
+    ],
+    legend=[
+        "<b>Preview badge</b> — this tile is already paired.",
+        "<b>Change preview video</b> — opens the sheet in the next figure.",
+    ]),
+
+"change-sheet": dict(
+    src="ipad-16-change-sheet.png", crop=(FORMC[0], 0.215, FORMC[1], 0.71),
+    caption="The Preview Video sheet for a film that is already paired.",
+    callouts=[
+        dict(t=(0.840,0.2475), b=(FR,0.2475), n=1),
+        dict(t=(0.804,0.4765), b=(FR,0.4765), n=2),
+        dict(t=(0.800,0.5460), b=(FR,0.5460), n=3),
+        dict(t=(0.196,0.6335), b=(FL,0.6335), n=4),
+    ],
+    legend=[
+        "<b>Done</b> — closes the sheet and keeps the current pairing.",
+        "<b>Length differs</b> — cannot be chosen for this film.",
+        "<b>Green tick</b> — the preview video paired right now. Tap a different row to change it.",
+        "<b>Remove pairing</b> — removes the preview from this film. Neither video is deleted.",
+    ]),
+
+"remove-swipe": dict(
+    src="ipad-18-remove-swipe.png", crop=(FORMC[0], 0.215, FORMC[1], 0.50),
+    caption="Deleting a preview video from the tablet: swipe the row left.",
+    callouts=[
+        dict(t=(0.170,0.3385), b=(FL,0.3385), n=1),
+        dict(t=(0.817,0.3300), b=(FR,0.3300), n=2),
+    ],
+    legend=[
+        "<b>The swiped row</b> — slide it to the left to reveal the button.",
+        "<b>Remove</b> — asks <i>Remove preview video?</i> first; confirm with <b>Remove</b>.",
+    ]),
 }

@@ -50,6 +50,12 @@ class DeviceManager: ObservableObject {
         syncManager.deviceCurrentTime = { [weak self] deviceId in
             self?.devices.first(where: { $0.deviceId == deviceId })?.state.currentTime
         }
+        syncManager.deviceDuration = { [weak self] deviceId in
+            self?.devices.first(where: { $0.deviceId == deviceId })?.state.duration
+        }
+        syncManager.setDeviceCurrentTime = { [weak self] deviceId, mediaTime in
+            self?.devices.first(where: { $0.deviceId == deviceId })?.state.currentTime = mediaTime
+        }
         syncManager.setDeviceFormat = { [weak self] deviceId, format in
             self?.devices.first(where: { $0.deviceId == deviceId })?.state.currentFormat = format
         }
@@ -165,6 +171,13 @@ class DeviceManager: ObservableObject {
         log("Stop command sent to \(deviceName(for: deviceId))", type: .info)
     }
     
+    /// Jump one headset to an absolute media time. The headset keeps whatever
+    /// state it is in, so this is safe while playing or paused.
+    func seek(deviceId: String, to mediaTime: Double) {
+        webSocketServer.send(to: deviceId, message: SeekCommand(mediaTime: mediaTime))
+        log("⏩ Seek \(deviceName(for: deviceId)) → \(formatPosition(mediaTime))", type: .info)
+    }
+
     /// Send stop command to all devices
     func stopAll() {
         let command = CommandMessage(action: .stop)
@@ -288,6 +301,7 @@ class DeviceManager: ObservableObject {
                 device.state.currentVideo = message.currentVideo
                 device.state.immersiveMode = message.immersiveMode
                 device.state.currentTime = message.currentTime ?? 0
+                self.syncManager.noteDevicePosition(deviceId, mediaTime: device.state.currentTime)
                 // The headset sends 0 while a file is still loading, which means
                 // "not known yet" — not "keep the last one". Only a message that
                 // omits the field (a headset on an older build) leaves it alone.
@@ -337,6 +351,7 @@ class DeviceManager: ObservableObject {
                     receivedAt: Date()
                 )
                 device.objectWillChange.send()
+                self.syncManager.noteDevicePosition(deviceId, mediaTime: message.mediaTime)
             }
         }
 

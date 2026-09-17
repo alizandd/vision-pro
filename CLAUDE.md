@@ -201,9 +201,12 @@ Group playback across multiple Vision Pros (see `docs/adr/2026-07-22-synchronize
 { "type": "command", "action": "syncPause" }
 { "type": "command", "action": "syncResume", "mediaTime": 42.5, "startAt": 1753200002000 }
 { "type": "command", "action": "syncStop" }
+{ "type": "command", "action": "seek", "mediaTime": 42.5 }
 ```
 
 `startAt` is epoch ms already converted to the target device's clock (controller applies the measured offset: deviceClock = controllerClock + offset, offset = t1 − (t0 + t2)/2).
+
+`seek` moves one headset to an absolute media time without changing its playback state; the headset answers with a `status` carrying the new `currentTime`. A group seek is not a separate message: the controller sends `syncPause` then `syncResume` with the new `mediaTime` (playing), or a plain `seek` per device (paused).
 
 ## Code Conventions
 
@@ -394,6 +397,15 @@ curl http://localhost:8080/api/videos
 ---
 
 ## Changelog
+
+### 2026-09-17 (Update 2)
+- **[Playback scrubber]** The operator can jump to any point in the video from the controller
+  - **Spec**: `docs/superpowers/specs/2026-09-17-playback-scrubber-design.md` · **ADR**: `docs/adr/2026-09-17-playback-scrubber.md` · branch `feature/playback-scrubber`
+  - **Protocol**: new `seek { mediaTime }` command (single headset, playback state unchanged, answered with a `status`). Group seek reuses `syncPause` + `syncResume { mediaTime, startAt }`, so the headset has no new scheduled path.
+  - **iOS Controller**: `PlaybackScrubber` — a hand-drawn track driven by `DragGesture` (SwiftUI's `Slider` did not reliably deliver `onEditingChanged(false)` on iPadOS 26, and the ScrollView claimed drags on the wide group bar until the gesture was made high-priority). Seek on release; a tap is a zero-length drag. The thumb holds at the target until the headset confirms or 2 s pass — logic in the pure-Swift `ScrubberModel`, tested by `iOSController/Tests/run.sh`. On every headset card with a loaded video, paired preview or not; disabled while that headset is in a group session. In `SyncControlPanel` while a session runs: `SyncSessionManager.seekAll` — pause + scheduled resume while playing, per-device seek while paused (Resume All then starts from the seek target).
+  - The 10 Hz `viewerState` feed is now subscribed whenever a card shows a loaded video, not only while a preview is paired.
+  - **Vision Pro**: `NativeVideoPlayerManager.seek(toMediaTime:)`, clamped to the asset; `onSeekCommand` in `WebSocketManager`.
+  - Verified on the iOS 26 + visionOS 26.1 simulators: single drag / swipe / tap, seek while paused, unpaired card, card disabled during a group session, group seek while playing and while paused, Resume All from the seek target. **Needs a device pass** for group seek.
 
 ### 2026-09-17
 - **[Fix]** Watch-along preview withheld on the first play of every video, quoting the *previous* video's running time; Stop + Play again made it work

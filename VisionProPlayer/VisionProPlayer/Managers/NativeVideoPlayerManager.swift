@@ -415,7 +415,29 @@ class NativeVideoPlayerManager: ObservableObject {
         let targetTime = CMTime(seconds: progress * duration, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
         player.seek(to: targetTime, toleranceBefore: .zero, toleranceAfter: .zero)
     }
-    
+
+    /// Seeks to an absolute media time on the operator's behalf.
+    ///
+    /// Playback state is left exactly as it is: a playing video keeps playing
+    /// from the new position, a paused one shows the new frame. The requested
+    /// time is clamped to the asset, so a slider that disagrees with the
+    /// headset by a frame cannot push past the end. Returns false when there is
+    /// nothing loaded to seek.
+    func seek(toMediaTime requested: Double) async -> Bool {
+        guard let player = player, duration > 0 else {
+            print("[NativeVideoPlayer] Cannot seek - no video loaded")
+            return false
+        }
+        let mediaTime = min(max(requested, 0), duration)
+        print("[NativeVideoPlayer] Seek to \(mediaTime)s")
+        let target = CMTime(seconds: mediaTime, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
+        await player.seek(to: target, toleranceBefore: .zero, toleranceAfter: .zero)
+        // The periodic observer only fires while playing; a paused seek must
+        // still update the reported position.
+        updateProgress(time: target)
+        return true
+    }
+
     /// Toggles mute state
     func toggleMute() {
         isMuted.toggle()

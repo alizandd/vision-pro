@@ -240,8 +240,8 @@ struct VideoSelectionView: View {
                 .tint(.primary)
             }
             
-            // What the wearer is watching (only when a preview is paired)
-            CompanionPreviewView(device: device)
+            // What the wearer is watching, and the seek bar (whenever a video is loaded)
+            CompanionPreviewView(device: device, sync: deviceManager.syncManager)
 
             // Currently Playing
             if let currentVideo = device.state.currentVideo {

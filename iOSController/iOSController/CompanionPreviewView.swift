@@ -2,12 +2,16 @@ import SwiftUI
 import AVFoundation
 
 /// Shows what the headset wearer is watching: the paired flat companion video,
-/// held in step with the headset.
+/// held in step with the headset, with a seek bar under it.
 ///
-/// Renders nothing at all when no companion is paired — the device card then
-/// looks and behaves exactly as it did before this feature existed.
+/// With no companion paired the picture is replaced by a one-line notice, but
+/// the seek bar stays — it controls the headset, not the preview. Renders
+/// nothing at all while the headset has no video loaded.
 struct CompanionPreviewView: View {
     @ObservedObject var device: ConnectedDevice
+    /// Observed directly (not through `deviceManager`) so the card re-renders
+    /// the moment a group session starts or ends and greys its bar out.
+    @ObservedObject var sync: SyncSessionManager
     @EnvironmentObject var deviceManager: DeviceManager
 
     @StateObject private var preview = CompanionPreviewPlayer()
@@ -32,6 +36,28 @@ struct CompanionPreviewView: View {
         }
     }
 
+    /// True while this headset is an active member of a group session. Seeking
+    /// one headset out of a running group would silently desync it, so the
+    /// card's scrubber is read-only then and points at the group bar instead.
+    private var isInActiveGroup: Bool {
+        guard sync.state == .playing || sync.state == .paused else { return false }
+        switch sync.deviceStatus[device.deviceId] {
+        case .playing, .paused, .ready: return true
+        default: return false
+        }
+    }
+
+    private var scrubber: some View {
+        PlaybackScrubber(
+            position: position,
+            duration: device.state.duration,
+            isEnabled: !isInActiveGroup,
+            hint: "Use the Synchronized Playback bar"
+        ) { target in
+            deviceManager.seek(deviceId: device.deviceId, to: target)
+        }
+    }
+
     var body: some View {
         Group {
             if let companion = pairedCompanion, hasActiveVideo {
@@ -39,6 +65,12 @@ struct CompanionPreviewView: View {
             } else if hasActiveVideo {
                 unpairedNotice
             }
+        }
+        // The 10 Hz position feed used to be switched on only while a paired
+        // preview was on screen. The scrubber needs it for every loaded video,
+        // paired or not — and still nothing while the card shows no video.
+        .onChange(of: hasActiveVideo, initial: true) { _, active in
+            deviceManager.setPreviewSubscription(deviceId: device.deviceId, enabled: active)
         }
         .onDisappear {
             deviceManager.setPreviewSubscription(deviceId: device.deviceId, enabled: false)
@@ -69,19 +101,16 @@ struct CompanionPreviewView: View {
             if let reason = preview.withheldReason {
                 withheldNotice(reason)
             } else {
-                ZStack(alignment: .bottomLeading) {
-                    PlayerLayerView(player: preview.player)
-                        .aspectRatio(16.0 / 9.0, contentMode: .fit)
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
-                        .overlay {
-                            RoundedRectangle(cornerRadius: 10)
-                                .strokeBorder(Color.primary.opacity(0.08))
-                        }
-
-                    timeBadge
-                        .padding(8)
-                }
+                PlayerLayerView(player: preview.player)
+                    .aspectRatio(16.0 / 9.0, contentMode: .fit)
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 10)
+                            .strokeBorder(Color.primary.opacity(0.08))
+                    }
             }
+
+            scrubber
 
             // Where the head is pointed — only meaningful for immersive
             // projections, so flat formats show nothing rather than a fake.
@@ -126,28 +155,17 @@ struct CompanionPreviewView: View {
         return device.state.currentTime
     }
 
-    private var timeBadge: some View {
-        let label = formatPosition(position) + (device.state.duration.map { " / \(formatPosition($0))" } ?? "")
-        return Text(label)
-            .font(.caption2.monospacedDigit())
-            .padding(.horizontal, 6)
-            .padding(.vertical, 3)
-            .background(.ultraThinMaterial, in: Capsule())
-            .accessibilityLabel("Position \(formatPosition(position))")
-    }
-
     private var unpairedNotice: some View {
-        HStack(spacing: 10) {
-            Image(systemName: "rectangle.on.rectangle.angled")
-                .foregroundStyle(.secondary)
-            VStack(alignment: .leading, spacing: 2) {
-                Text("No preview video for this one")
-                    .font(.caption.weight(.medium))
-                Text("Long-press the video above to pair a flat version and watch along.")
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 10) {
+                Image(systemName: "rectangle.on.rectangle.angled")
+                    .foregroundStyle(.secondary)
+                Text("No preview video — long-press the tile above to pair one.")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
+                Spacer(minLength: 0)
             }
-            Spacer(minLength: 0)
+            scrubber
         }
         .padding(.vertical, 8)
     }
@@ -172,7 +190,6 @@ struct CompanionPreviewView: View {
 
     private func start(_ companion: CompanionVideo) {
         verifyAndLoad(companion)
-        deviceManager.setPreviewSubscription(deviceId: device.deviceId, enabled: true)
         tick()
     }
 

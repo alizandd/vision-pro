@@ -28,6 +28,7 @@ class WebSocketManager: ObservableObject {
     var onSyncPrepareCommand: ((SyncPrepareCommand) -> Void)?
     var onSyncStartCommand: ((SyncStartCommand) -> Void)?
     var onSyncResumeCommand: ((SyncResumeCommand) -> Void)?
+    var onSeekCommand: ((SeekCommand) -> Void)?
 
     /// WebSocket task
     nonisolated(unsafe) private var webSocketTask: URLSessionWebSocketTask?
@@ -346,6 +347,10 @@ class WebSocketManager: ObservableObject {
                     let resumeCommand = try JSONDecoder().decode(SyncResumeCommand.self, from: data)
                     print("[WebSocket] Sync resume at media time: \(resumeCommand.mediaTime)")
                     onSyncResumeCommand?(resumeCommand)
+                } else if let actionStr = json?["action"] as? String, actionStr == "seek" {
+                    let seekCommand = try JSONDecoder().decode(SeekCommand.self, from: data)
+                    print("[WebSocket] Seek to media time: \(seekCommand.mediaTime)")
+                    onSeekCommand?(seekCommand)
                 } else {
                     let command = try JSONDecoder().decode(ServerCommand.self, from: data)
                     print("[WebSocket] Command: \(command.action), Format: \(command.videoFormat?.displayName ?? "nil")")

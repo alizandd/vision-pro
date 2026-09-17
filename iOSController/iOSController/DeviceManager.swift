@@ -277,15 +277,22 @@ class DeviceManager: ObservableObject {
                 guard let self = self,
                       let device = self.devices.first(where: { $0.deviceId == deviceId }) else { return }
                 
+                // A running time belongs to one file. Carrying it over to the next
+                // video made every preview check compare against the previous
+                // video's length.
+                if message.currentVideo != device.state.currentVideo {
+                    device.state.duration = nil
+                }
+
                 device.state.playbackState = PlaybackState(rawValue: message.state) ?? .unknown
                 device.state.currentVideo = message.currentVideo
                 device.state.immersiveMode = message.immersiveMode
                 device.state.currentTime = message.currentTime ?? 0
-                // Keep the last reported duration when a message omits it, so a
-                // headset on an older build simply leaves it nil rather than
-                // clearing a value we already learned.
-                if let reported = message.duration, reported.isFinite, reported > 0 {
-                    device.state.duration = reported
+                // The headset sends 0 while a file is still loading, which means
+                // "not known yet" — not "keep the last one". Only a message that
+                // omits the field (a headset on an older build) leaves it alone.
+                if let reported = message.duration {
+                    device.state.duration = reported.isFinite && reported > 0 ? reported : nil
                 }
 
                 // Let an active sync session react (e.g. end when all devices finish)

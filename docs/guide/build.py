@@ -359,6 +359,9 @@ BODY = r"""
 
 <div class="note"><b>When a video reaches its end</b>The headset stops by itself, closes the immersive view and brings the window back, exactly as if Stop had been pressed. You do not need to clear anything before starting the next video.</div>
 
+<h3>Jumping to a point in the video</h3>
+<p>While a video is loaded the card shows a <b>position bar</b> under the preview (or under the "No preview video" line when none is paired), with the current position on the left and the running time on the right. <b>Drag the knob and let go</b> — or simply tap the bar where you want to be: the headset jumps to that point when your finger lifts, not while it moves. If the video was paused it stays paused on the new frame; if it was playing it carries on from there. The bar is greyed out while that headset is part of a <b>Play on All</b> session — use the bar in the Synchronized Playback panel instead, so the group stays together.</p>
+
 <h3>Choosing the format</h3>
 <p>The format tells the headset how to interpret the picture. It is not detected for you — if it is wrong, the video plays but looks wrong.</p>
 <table>
@@ -394,6 +397,9 @@ BODY = r"""
 </div>
 
 <p>Once running, the panel offers <b>Pause All</b>, <b>Resume All</b> and <b>Stop All</b>. Resume All re-synchronises on the way back in, so the group stays together after a pause.</p>
+
+<h3>Jumping the whole group</h3>
+<p>While a group session is playing or paused, a <b>position bar</b> appears above Pause All / Stop All. Drag it and let go, or tap it: every headset jumps to that point together. Playing headsets pause for about a second and restart on the same tick, exactly as Resume All does — expect that short freeze. Paused headsets move to the new frame and stay paused; the next Resume All starts from there.</p>
 
 <h3>Why a video is missing from the list</h3>
 <table>

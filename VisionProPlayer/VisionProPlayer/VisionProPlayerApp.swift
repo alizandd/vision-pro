@@ -364,6 +364,16 @@ struct VisionProPlayerApp: App {
 
                     self.openWindow(id: "main")
                     print("[App] Main window reopened after playback end")
+
+                    // Same "fully stopped" report as an explicit Stop, so a
+                    // switch right after a video ended does not wait in vain.
+                    wsManager.sendStatus(
+                        state: PlaybackState.stopped.rawValue,
+                        currentVideo: state.currentVideoURL,
+                        immersiveMode: false,
+                        currentTime: 0,
+                        duration: nil
+                    )
                 }
             }
         }
@@ -444,6 +454,17 @@ struct VisionProPlayerApp: App {
                 // Reopen the main window
                 openWindow(id: "main")
                 print("[App] Main window reopened")
+
+                // Only now is the headset fully stopped. The status stop() sent
+                // went out while the view was still open; the controller waits
+                // for this one before it starts the next video.
+                webSocketManager.sendStatus(
+                    state: PlaybackState.stopped.rawValue,
+                    currentVideo: appState.currentVideoURL,
+                    immersiveMode: false,
+                    currentTime: 0,
+                    duration: nil
+                )
             }
         }
     }

@@ -50,6 +50,7 @@ enum CommandAction: String, Codable {
     case syncPause     // Pause synchronized playback on all devices
     case syncResume    // Resume synchronized playback at a scheduled time
     case syncStop      // Stop synchronized playback
+    case seek          // Jump to an absolute media time; playback state unchanged
 }
 
 // MARK: - Synchronized Playback
@@ -81,6 +82,15 @@ struct SyncResumeCommand: Codable {
     let action: String
     let mediaTime: Double
     let startAt: Int64
+    let timestamp: Int?
+}
+
+/// Jump to an absolute media time on the operator's behalf. Sent to one
+/// headset; a group seek arrives as syncPause + syncResume instead.
+struct SeekCommand: Codable {
+    let type: String
+    let action: String
+    let mediaTime: Double
     let timestamp: Int?
 }
 

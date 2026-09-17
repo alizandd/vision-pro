@@ -307,6 +307,22 @@ struct VisionProPlayerApp: App {
             }
         }
 
+        // Handle seek: jump and report the new position without a state change
+        webSocketManager.onSeekCommand = { seekCommand in
+            Task { @MainActor in
+                guard await vidManager.seek(toMediaTime: seekCommand.mediaTime) else { return }
+                // No state changed, so nothing else would send a status — but
+                // the controller needs the new position to release its thumb.
+                wsManager.sendStatus(
+                    state: vidManager.playbackState.rawValue,
+                    currentVideo: state.currentVideoURL,
+                    immersiveMode: state.isImmersiveActive,
+                    currentTime: vidManager.currentTime,
+                    duration: vidManager.duration
+                )
+            }
+        }
+
         // Handle sync resume: seek + scheduled restart
         webSocketManager.onSyncResumeCommand = { resumeCommand in
             Task { @MainActor in
@@ -409,7 +425,7 @@ struct VisionProPlayerApp: App {
             // Delete commands are handled separately via onDeleteVideoCommand callback
             print("[App] Delete command received via regular handler - ignoring (handled separately)")
 
-        case .syncPrepare, .syncStart, .syncResume:
+        case .syncPrepare, .syncStart, .syncResume, .seek:
             // Handled via dedicated callbacks (onSyncPrepareCommand etc.)
             print("[App] \(command.action) received via regular handler - ignoring (handled separately)")
 

@@ -114,39 +114,23 @@ class DeviceManager: ObservableObject {
     /// Smart play that guarantees a clean start.
     ///
     /// The Vision Pro cannot reliably switch directly from one playing video to
-    /// another — it must be fully stopped first (which also tears down and
-    /// reopens the immersive space). This helper automates the "stop, then play"
-    /// sequence the user previously had to do by hand:
-    /// - If the device is currently busy (playing/paused/loading), it sends a
-    ///   `stop`, waits briefly for the immersive space to close, then sends `play`.
-    /// - Otherwise it plays immediately.
+    /// another — it must be fully stopped first, which also tears down and
+    /// reopens the immersive space. This sends `stop`, waits for the headset to
+    /// confirm the view is closed (`stopAndWait`), and only then sends `play`.
+    /// An idle headset plays immediately.
     func playSelected(deviceId: String, videoUrl: String, format: VideoFormat) {
         guard !videoUrl.isEmpty else { return }
         guard let device = devices.first(where: { $0.deviceId == deviceId }) else { return }
-        
-        let currentState = device.state.playbackState
-        let isBusy = currentState == .playing || currentState == .paused || currentState == .loading
-        
-        guard isBusy else {
-            // Nothing playing — start right away.
+
+        guard StopGate.isBusy(state: device.state.playbackState, immersive: device.state.immersiveMode) else {
             play(deviceId: deviceId, videoUrl: videoUrl, format: format)
             return
         }
-        
-        // Stop the current video for a clean switch.
-        log("Switching video — stopping current playback first", type: .info)
-        stop(deviceId: deviceId)
-        
-        // Optimistically reflect the stopped state so the UI updates immediately
-        // instead of waiting for the device's status broadcast.
-        device.state.playbackState = .stopped
-        objectWillChange.send()
-        
-        // Give the Vision Pro time to dismiss the immersive space before the new
-        // play command arrives, so it opens a fresh space for the next video.
+
         Task { @MainActor [weak self] in
-            try? await Task.sleep(nanoseconds: 1_200_000_000) // 1.2s
-            self?.play(deviceId: deviceId, videoUrl: videoUrl, format: format)
+            guard let self else { return }
+            await self.stopAndWait(deviceIds: [deviceId])
+            self.play(deviceId: deviceId, videoUrl: videoUrl, format: format)
         }
     }
     
@@ -171,6 +155,75 @@ class DeviceManager: ObservableObject {
         log("Stop command sent to \(deviceName(for: deviceId))", type: .info)
     }
     
+    // MARK: - Stop before switch
+
+    private enum StopOutcome { case confirmed, disconnected, timedOut }
+
+    /// Pending "fully stopped" waits, keyed by device id. Each continuation is
+    /// resumed exactly once, through `resolveStopWait`.
+    private var stopWaiters: [String: CheckedContinuation<StopOutcome, Never>] = [:]
+
+    /// Sends `stop` to every busy headset in `deviceIds` and waits until each
+    /// has reported stopped with its immersive view closed, or `timeout` has
+    /// passed. See docs/superpowers/specs/2026-09-17-stop-before-switch-design.md.
+    ///
+    /// The headset reports `stopped` before it starts closing the immersive
+    /// view, so the wait is for the status it sends *after* the view is closed
+    /// (`immersiveMode: false`). Older headset builds never send that one; the
+    /// timeout keeps them usable.
+    @MainActor
+    func stopAndWait(deviceIds: [String], timeout: TimeInterval = 6) async {
+        let busy = deviceIds.filter { id in
+            guard let device = devices.first(where: { $0.deviceId == id }) else { return false }
+            return StopGate.isBusy(state: device.state.playbackState, immersive: device.state.immersiveMode)
+        }
+        guard !busy.isEmpty else { return }
+
+        for id in busy {
+            log("⏹ Stopping \(deviceName(for: id)) before the next video", type: .info)
+            stop(deviceId: id)
+        }
+
+        await withTaskGroup(of: Void.self) { group in
+            for id in busy {
+                group.addTask { @MainActor in
+                    await self.waitForFullStop(deviceId: id, timeout: timeout)
+                }
+            }
+        }
+    }
+
+    @MainActor
+    private func waitForFullStop(deviceId: String, timeout: TimeInterval) async {
+        let started = Date()
+        let outcome = await withCheckedContinuation { (continuation: CheckedContinuation<StopOutcome, Never>) in
+            stopWaiters[deviceId] = continuation
+            Task { @MainActor [weak self] in
+                try? await Task.sleep(nanoseconds: UInt64(timeout * 1_000_000_000))
+                self?.resolveStopWait(deviceId: deviceId, outcome: .timedOut)
+            }
+        }
+
+        let name = deviceName(for: deviceId)
+        switch outcome {
+        case .confirmed:
+            let seconds = String(format: "%.1f", Date().timeIntervalSince(started))
+            log("✅ \(name) fully stopped (\(seconds) s)", type: .success)
+        case .disconnected:
+            log("⏹ \(name) disconnected while stopping — continuing", type: .warning)
+        case .timedOut:
+            log("⚠️ \(name) did not confirm the stop within \(Int(timeout)) s — continuing", type: .warning)
+        }
+    }
+
+    /// Resumes a pending stop wait exactly once; later calls for the same
+    /// device are no-ops, which is what makes the timeout race safe.
+    @MainActor
+    private func resolveStopWait(deviceId: String, outcome: StopOutcome) {
+        guard let continuation = stopWaiters.removeValue(forKey: deviceId) else { return }
+        continuation.resume(returning: outcome)
+    }
+
     /// Jump one headset to an absolute media time. The headset keeps whatever
     /// state it is in, so this is safe while playing or paused.
     func seek(deviceId: String, to mediaTime: Double) {
@@ -309,6 +362,10 @@ class DeviceManager: ObservableObject {
                     device.state.duration = reported.isFinite && reported > 0 ? reported : nil
                 }
 
+                if StopGate.isFullyStopped(state: device.state.playbackState, immersive: device.state.immersiveMode) {
+                    self.resolveStopWait(deviceId: deviceId, outcome: .confirmed)
+                }
+
                 // Let an active sync session react (e.g. end when all devices finish)
                 self.syncManager.handleDeviceStatus(deviceId: deviceId, state: device.state.playbackState)
 
@@ -365,6 +422,10 @@ class DeviceManager: ObservableObject {
                     self.devices.remove(at: index)
                     self.log("Device disconnected: \(deviceName)", type: .warning)
                 }
+
+                // A headset that is gone cannot confirm anything; do not hold
+                // the switch for it.
+                self.resolveStopWait(deviceId: deviceId, outcome: .disconnected)
 
                 // Keep any active sync session consistent
                 self.syncManager.handleDeviceDisconnected(deviceId: deviceId)

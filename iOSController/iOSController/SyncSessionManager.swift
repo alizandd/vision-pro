@@ -13,6 +13,7 @@ class SyncSessionManager: ObservableObject {
     /// Session lifecycle states
     enum SessionState: Equatable {
         case idle
+        case stopping
         case syncingClocks
         case preparing
         case playing
@@ -73,6 +74,10 @@ class SyncSessionManager: ObservableObject {
     /// per-device to know whether a look direction is meaningful, and a group
     /// session never goes through the single-device play path that sets it.
     var setDeviceFormat: ((String, VideoFormat) -> Void)?
+    /// Fully stops whatever the devices are doing before a session starts —
+    /// wired by DeviceManager to `stopAndWait`. A headset that swaps files
+    /// inside an open immersive view is the switch that misbehaves.
+    var stopBusyDevices: (([String]) async -> Void)?
     var log: ((String, LogType) -> Void)?
 
     private var nowMs: Int64 { Int64(Date().timeIntervalSince1970 * 1000) }
@@ -147,6 +152,10 @@ class SyncSessionManager: ObservableObject {
         currentFormat = format
         deviceStatus = [:]
         readyDevices = []
+
+        // Phase 0: full stop on every target. Idle devices cost nothing here.
+        state = .stopping
+        await stopBusyDevices?(deviceIds)
 
         // Phase 1: clock sync
         state = .syncingClocks

@@ -56,6 +56,9 @@ class DeviceManager: ObservableObject {
         syncManager.setDeviceCurrentTime = { [weak self] deviceId, mediaTime in
             self?.devices.first(where: { $0.deviceId == deviceId })?.state.currentTime = mediaTime
         }
+        syncManager.stopBusyDevices = { [weak self] deviceIds in
+            await self?.stopAndWait(deviceIds: deviceIds)
+        }
         syncManager.setDeviceFormat = { [weak self] deviceId, format in
             self?.devices.first(where: { $0.deviceId == deviceId })?.state.currentFormat = format
         }

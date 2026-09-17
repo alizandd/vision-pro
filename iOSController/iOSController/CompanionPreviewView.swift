@@ -106,6 +106,12 @@ struct CompanionPreviewView: View {
         .onChange(of: device.state.currentTime) { _, _ in tick() }
         .onChange(of: device.state.viewer?.mediaTime) { _, _ in tick() }
         .onChange(of: device.state.playbackState) { _, _ in tick() }
+        // The running time usually arrives after playback has already begun, so
+        // the length check has to run again when it does — not only on appear.
+        .onChange(of: device.state.duration) { _, _ in
+            verifyAndLoad(companion)
+            tick()
+        }
     }
 
     /// Where the wearer is in the video.
@@ -165,9 +171,16 @@ struct CompanionPreviewView: View {
     // MARK: - Driving
 
     private func start(_ companion: CompanionVideo) {
-        // Refuse to show a companion whose running time disagrees with the asset
-        // the headset actually loaded — it would sit on the wrong moment and
-        // look entirely convincing doing it.
+        verifyAndLoad(companion)
+        deviceManager.setPreviewSubscription(deviceId: device.deviceId, enabled: true)
+        tick()
+    }
+
+    /// Refuse to show a companion whose running time disagrees with the asset
+    /// the headset actually loaded — it would sit on the wrong moment and look
+    /// entirely convincing doing it. Safe to call repeatedly: loading the
+    /// companion that is already loaded does nothing.
+    private func verifyAndLoad(_ companion: CompanionVideo) {
         switch CompanionPairingStore.verify(
             companion: companion,
             againstHeadsetDuration: device.state.duration
@@ -182,9 +195,6 @@ struct CompanionPreviewView: View {
                 url: deviceManager.companionLibrary.url(for: companion)
             )
         }
-
-        deviceManager.setPreviewSubscription(deviceId: device.deviceId, enabled: true)
-        tick()
     }
 
     /// Feeds the newest headset position into the player.

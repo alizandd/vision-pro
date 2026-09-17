@@ -395,6 +395,12 @@ curl http://localhost:8080/api/videos
 
 ## Changelog
 
+### 2026-09-17
+- **[Fix]** Watch-along preview withheld on the first play of every video, quoting the *previous* video's running time; Stop + Play again made it work
+  - **Bug log**: `docs/bugs/2026-09-17-preview-checked-against-previous-video.md` · branch `fix/preview-stale-duration`
+  - Controller only. `DeviceManager` ignored the `0` running time the headset reports while loading and so carried the last video's length over to the next one; `CompanionPreviewView` ran the length check once, on appear, before the real running time had arrived. Now a changed `currentVideo` clears the stored running time, a reported `0` is stored as unknown, and the check re-runs when the running time changes.
+  - Verified on the iOS 26 + visionOS 26.1 simulators: first play shows the preview; a genuine mismatch is still refused, now quoting the correct length.
+
 ### 2026-08-21
 - **[Fix]** First playback showed no picture (audio only) until the user stopped and replayed — ~70-80% of first plays
   - **Bug log**: `docs/bugs/2026-08-21-first-play-no-picture.md` · TeamFlow #2445 · branch `feature/first-play-no-picture`

@@ -87,7 +87,11 @@ struct PlaybackScrubber: View {
             }
             .frame(width: width, height: hitHeight)
             .contentShape(Rectangle())
-            .gesture(isUsable ? dragGesture(width: width) : nil)
+            // High priority so the enclosing ScrollView cannot claim a drag that
+            // starts on the track — it did on the wide group bar, turning seeks
+            // into page scrolls. The track is 32 pt tall, so a scroll that
+            // happens to begin on it is no real loss.
+            .highPriorityGesture(isUsable ? dragGesture(width: width) : nil)
         }
     }
 

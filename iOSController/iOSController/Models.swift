@@ -230,6 +230,7 @@ enum CommandAction: String, Codable {
     case syncPause    // Pause synchronized playback
     case syncResume   // Resume synchronized playback at a scheduled time
     case syncStop     // Stop synchronized playback
+    case seek         // Jump one headset to an absolute media time
 }
 
 // MARK: - Synchronized Playback Messages
@@ -246,6 +247,21 @@ struct SyncPrepareCommand: Codable {
     init(filename: String, videoFormat: VideoFormat?) {
         self.filename = filename
         self.videoFormat = videoFormat?.rawValue
+        self.timestamp = Int(Date().timeIntervalSince1970 * 1000)
+    }
+}
+
+/// Jump one headset to an absolute media time. Playback state is unchanged on
+/// the headset; a group seek never uses this while playing (see
+/// SyncSessionManager.seekAll).
+struct SeekCommand: Codable {
+    var type: String = "command"
+    var action: String = CommandAction.seek.rawValue
+    let mediaTime: Double
+    let timestamp: Int
+
+    init(mediaTime: Double) {
+        self.mediaTime = mediaTime
         self.timestamp = Int(Date().timeIntervalSince1970 * 1000)
     }
 }

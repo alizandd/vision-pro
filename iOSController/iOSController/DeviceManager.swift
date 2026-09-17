@@ -165,6 +165,13 @@ class DeviceManager: ObservableObject {
         log("Stop command sent to \(deviceName(for: deviceId))", type: .info)
     }
     
+    /// Jump one headset to an absolute media time. The headset keeps whatever
+    /// state it is in, so this is safe while playing or paused.
+    func seek(deviceId: String, to mediaTime: Double) {
+        webSocketServer.send(to: deviceId, message: SeekCommand(mediaTime: mediaTime))
+        log("⏩ Seek \(deviceName(for: deviceId)) → \(formatPosition(mediaTime))", type: .info)
+    }
+
     /// Send stop command to all devices
     func stopAll() {
         let command = CommandMessage(action: .stop)

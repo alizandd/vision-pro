@@ -355,6 +355,8 @@ BODY = r"""
   <tr><td><b>Stop</b></td><td>Ends playback and releases the file. Position is <b>not</b> kept — the next Play starts from the beginning.</td><td><b>Closes</b> — the wearer is returned to the app window</td></tr>
 </table>
 
+<div class="note"><b>Switching straight to another video</b>Selecting a different video and tapping <b>Play This</b> while one is playing stops the current one <i>completely</i> first — the wearer sees the app window for a moment — and only then starts the next. <b>Play on All</b> does the same on every headset before it prepares them. This is deliberate: swapping files inside the open immersive view is what used to misbehave, so the controller now waits for each headset to confirm it has closed the view (the Activity Log shows "fully stopped" and how long it took).</div>
+
 {{FIG:paused}}
 
 <div class="note"><b>When a video reaches its end</b>The headset stops by itself, closes the immersive view and brings the window back, exactly as if Stop had been pressed. You do not need to clear anything before starting the next video.</div>

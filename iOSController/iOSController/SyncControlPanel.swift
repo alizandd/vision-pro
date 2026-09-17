@@ -32,6 +32,14 @@ struct SyncControlPanel: View {
         syncManager.state != .idle
     }
 
+    private var phaseLabel: String {
+        switch syncManager.state {
+        case .stopping: return "Stopping current videos…"
+        case .syncingClocks: return "Syncing clocks…"
+        default: return "Preparing devices…"
+        }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             // Header
@@ -161,10 +169,10 @@ struct SyncControlPanel: View {
                         .tint(.purple)
                         .disabled(selectedFilename.isEmpty)
 
-                    case .syncingClocks, .preparing:
+                    case .stopping, .syncingClocks, .preparing:
                         ProgressView()
                             .controlSize(.small)
-                        Text(syncManager.state == .syncingClocks ? "Syncing clocks…" : "Preparing devices…")
+                        Text(phaseLabel)
                             .font(.caption)
                             .foregroundColor(.secondary)
 
@@ -188,7 +196,7 @@ struct SyncControlPanel: View {
                         .tint(.purple)
                     }
 
-                    if isSessionActive && syncManager.state != .syncingClocks {
+                    if isSessionActive && syncManager.state != .syncingClocks && syncManager.state != .stopping {
                         Button {
                             syncManager.stopAll()
                         } label: {
@@ -248,6 +256,8 @@ struct SyncControlPanel: View {
             switch syncManager.state {
             case .idle:
                 EmptyView()
+            case .stopping:
+                badge("STOPPING", color: .orange)
             case .syncingClocks:
                 badge("SYNCING", color: .orange)
             case .preparing:

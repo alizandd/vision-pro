@@ -398,6 +398,12 @@ curl http://localhost:8080/api/videos
 
 ## Changelog
 
+### 2026-09-17 (Update 3)
+- **[Fix]** Switching to another video while one is playing sometimes misbehaved; Play on All had no protection at all
+  - **Bug log**: `docs/bugs/2026-09-17-switch-while-playing.md` · **Spec**: `docs/superpowers/specs/2026-09-17-stop-before-switch-design.md` · branch `fix/stop-before-switch`
+  - The headset reported `stopped` *before* closing its immersive view and nothing after, so the controller's 1.2 s sleep before `play` was a guess. The headset now sends a `status` with `immersiveMode: false` once the view has closed (on Stop and when a video ends). The controller's new `DeviceManager.stopAndWait` sends `stop` to busy headsets and waits for that status (6 s safety net); `playSelected` uses it, and `playOnAll` runs it as a new `stopping` phase before clock sync. Rules in `StopGate`, tested by `iOSController/Tests/run.sh`.
+  - Verified on the iOS 26 + visionOS 26.1 simulators, including the timeout path against a headset build without the new status. **Needs a device pass** — the ✅ line prints the real teardown time.
+
 ### 2026-09-17 (Update 2)
 - **[Playback scrubber]** The operator can jump to any point in the video from the controller
   - **Spec**: `docs/superpowers/specs/2026-09-17-playback-scrubber-design.md` · **ADR**: `docs/adr/2026-09-17-playback-scrubber.md` · branch `feature/playback-scrubber`
